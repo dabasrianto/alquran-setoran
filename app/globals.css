@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --success: 142 71% 45%;
+    --success-foreground: 210 40% 98%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --warning: 48 96% 89%;
+    --warning-foreground: 38 92% 50%;
+    --success: 142 71% 45%;
+    --success-foreground: 210 40% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.penilaian-label {
+  @apply inline-block px-1.5 py-0.5 text-xs font-medium rounded-md ml-2 align-middle;
+}
+
+.penilaian-ulang {
+  @apply bg-red-100 text-red-800 border border-red-200;
+}
+
+.penilaian-kurang {
+  @apply bg-orange-100 text-orange-800 border border-orange-200;
+}
+
+.penilaian-lancar {
+  @apply bg-green-100 text-green-800 border border-green-200;
+}
+
+.penilaian-mutqin {
+  @apply bg-teal-100 text-teal-800 border border-teal-200;
+}
+
+.kelas-label {
+  @apply text-sm text-muted-foreground ml-2 italic;
+}
+
+.target-label {
+  @apply text-sm text-foreground mt-1 font-medium;
+}
+
+.target-label strong {
+  @apply text-primary;
+}
+
+.progress-bar-container {
+  @apply bg-muted rounded-md overflow-hidden h-3 w-full;
+}
+
+.progress-bar {
+  background-color: hsl(var(--primary));
+  height: 100%;
+  transition: all;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  color: white;
+}
+
+.progress-bar-complete {
+  @apply bg-success;
+}
+
+.progress-bar-juz {
+  @apply bg-purple-500;
+}
+
+.progress-bar-juz.progress-bar-complete {
+  @apply bg-purple-700;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .setoran-list {
+    max-height: 200px;
+  }
+
+  .setoran-item {
+    font-size: 0.875rem;
+  }
+
+  .penilaian-label {
+    font-size: 0.7rem;
+    padding: 0.125rem 0.5rem;
+  }
+
+  .progress-bar-container {
+    height: 8px;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printArea,
+  #printArea * {
+    visibility: visible;
+  }
+  #printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+  }
+}
