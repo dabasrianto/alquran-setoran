@@ -9,13 +9,25 @@ import StudentList from "@/components/student-list"
 import OverallStats from "@/components/overall-stats"
 import DataManagement from "@/components/data-management"
 import type { Student, Setoran } from "@/lib/types"
-import { useLocalStorage } from "@/hooks/use-local-storage"
 import { calculateStudentSummary } from "@/lib/utils"
-
-const STORAGE_KEY = "hafalanQuranData"
+import { Button } from "@/components/ui/button"
+import { useFirebaseData } from "@/hooks/use-firebase-data"
 
 export default function TasmiApp() {
-  const [students, setStudents] = useLocalStorage<Student[]>(STORAGE_KEY, [])
+  const {
+    students,
+    pengujis,
+    loading,
+    error,
+    subscriptionStatus,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    addSetoran,
+    updateSetoran,
+    deleteSetoran,
+  } = useFirebaseData()
+
   const [filterName, setFilterName] = useState("")
   const [filterKelas, setFilterKelas] = useState("all")
   const [sortOption, setSortOption] = useState("name_asc")
@@ -71,73 +83,90 @@ export default function TasmiApp() {
     setSortedStudents(sorted)
   }, [students, filterName, filterKelas, sortOption])
 
-  const handleAddStudent = (student: Student) => {
-    setStudents([...students, student])
+  const handleAddStudent = async (studentData: Omit<Student, "id">) => {
+    try {
+      await addStudent(studentData)
+    } catch (error: any) {
+      console.error("Error adding student:", error)
+      alert(error.message || "Gagal menambah murid")
+    }
   }
 
-  const handleUpdateStudent = (updatedStudent: Student) => {
-    setStudents(students.map((s) => (s.id === updatedStudent.id ? updatedStudent : s)))
-    setEditingStudent(null)
+  const handleUpdateStudent = async (updatedStudent: Student) => {
+    try {
+      await updateStudent(updatedStudent.id, updatedStudent)
+      setEditingStudent(null)
+    } catch (error: any) {
+      console.error("Error updating student:", error)
+      alert(error.message || "Gagal mengupdate murid")
+    }
   }
 
-  const handleDeleteStudent = (studentId: string) => {
+  const handleDeleteStudent = async (studentId: string) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus murid ini beserta seluruh data setorannya?")) {
-      setStudents(students.filter((s) => s.id !== studentId))
-      if (editingStudent?.id === studentId) {
-        setEditingStudent(null)
-      }
-      if (editingSetoran?.studentId === studentId) {
-        setEditingSetoran(null)
+      try {
+        await deleteStudent(studentId)
+        if (editingStudent?.id === studentId) {
+          setEditingStudent(null)
+        }
+        if (editingSetoran?.studentId === studentId) {
+          setEditingSetoran(null)
+        }
+      } catch (error: any) {
+        console.error("Error deleting student:", error)
+        alert(error.message || "Gagal menghapus murid")
       }
     }
   }
 
-  const handleAddSetoran = (studentId: string, setoran: Setoran) => {
-    setStudents(
-      students.map((s) => {
-        if (s.id === studentId) {
-          return {
-            ...s,
-            hafalan: [...(s.hafalan || []), setoran],
-          }
-        }
-        return s
-      }),
-    )
+  const handleAddSetoran = async (studentId: string, setoran: Omit<Setoran, "id">) => {
+    try {
+      await addSetoran(studentId, setoran)
+    } catch (error: any) {
+      console.error("Error adding setoran:", error)
+      alert(error.message || "Gagal menambah setoran")
+    }
   }
 
-  const handleUpdateSetoran = (studentId: string, setoranId: string, updatedSetoran: Partial<Setoran>) => {
-    setStudents(
-      students.map((s) => {
-        if (s.id === studentId) {
-          return {
-            ...s,
-            hafalan: (s.hafalan || []).map((h) => (h.id === setoranId ? { ...h, ...updatedSetoran } : h)),
-          }
-        }
-        return s
-      }),
-    )
-    setEditingSetoran(null)
+  const handleUpdateSetoran = async (studentId: string, setoranId: string, updatedSetoran: Partial<Setoran>) => {
+    try {
+      await updateSetoran(studentId, setoranId, updatedSetoran)
+      setEditingSetoran(null)
+    } catch (error: any) {
+      console.error("Error updating setoran:", error)
+      alert(error.message || "Gagal mengupdate setoran")
+    }
   }
 
-  const handleDeleteSetoran = (studentId: string, setoranId: string) => {
+  const handleDeleteSetoran = async (studentId: string, setoranId: string) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus setoran ini?")) {
-      setStudents(
-        students.map((s) => {
-          if (s.id === studentId) {
-            return {
-              ...s,
-              hafalan: (s.hafalan || []).filter((h) => h.id !== setoranId),
-            }
-          }
-          return s
-        }),
-      )
-      if (editingSetoran?.setoran.id === setoranId) {
-        setEditingSetoran(null)
+      try {
+        await deleteSetoran(studentId, setoranId)
+        if (editingSetoran?.setoran.id === setoranId) {
+          setEditingSetoran(null)
+        }
+      } catch (error: any) {
+        console.error("Error deleting setoran:", error)
+        alert(error.message || "Gagal menghapus setoran")
       }
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">Error: {error}</p>
+        <Button onClick={() => window.location.reload()}>Coba Lagi</Button>
+      </div>
+    )
   }
 
   // Mobile-friendly tabs for different sections
@@ -160,6 +189,7 @@ export default function TasmiApp() {
                 editingStudent={editingStudent}
                 setEditingStudent={setEditingStudent}
                 students={students}
+                subscriptionStatus={subscriptionStatus}
               />
             </CardContent>
           </Card>
@@ -189,6 +219,7 @@ export default function TasmiApp() {
             <CardContent className="p-4 md:p-6">
               <SetoranForm
                 students={students}
+                pengujis={pengujis}
                 onAddSetoran={handleAddSetoran}
                 onUpdateSetoran={handleUpdateSetoran}
                 editingSetoran={editingSetoran}
@@ -209,7 +240,7 @@ export default function TasmiApp() {
         <TabsContent value="data">
           <Card>
             <CardContent className="p-4 md:p-6">
-              <DataManagement students={students} setStudents={setStudents} />
+              <DataManagement students={students} />
             </CardContent>
           </Card>
         </TabsContent>

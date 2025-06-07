@@ -1,19 +1,16 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { Student } from "@/lib/types"
-import { Download, Upload, Printer } from "lucide-react"
+import { Download, Printer } from "lucide-react"
 import { preparePrintContent } from "@/lib/print-utils"
 
 interface DataManagementProps {
   students: Student[]
-  setStudents: (students: Student[]) => void
 }
 
-export default function DataManagement({ students, setStudents }: DataManagementProps) {
+export default function DataManagement({ students }: DataManagementProps) {
   const [importStatus, setImportStatus] = useState("")
 
   const handleExport = () => {
@@ -32,32 +29,6 @@ export default function DataManagement({ students, setStudents }: DataManagement
       console.error("Error exporting data:", error)
       setImportStatus("Gagal mengekspor data. Silakan coba lagi.")
     }
-  }
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string
-        const importedData = JSON.parse(content)
-
-        if (!Array.isArray(importedData)) {
-          throw new Error("Format data tidak valid")
-        }
-
-        setStudents(importedData)
-        setImportStatus("Data berhasil diimpor!")
-        setTimeout(() => setImportStatus(""), 3000)
-      } catch (error) {
-        console.error("Error importing data:", error)
-        setImportStatus("Gagal mengimpor data. Format file tidak valid.")
-      }
-    }
-    reader.readAsText(file)
-    event.target.value = ""
   }
 
   const handlePrint = () => {
@@ -95,21 +66,23 @@ export default function DataManagement({ students, setStudents }: DataManagement
           <Download className="w-5 h-5 mr-2" />
           <span>Ekspor Data (JSON)</span>
         </Button>
-        <Button variant="warning" onClick={() => document.getElementById("importFile")?.click()}>
-          <Upload className="w-5 h-5 mr-2" />
-          <span>Impor Data (JSON)</span>
-        </Button>
         <Button variant="default" onClick={handlePrint}>
           <Printer className="w-5 h-5 mr-2" />
           <span>Cetak Laporan</span>
         </Button>
-        <input type="file" id="importFile" accept=".json" onChange={handleImport} className="hidden" />
       </div>
       {importStatus && (
         <p className={`mt-2 text-sm ${importStatus.includes("berhasil") ? "text-green-600" : "text-red-600"}`}>
           {importStatus}
         </p>
       )}
+      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="font-semibold text-blue-800 mb-2">Catatan:</h3>
+        <p className="text-sm text-blue-700">
+          Data sekarang tersimpan di Firebase dan tersinkronisasi secara real-time. Fitur impor data telah dinonaktifkan
+          untuk menjaga konsistensi data.
+        </p>
+      </div>
     </div>
   )
 }

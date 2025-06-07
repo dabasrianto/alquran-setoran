@@ -7,14 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { CheckCircle, X } from "lucide-react"
 import type { Student, Setoran, Penguji } from "@/lib/types"
-import { generateId } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
-import { useLocalStorage } from "@/hooks/use-local-storage"
 
 interface SetoranFormProps {
   students: Student[]
-  onAddSetoran: (studentId: string, setoran: Setoran) => void
-  onUpdateSetoran: (studentId: string, setoranId: string, updatedSetoran: Partial<Setoran>) => void
+  pengujis: Penguji[]
+  onAddSetoran: (studentId: string, setoran: Omit<Setoran, "id">) => Promise<void>
+  onUpdateSetoran: (studentId: string, setoranId: string, updatedSetoran: Partial<Setoran>) => Promise<void>
   editingSetoran: {
     setoran: Setoran
     studentId: string
@@ -29,6 +28,7 @@ interface SetoranFormProps {
 
 export default function SetoranForm({
   students,
+  pengujis,
   onAddSetoran,
   onUpdateSetoran,
   editingSetoran,
@@ -42,9 +42,7 @@ export default function SetoranForm({
   const [catatan, setCatatan] = useState("")
   const [pengujiId, setPengujiId] = useState("")
   const [error, setError] = useState("")
-
-  // Ambil data penguji dari localStorage
-  const [pengujis] = useLocalStorage<Penguji[]>("pengujiData", [])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (editingSetoran) {
@@ -73,76 +71,82 @@ export default function SetoranForm({
     setError("")
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("")
+    setLoading(true)
 
-    if (!studentId) {
-      setError("Silakan pilih murid.")
-      return
-    }
-    if (!surah) {
-      setError("Silakan pilih surat.")
-      return
-    }
-    if (!penilaian) {
-      setError("Silakan pilih penilaian.")
-      return
-    }
-
-    const start = Number.parseInt(startAyah)
-    const end = Number.parseInt(endAyah)
-
-    if (isNaN(start) || start < 1) {
-      setError("Ayat mulai tidak valid.")
-      return
-    }
-    if (isNaN(end) || end < 1) {
-      setError("Ayat selesai tidak valid.")
-      return
-    }
-    if (end < start) {
-      setError("Ayat selesai tidak boleh kurang dari ayat mulai.")
-      return
-    }
-
-    const surahInfo = quranData.find((s) => s.name === surah)
-    if (!surahInfo) {
-      setError("Informasi surat tidak ditemukan.")
-      return
-    }
-    if (start > surahInfo.verses) {
-      setError(`Ayat mulai (${start}) melebihi jumlah ayat di ${surahInfo.name} (${surahInfo.verses} ayat).`)
-      return
-    }
-    if (end > surahInfo.verses) {
-      setError(`Ayat selesai (${end}) melebihi jumlah ayat di ${surahInfo.name} (${surahInfo.verses} ayat).`)
-      return
-    }
-
-    if (editingSetoran) {
-      onUpdateSetoran(studentId, editingSetoran.setoran.id, {
-        surah,
-        start,
-        end,
-        penilaian,
-        catatan: catatan.trim(),
-        pengujiId: pengujiId || undefined,
-      })
-    } else {
-      const newSetoran: Setoran = {
-        id: generateId(),
-        surah,
-        start,
-        end,
-        penilaian,
-        catatan: catatan.trim(),
-        timestamp: new Date().toISOString(),
-        pengujiId: pengujiId || undefined,
+    try {
+      if (!studentId) {
+        setError("Silakan pilih murid.")
+        return
       }
-      onAddSetoran(studentId, newSetoran)
-    }
+      if (!surah) {
+        setError("Silakan pilih surat.")
+        return
+      }
+      if (!penilaian) {
+        setError("Silakan pilih penilaian.")
+        return
+      }
 
-    resetForm()
+      const start = Number.parseInt(startAyah)
+      const end = Number.parseInt(endAyah)
+
+      if (isNaN(start) || start < 1) {
+        setError("Ayat mulai tidak valid.")
+        return
+      }
+      if (isNaN(end) || end < 1) {
+        setError("Ayat selesai tidak valid.")
+        return
+      }
+      if (end < start) {
+        setError("Ayat selesai tidak boleh kurang dari ayat mulai.")
+        return
+      }
+
+      const surahInfo = quranData.find((s) => s.name === surah)
+      if (!surahInfo) {
+        setError("Informasi surat tidak ditemukan.")
+        return
+      }
+      if (start > surahInfo.verses) {
+        setError(`Ayat mulai (${start}) melebihi jumlah ayat di ${surahInfo.name} (${surahInfo.verses} ayat).`)
+        return
+      }
+      if (end > surahInfo.verses) {
+        setError(`Ayat selesai (${end}) melebihi jumlah ayat di ${surahInfo.name} (${surahInfo.verses} ayat).`)
+        return
+      }
+
+      if (editingSetoran) {
+        await onUpdateSetoran(studentId, editingSetoran.setoran.id, {
+          surah,
+          start,
+          end,
+          penilaian,
+          catatan: catatan.trim(),
+          pengujiId: pengujiId || undefined,
+        })
+      } else {
+        await onAddSetoran(studentId, {
+          surah,
+          start,
+          end,
+          penilaian,
+          catatan: catatan.trim(),
+          timestamp: new Date().toISOString(),
+          pengujiId: pengujiId || undefined,
+        })
+      }
+
+      resetForm()
+    } catch (err: any) {
+      console.error("Error saving setoran:", err)
+      setError(err.message || "Terjadi kesalahan saat menyimpan data.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleCancel = () => {
@@ -162,7 +166,7 @@ export default function SetoranForm({
           <label htmlFor="selectStudent" className="block text-sm font-medium text-gray-600 mb-1">
             Pilih Murid:
           </label>
-          <Select value={studentId} onValueChange={setStudentId} disabled={!!editingSetoran}>
+          <Select value={studentId} onValueChange={setStudentId} disabled={!!editingSetoran || loading}>
             <SelectTrigger id="selectStudent">
               <SelectValue placeholder="-- Pilih Murid --" />
             </SelectTrigger>
@@ -180,7 +184,7 @@ export default function SetoranForm({
             <label htmlFor="selectSurah" className="block text-sm font-medium text-gray-600 mb-1">
               Pilih Surat:
             </label>
-            <Select value={surah} onValueChange={setSurah}>
+            <Select value={surah} onValueChange={setSurah} disabled={loading}>
               <SelectTrigger id="selectSurah">
                 <SelectValue placeholder="-- Pilih Surat --" />
               </SelectTrigger>
@@ -197,7 +201,7 @@ export default function SetoranForm({
             <label htmlFor="selectPenilaian" className="block text-sm font-medium text-gray-600 mb-1">
               Penilaian:
             </label>
-            <Select value={penilaian} onValueChange={setPenilaian}>
+            <Select value={penilaian} onValueChange={setPenilaian} disabled={loading}>
               <SelectTrigger id="selectPenilaian">
                 <SelectValue placeholder="-- Pilih Penilaian --" />
               </SelectTrigger>
@@ -222,6 +226,7 @@ export default function SetoranForm({
               min="1"
               value={startAyah}
               onChange={(e) => setStartAyah(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div>
@@ -235,13 +240,14 @@ export default function SetoranForm({
               min="1"
               value={endAyah}
               onChange={(e) => setEndAyah(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div>
             <label htmlFor="selectPenguji" className="block text-sm font-medium text-gray-600 mb-1">
               Penguji:
             </label>
-            <Select value={pengujiId} onValueChange={setPengujiId}>
+            <Select value={pengujiId} onValueChange={setPengujiId} disabled={loading}>
               <SelectTrigger id="selectPenguji">
                 <SelectValue placeholder="-- Pilih Penguji --" />
               </SelectTrigger>
@@ -266,16 +272,26 @@ export default function SetoranForm({
             placeholder="Masukkan catatan untuk setoran ini..."
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
+            disabled={loading}
           />
         </div>
       </div>
       <div className="mt-4 flex flex-col sm:flex-row gap-2">
-        <Button onClick={handleSubmit} className="w-full sm:w-auto">
-          <CheckCircle className="w-5 h-5 mr-2" />
-          <span>{editingSetoran ? "Simpan Perubahan" : "Tambah Setoran"}</span>
+        <Button onClick={handleSubmit} className="w-full sm:w-auto" disabled={loading}>
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <span>Menyimpan...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-5 h-5 mr-2" />
+              <span>{editingSetoran ? "Simpan Perubahan" : "Tambah Setoran"}</span>
+            </>
+          )}
         </Button>
         {editingSetoran && (
-          <Button variant="secondary" onClick={handleCancel} className="w-full sm:w-auto">
+          <Button variant="secondary" onClick={handleCancel} className="w-full sm:w-auto" disabled={loading}>
             <X className="w-5 h-5 mr-2" />
             <span>Batal Edit</span>
           </Button>

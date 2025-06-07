@@ -4,18 +4,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { InfoIcon, Edit, Trash2, ChevronDown } from "lucide-react"
+import { InfoIcon, Edit, Trash2, ChevronDown, Crown, Users } from "lucide-react"
 
 export default function PanduanContent() {
   return (
     <Tabs defaultValue="pengenalan" className="w-full">
-      <TabsList className="w-full mb-6 grid grid-cols-3 md:grid-cols-6">
+      <TabsList className="w-full mb-6 grid grid-cols-3 md:grid-cols-7">
         <TabsTrigger value="pengenalan">Pengenalan</TabsTrigger>
+        <TabsTrigger value="akun">Akun</TabsTrigger>
+        <TabsTrigger value="subscription">Langganan</TabsTrigger>
         <TabsTrigger value="murid">Murid</TabsTrigger>
         <TabsTrigger value="setoran">Setoran</TabsTrigger>
         <TabsTrigger value="penguji">Penguji</TabsTrigger>
         <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-        <TabsTrigger value="data">Data</TabsTrigger>
       </TabsList>
 
       <TabsContent value="pengenalan">
@@ -28,15 +29,17 @@ export default function PanduanContent() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Apa itu Aplikasi Tasmi'?</h3>
               <p>
-                Aplikasi Tasmi' adalah sistem manajemen dan analisis hafalan Al-Quran yang dirancang untuk membantu
-                guru/ustadz dalam memantau dan mengevaluasi progres hafalan murid. Aplikasi ini memungkinkan Anda untuk:
+                Aplikasi Tasmi' adalah sistem manajemen dan analisis hafalan Al-Quran berbasis cloud yang dirancang
+                untuk membantu guru/ustadz dalam memantau dan mengevaluasi progres hafalan murid. Aplikasi ini
+                memungkinkan Anda untuk:
               </p>
               <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Mengelola data murid dan ustadz/ustadzah (penguji)</li>
-                <li>Mencatat dan melacak setoran hafalan</li>
+                <li>Mengelola data murid dan ustadz/ustadzah (penguji) secara online</li>
+                <li>Mencatat dan melacak setoran hafalan dengan sinkronisasi real-time</li>
                 <li>Melihat progres hafalan per surat dan juz</li>
-                <li>Menganalisis data hafalan melalui dashboard</li>
-                <li>Mengekspor dan mengimpor data</li>
+                <li>Menganalisis data hafalan melalui dashboard interaktif</li>
+                <li>Akses data dari berbagai perangkat dengan akun Google</li>
+                <li>Sistem langganan dengan fitur unlimited untuk premium</li>
               </ul>
             </div>
 
@@ -61,12 +64,189 @@ export default function PanduanContent() {
 
             <Alert>
               <InfoIcon className="h-4 w-4" />
-              <AlertTitle>Penyimpanan Data</AlertTitle>
+              <AlertTitle>Penyimpanan Data Cloud</AlertTitle>
               <AlertDescription>
-                Aplikasi Tasmi' menggunakan penyimpanan lokal (localStorage) di browser Anda. Ini berarti data tersimpan
-                di perangkat yang Anda gunakan. Pastikan untuk mengekspor data secara berkala sebagai cadangan.
+                Aplikasi Tasmi' menggunakan Firebase (Google Cloud) untuk menyimpan data Anda. Data tersinkronisasi
+                secara real-time antar perangkat dan aman tersimpan di cloud. Anda dapat mengakses data dari mana saja
+                dengan akun Google yang sama.
               </AlertDescription>
             </Alert>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="akun">
+        <Card>
+          <CardHeader>
+            <CardTitle>Manajemen Akun</CardTitle>
+            <CardDescription>Cara mengelola akun dan autentikasi</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Login dengan Google</AccordionTrigger>
+                <AccordionContent>
+                  <ol className="list-decimal pl-6 space-y-2">
+                    <li>Buka aplikasi Tasmi' di browser</li>
+                    <li>Klik tombol "Masuk dengan Google"</li>
+                    <li>Pilih akun Google yang ingin digunakan</li>
+                    <li>Berikan izin akses yang diperlukan</li>
+                    <li>Anda akan diarahkan ke halaman utama aplikasi</li>
+                  </ol>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    <strong>Catatan:</strong> Gunakan akun Google yang sama untuk mengakses data dari berbagai
+                    perangkat.
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-2">
+                <AccordionTrigger>Logout dari Aplikasi</AccordionTrigger>
+                <AccordionContent>
+                  <ol className="list-decimal pl-6 space-y-2">
+                    <li>Klik foto profil Anda di pojok kanan atas</li>
+                    <li>Pilih "Log out" dari menu dropdown</li>
+                    <li>Anda akan diarahkan kembali ke halaman login</li>
+                  </ol>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    <strong>Tip:</strong> Data Anda tetap aman tersimpan di cloud meskipun logout.
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3">
+                <AccordionTrigger>Sinkronisasi Data Antar Perangkat</AccordionTrigger>
+                <AccordionContent>
+                  <p className="mb-2">Data Anda otomatis tersinkronisasi antar perangkat:</p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Login dengan akun Google yang sama di perangkat lain</li>
+                    <li>Data akan otomatis muncul dalam beberapa detik</li>
+                    <li>Perubahan yang dibuat di satu perangkat akan terlihat di perangkat lain</li>
+                    <li>Tidak perlu export/import data manual</li>
+                  </ul>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    <strong>Catatan:</strong> Pastikan koneksi internet stabil untuk sinkronisasi optimal.
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="subscription">
+        <Card>
+          <CardHeader>
+            <CardTitle>Paket Langganan</CardTitle>
+            <CardDescription>Memahami dan mengelola paket langganan</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    Paket Gratis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Murid:</span>
+                      <span className="font-semibold">Maksimal 5</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Ustadz:</span>
+                      <span className="font-semibold">Maksimal 1</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Ustadzah:</span>
+                      <span className="font-semibold">Maksimal 1</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Harga:</span>
+                      <span className="font-semibold text-green-600">Gratis</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-200 bg-amber-50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-amber-600" />
+                    Paket Premium
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Murid:</span>
+                      <span className="font-semibold">Unlimited</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Ustadz:</span>
+                      <span className="font-semibold">Unlimited</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Ustadzah:</span>
+                      <span className="font-semibold">Unlimited</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Harga:</span>
+                      <span className="font-semibold text-amber-600">Rp 50.000/bulan</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Cara Upgrade ke Premium</AccordionTrigger>
+                <AccordionContent>
+                  <ol className="list-decimal pl-6 space-y-2">
+                    <li>Klik tombol "Upgrade Premium" di banner langganan (halaman utama)</li>
+                    <li>Atau klik foto profil → pilih menu upgrade</li>
+                    <li>Pilih metode pembayaran yang tersedia</li>
+                    <li>Lakukan pembayaran sesuai instruksi</li>
+                    <li>Akun akan otomatis upgrade setelah pembayaran dikonfirmasi</li>
+                  </ol>
+                  <div className="mt-2 text-sm text-blue-600">
+                    <strong>Info:</strong> Fitur upgrade sedang dalam pengembangan. Hubungi admin untuk upgrade manual.
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-2">
+                <AccordionTrigger>Melihat Status Langganan</AccordionTrigger>
+                <AccordionContent>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Status langganan ditampilkan di foto profil (pojok kanan atas)</li>
+                    <li>Banner di halaman utama menunjukkan limit yang tersisa</li>
+                    <li>Ikon crown (👑) menandakan akun premium</li>
+                    <li>Ikon user (👤) menandakan akun gratis</li>
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3">
+                <AccordionTrigger>Limit dan Pembatasan</AccordionTrigger>
+                <AccordionContent>
+                  <p className="mb-2">Ketika mencapai limit akun gratis:</p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Sistem akan menampilkan pesan error saat mencoba menambah data</li>
+                    <li>Data yang sudah ada tetap dapat diedit dan dihapus</li>
+                    <li>Fitur dashboard dan laporan tetap berfungsi normal</li>
+                    <li>Upgrade ke premium untuk menghilangkan semua batasan</li>
+                  </ul>
+                  <div className="mt-2 text-sm text-amber-600">
+                    <strong>Tip:</strong> Upgrade ke premium jika mengelola lebih dari 5 murid atau butuh lebih banyak
+                    ustadz/ustadzah.
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </CardContent>
         </Card>
       </TabsContent>
@@ -97,10 +277,10 @@ export default function PanduanContent() {
                       </li>
                     </ul>
                     <li>Klik tombol "Tambah Murid"</li>
-                    <li>Murid baru akan muncul di daftar murid di bawah formulir</li>
+                    <li>Data akan otomatis tersimpan ke cloud dan muncul di daftar murid</li>
                   </ol>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Catatan:</strong> Nama murid harus unik dan tidak boleh sama dengan murid yang sudah ada.
+                    <strong>Catatan:</strong> Nama murid harus unik. Akun gratis dibatasi maksimal 5 murid.
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -120,9 +300,11 @@ export default function PanduanContent() {
                     <li>Form akan diisi dengan data murid yang ada</li>
                     <li>Ubah informasi yang diperlukan</li>
                     <li>Klik tombol "Simpan Perubahan"</li>
+                    <li>Data akan otomatis tersinkronisasi ke cloud</li>
                   </ol>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Jika Anda ingin membatalkan pengeditan, klik tombol "Batal Edit".
+                    <strong>Tip:</strong> Perubahan akan langsung terlihat di semua perangkat yang login dengan akun
+                    yang sama.
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -140,10 +322,11 @@ export default function PanduanContent() {
                       di samping nama murid
                     </li>
                     <li>Konfirmasi penghapusan pada dialog yang muncul</li>
+                    <li>Data akan terhapus permanen dari cloud</li>
                   </ol>
                   <div className="mt-2 text-sm text-red-500">
-                    <strong>Peringatan:</strong> Menghapus murid akan menghapus semua data setoran hafalan yang terkait
-                    dengan murid tersebut. Tindakan ini tidak dapat dibatalkan.
+                    <strong>Peringatan:</strong> Menghapus murid akan menghapus semua data setoran hafalan yang terkait.
+                    Tindakan ini tidak dapat dibatalkan.
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -167,33 +350,6 @@ export default function PanduanContent() {
                       <li>Riwayat Setoran - daftar semua setoran hafalan murid</li>
                     </ul>
                   </ol>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-5">
-                <AccordionTrigger>Memfilter dan Mengurutkan Daftar Murid</AccordionTrigger>
-                <AccordionContent>
-                  <p className="mb-2">Anda dapat memfilter dan mengurutkan daftar murid dengan beberapa cara:</p>
-                  <ul className="list-disc pl-6 space-y-2">
-                    <li>
-                      <strong>Filter Nama</strong> - Ketik nama murid di kotak "Filter Nama..." untuk mencari murid
-                      tertentu
-                    </li>
-                    <li>
-                      <strong>Filter Kelas</strong> - Pilih kelas dari dropdown "Semua Kelas" untuk menampilkan murid
-                      dari kelas tertentu
-                    </li>
-                    <li>
-                      <strong>Urutkan</strong> - Pilih opsi pengurutan dari dropdown "Urutkan Berdasarkan" untuk
-                      mengurutkan murid berdasarkan:
-                      <ul className="list-disc pl-6 mt-1">
-                        <li>Nama (A-Z atau Z-A)</li>
-                        <li>Total Ayat Hafal (Terbanyak atau Tersedikit)</li>
-                        <li>Surat Selesai (Terbanyak)</li>
-                        <li>Juz Selesai (Terbanyak)</li>
-                      </ul>
-                    </li>
-                  </ul>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -229,74 +385,27 @@ export default function PanduanContent() {
                         <strong>Ayat Selesai</strong> (wajib) - Nomor ayat akhir yang disetorkan
                       </li>
                       <li>
-                        <strong>Penilaian</strong> (wajib) - Pilih penilaian untuk setoran (Ulang Lagi, Kurang Lancar,
-                        Lancar, atau Mutqin)
+                        <strong>Penilaian</strong> (wajib) - Pilih penilaian untuk setoran
                       </li>
                       <li>
                         <strong>Penguji</strong> (opsional) - Pilih ustadz/ustadzah yang menguji
                       </li>
                       <li>
-                        <strong>Catatan</strong> (opsional) - Tambahkan catatan atau komentar untuk setoran
+                        <strong>Catatan</strong> (opsional) - Tambahkan catatan untuk setoran
                       </li>
                     </ul>
                     <li>Klik tombol "Tambah Setoran"</li>
-                    <li>Setoran baru akan tercatat dan muncul di riwayat setoran murid</li>
+                    <li>Data akan tersimpan ke cloud dan langsung muncul di progres murid</li>
                   </ol>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Catatan:</strong> Pastikan ayat mulai dan ayat selesai valid dan tidak melebihi jumlah ayat
-                    dalam surat yang dipilih.
+                    <strong>Catatan:</strong> Sistem akan otomatis menghitung progres hafalan berdasarkan setoran yang
+                    diinput.
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger>Mengedit Setoran Hafalan</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Temukan murid yang setorannya ingin diedit</li>
-                    <li>Klik tombol expand untuk melihat riwayat setoran</li>
-                    <li>
-                      Klik tombol{" "}
-                      <span className="inline-flex items-center">
-                        <Edit className="h-3 w-3 mr-1" /> Edit
-                      </span>{" "}
-                      di samping setoran yang ingin diedit
-                    </li>
-                    <li>Form setoran akan diisi dengan data setoran yang ada</li>
-                    <li>Ubah informasi yang diperlukan</li>
-                    <li>Klik tombol "Simpan Perubahan"</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Saat mengedit setoran, Anda tidak dapat mengubah murid yang terkait dengan
-                    setoran tersebut.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger>Menghapus Setoran Hafalan</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Temukan murid yang setorannya ingin dihapus</li>
-                    <li>Klik tombol expand untuk melihat riwayat setoran</li>
-                    <li>
-                      Klik tombol{" "}
-                      <span className="inline-flex items-center">
-                        <Trash2 className="h-3 w-3 mr-1" /> Hapus
-                      </span>{" "}
-                      di samping setoran yang ingin dihapus
-                    </li>
-                    <li>Konfirmasi penghapusan pada dialog yang muncul</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-red-500">
-                    <strong>Peringatan:</strong> Menghapus setoran akan menghapus data hafalan tersebut dari progres
-                    murid. Tindakan ini tidak dapat dibatalkan.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4">
-                <AccordionTrigger>Memahami Sistem Penilaian</AccordionTrigger>
+                <AccordionTrigger>Sistem Penilaian</AccordionTrigger>
                 <AccordionContent>
                   <p className="mb-2">Aplikasi Tasmi' menggunakan empat kategori penilaian:</p>
                   <ul className="list-disc pl-6 space-y-2">
@@ -318,8 +427,8 @@ export default function PanduanContent() {
                     </li>
                   </ul>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Gunakan catatan untuk memberikan detail spesifik tentang kesalahan atau
-                    kelebihan dalam setoran.
+                    <strong>Tip:</strong> Data penilaian akan ditampilkan dalam grafik di dashboard untuk analisis
+                    kualitas hafalan.
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -354,62 +463,10 @@ export default function PanduanContent() {
                       </li>
                     </ul>
                     <li>Klik tombol "Tambah Ustadz/Ustadzah"</li>
-                    <li>Ustadz/Ustadzah baru akan muncul di daftar</li>
-                  </ol>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2">
-                <AccordionTrigger>Mengedit Data Ustadz/Ustadzah</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Temukan ustadz/ustadzah yang ingin diedit di daftar</li>
-                    <li>
-                      Klik tombol{" "}
-                      <span className="inline-flex items-center">
-                        <Edit className="h-3 w-3 mr-1" /> Edit
-                      </span>
-                    </li>
-                    <li>Form akan diisi dengan data yang ada</li>
-                    <li>Ubah informasi yang diperlukan</li>
-                    <li>Klik tombol "Simpan Perubahan"</li>
-                  </ol>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger>Menghapus Ustadz/Ustadzah</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Temukan ustadz/ustadzah yang ingin dihapus di daftar</li>
-                    <li>
-                      Klik tombol{" "}
-                      <span className="inline-flex items-center">
-                        <Trash2 className="h-3 w-3 mr-1" /> Hapus
-                      </span>
-                    </li>
-                    <li>Konfirmasi penghapusan pada dialog yang muncul</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-red-500">
-                    <strong>Peringatan:</strong> Menghapus ustadz/ustadzah tidak akan menghapus setoran yang terkait,
-                    tetapi referensi penguji pada setoran tersebut akan hilang.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4">
-                <AccordionTrigger>Mengaitkan Penguji dengan Setoran</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>
-                      Saat menambahkan atau mengedit setoran hafalan, pilih ustadz/ustadzah dari dropdown "Penguji"
-                    </li>
-                    <li>Informasi penguji akan tercatat bersama dengan setoran</li>
-                    <li>Nama penguji akan ditampilkan di riwayat setoran murid</li>
+                    <li>Data akan tersimpan ke cloud dan dapat dipilih saat input setoran</li>
                   </ol>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Mengaitkan penguji dengan setoran membantu melacak siapa yang menguji hafalan
-                    tertentu, yang berguna untuk analisis dan akuntabilitas.
+                    <strong>Catatan:</strong> Akun gratis dibatasi maksimal 1 ustadz dan 1 ustadzah.
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -431,11 +488,12 @@ export default function PanduanContent() {
                 <AccordionContent>
                   <ol className="list-decimal pl-6 space-y-2">
                     <li>Klik tombol "Dashboard" di menu navigasi</li>
-                    <li>Dashboard akan menampilkan berbagai visualisasi dan statistik hafalan</li>
+                    <li>Dashboard akan otomatis memuat data terbaru dari cloud</li>
+                    <li>Data akan refresh otomatis setiap 30 detik</li>
                   </ol>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Catatan:</strong> Dashboard hanya akan menampilkan data jika ada murid dan setoran hafalan
-                    yang telah diinput.
+                    <strong>Catatan:</strong> Dashboard menampilkan data real-time yang tersinkronisasi dengan input
+                    terbaru.
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -462,146 +520,39 @@ export default function PanduanContent() {
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger>Menggunakan Tab Visualisasi</AccordionTrigger>
+                <AccordionTrigger>Menggunakan Visualisasi Data</AccordionTrigger>
                 <AccordionContent>
                   <p className="mb-2">Dashboard memiliki beberapa tab visualisasi:</p>
                   <ul className="list-disc pl-6 space-y-2">
                     <li>
-                      <strong>Progres Murid</strong> - Menampilkan grafik murid dengan hafalan terbanyak
+                      <strong>Progres Murid</strong> - Grafik murid dengan hafalan terbanyak
                     </li>
                     <li>
-                      <strong>Progres Surat</strong> - Menampilkan grafik progres hafalan per surat
+                      <strong>Progres Surat</strong> - Grafik progres hafalan per surat
                     </li>
                     <li>
-                      <strong>Progres Juz</strong> - Menampilkan grafik progres hafalan per juz
+                      <strong>Progres Juz</strong> - Grafik progres hafalan per juz
                     </li>
                     <li>
-                      <strong>Penilaian</strong> - Menampilkan distribusi penilaian setoran dalam bentuk diagram
-                      lingkaran
+                      <strong>Penilaian</strong> - Diagram lingkaran distribusi penilaian setoran
                     </li>
                   </ul>
                   <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Klik pada tab yang berbeda untuk beralih antara visualisasi.
+                    <strong>Tip:</strong> Gunakan filter kelas untuk melihat statistik spesifik per kelas.
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger>Memfilter Data Dashboard</AccordionTrigger>
+                <AccordionTrigger>Sinkronisasi Data Real-time</AccordionTrigger>
                 <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Gunakan dropdown "Filter Kelas" di bagian atas dashboard</li>
-                    <li>Pilih kelas tertentu untuk melihat statistik dan visualisasi khusus untuk kelas tersebut</li>
-                    <li>Pilih "Semua Kelas" untuk melihat data keseluruhan</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Memfilter berdasarkan kelas sangat berguna untuk membandingkan kinerja antar
-                    kelas atau fokus pada kelas tertentu.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-5">
-                <AccordionTrigger>Menginterpretasikan Grafik</AccordionTrigger>
-                <AccordionContent>
-                  <p className="mb-2">Beberapa tips untuk menginterpretasikan grafik di dashboard:</p>
+                  <p className="mb-2">Dashboard menggunakan sinkronisasi real-time:</p>
                   <ul className="list-disc pl-6 space-y-2">
-                    <li>
-                      <strong>Grafik Murid</strong> - Menunjukkan murid dengan jumlah ayat hafalan terbanyak, membantu
-                      mengidentifikasi murid berprestasi
-                    </li>
-                    <li>
-                      <strong>Grafik Surat</strong> - Menunjukkan surat mana yang paling banyak dihafal (selesai) dan
-                      yang masih dalam proses, membantu merencanakan fokus pembelajaran
-                    </li>
-                    <li>
-                      <strong>Grafik Juz</strong> - Menunjukkan progres per juz, membantu melihat distribusi hafalan
-                      dalam Al-Quran
-                    </li>
-                    <li>
-                      <strong>Diagram Penilaian</strong> - Menunjukkan distribusi kualitas hafalan, membantu
-                      mengevaluasi efektivitas metode pengajaran
-                    </li>
+                    <li>Data otomatis update setiap 30 detik</li>
+                    <li>Perubahan dari perangkat lain akan terlihat tanpa refresh manual</li>
+                    <li>Grafik dan statistik selalu menampilkan data terbaru</li>
+                    <li>Tidak perlu export/import data untuk melihat update</li>
                   </ul>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="data">
-        <Card>
-          <CardHeader>
-            <CardTitle>Manajemen Data</CardTitle>
-            <CardDescription>Cara mengelola, mengekspor, dan mengimpor data</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Mengekspor Data</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Buka tab "Data" di halaman Beranda</li>
-                    <li>Klik tombol "Ekspor Data (JSON)"</li>
-                    <li>File JSON akan diunduh ke perangkat Anda</li>
-                    <li>Simpan file ini di tempat yang aman sebagai cadangan</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Lakukan ekspor data secara berkala (misalnya mingguan atau bulanan) untuk
-                    mencegah kehilangan data.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2">
-                <AccordionTrigger>Mengimpor Data</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Buka tab "Data" di halaman Beranda</li>
-                    <li>Klik tombol "Impor Data (JSON)"</li>
-                    <li>Pilih file JSON yang sebelumnya diekspor dari aplikasi Tasmi'</li>
-                    <li>Data akan dimuat ke dalam aplikasi</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-red-500">
-                    <strong>Peringatan:</strong> Mengimpor data akan menimpa semua data yang ada saat ini. Pastikan
-                    untuk mengekspor data saat ini sebelum mengimpor data baru jika Anda ingin menyimpannya.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger>Mencetak Laporan</AccordionTrigger>
-                <AccordionContent>
-                  <ol className="list-decimal pl-6 space-y-2">
-                    <li>Buka tab "Data" di halaman Beranda</li>
-                    <li>Klik tombol "Cetak Laporan"</li>
-                    <li>Jendela cetak baru akan terbuka dengan laporan yang siap dicetak</li>
-                    <li>Gunakan dialog cetak browser untuk mencetak atau menyimpan sebagai PDF</li>
-                  </ol>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    <strong>Tip:</strong> Laporan cetak berisi ringkasan progres hafalan untuk semua murid, yang berguna
-                    untuk pertemuan dengan orang tua atau evaluasi program.
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4">
-                <AccordionTrigger>Memahami Penyimpanan Data Lokal</AccordionTrigger>
-                <AccordionContent>
-                  <p className="mb-2">
-                    Aplikasi Tasmi' menggunakan localStorage browser untuk menyimpan data. Ini berarti:
-                  </p>
-                  <ul className="list-disc pl-6 space-y-2">
-                    <li>Data disimpan di perangkat yang Anda gunakan</li>
-                    <li>Data tidak akan hilang saat Anda menutup browser atau me-refresh halaman</li>
-                    <li>Data dapat hilang jika Anda menghapus cache browser atau data browsing</li>
-                    <li>Data tidak tersinkronisasi antar perangkat secara otomatis</li>
-                  </ul>
-                  <div className="mt-2 text-sm text-red-500">
-                    <strong>Penting:</strong> Karena keterbatasan penyimpanan lokal, sangat disarankan untuk secara
-                    teratur mengekspor data sebagai cadangan dan untuk memindahkan data antar perangkat.
-                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

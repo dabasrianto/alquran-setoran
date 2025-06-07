@@ -5,13 +5,14 @@ import Script from "next/script" // Tambahkan import Script
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { MobileNav } from "@/components/mobile-nav"
+import { AuthProvider } from "@/contexts/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Tasmi' - Aplikasi Analisa Setoran Hafalan Quran",
   description: "Aplikasi untuk melacak dan menganalisis hafalan Quran murid",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -39,8 +40,10 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
-          <MobileNav />
+          <AuthProvider>
+            {children}
+            <MobileNav />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

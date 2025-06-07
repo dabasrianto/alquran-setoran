@@ -9,6 +9,7 @@ import StudentProgress from "@/components/student-progress"
 import SetoranHistory from "@/components/setoran-history"
 import { useState } from "react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { useFirebaseData } from "@/hooks/use-firebase-data"
 
 interface StudentListProps {
   students: StudentWithSummary[]
@@ -40,6 +41,7 @@ export default function StudentList({
   uniqueKelas,
 }: StudentListProps) {
   const [expandedStudents, setExpandedStudents] = useState<Record<string, boolean>>({})
+  const { pengujis } = useFirebaseData()
 
   const toggleStudentExpand = (studentId: string) => {
     setExpandedStudents((prev) => ({
@@ -178,7 +180,12 @@ export default function StudentList({
               <CollapsibleContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   <StudentProgress student={student} />
-                  <SetoranHistory student={student} onDeleteSetoran={onDeleteSetoran} onEditSetoran={onEditSetoran} />
+                  <SetoranHistory
+                    student={student}
+                    pengujis={pengujis}
+                    onDeleteSetoran={onDeleteSetoran}
+                    onEditSetoran={onEditSetoran}
+                  />
                 </div>
               </CollapsibleContent>
             </Collapsible>

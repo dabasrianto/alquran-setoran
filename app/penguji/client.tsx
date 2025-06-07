@@ -1,34 +1,66 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import PengujiForm from "@/components/penguji-form"
 import PengujiList from "@/components/penguji-list"
+import { useFirebaseData } from "@/hooks/use-firebase-data"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 import type { Penguji } from "@/lib/types"
-import { useLocalStorage } from "@/hooks/use-local-storage"
-
-const STORAGE_KEY = "pengujiData"
 
 export default function PengujiManager() {
-  const [pengujis, setPengujis] = useLocalStorage<Penguji[]>(STORAGE_KEY, [])
+  const { pengujis, loading, error, subscriptionStatus, addPenguji, updatePenguji, deletePenguji } = useFirebaseData()
+
   const [editingPenguji, setEditingPenguji] = useState<Penguji | null>(null)
 
-  const handleAddPenguji = (penguji: Penguji) => {
-    setPengujis([...pengujis, penguji])
+  const handleAddPenguji = async (pengujiData: Omit<Penguji, "id">) => {
+    try {
+      await addPenguji(pengujiData)
+    } catch (error: any) {
+      console.error("Error adding penguji:", error)
+      alert(error.message || "Gagal menambah ustadz/ustadzah")
+    }
   }
 
-  const handleUpdatePenguji = (updatedPenguji: Penguji) => {
-    setPengujis(pengujis.map((p) => (p.id === updatedPenguji.id ? updatedPenguji : p)))
-    setEditingPenguji(null)
+  const handleUpdatePenguji = async (updatedPenguji: Penguji) => {
+    try {
+      await updatePenguji(updatedPenguji.id, updatedPenguji)
+      setEditingPenguji(null)
+    } catch (error: any) {
+      console.error("Error updating penguji:", error)
+      alert(error.message || "Gagal mengupdate ustadz/ustadzah")
+    }
   }
 
-  const handleDeletePenguji = (pengujiId: string) => {
+  const handleDeletePenguji = async (pengujiId: string) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus ustadz/ustadzah ini?")) {
-      setPengujis(pengujis.filter((p) => p.id !== pengujiId))
-      if (editingPenguji?.id === pengujiId) {
-        setEditingPenguji(null)
+      try {
+        await deletePenguji(pengujiId)
+        if (editingPenguji?.id === pengujiId) {
+          setEditingPenguji(null)
+        }
+      } catch (error: any) {
+        console.error("Error deleting penguji:", error)
+        alert(error.message || "Gagal menghapus ustadz/ustadzah")
       }
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">Error: {error}</p>
+        <Button onClick={() => window.location.reload()}>Coba Lagi</Button>
+      </div>
+    )
   }
 
   return (
@@ -41,6 +73,7 @@ export default function PengujiManager() {
             editingPenguji={editingPenguji}
             setEditingPenguji={setEditingPenguji}
             pengujis={pengujis}
+            subscriptionStatus={subscriptionStatus}
           />
         </CardContent>
       </Card>

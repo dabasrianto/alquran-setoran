@@ -4,18 +4,15 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2, User } from "lucide-react"
 import type { StudentWithSummary, Setoran, Penguji } from "@/lib/types"
 import { quranData } from "@/lib/quran-data"
-import { useLocalStorage } from "@/hooks/use-local-storage"
 
 interface SetoranHistoryProps {
   student: StudentWithSummary
+  pengujis: Penguji[]
   onDeleteSetoran: (studentId: string, setoranId: string) => void
   onEditSetoran: (data: { setoran: Setoran; studentId: string }) => void
 }
 
-export default function SetoranHistory({ student, onDeleteSetoran, onEditSetoran }: SetoranHistoryProps) {
-  // Ambil data penguji dari localStorage
-  const [pengujis] = useLocalStorage<Penguji[]>("pengujiData", [])
-
+export default function SetoranHistory({ student, pengujis, onDeleteSetoran, onEditSetoran }: SetoranHistoryProps) {
   const getPenilaianClass = (penilaian: string) => {
     switch (penilaian) {
       case "Ulang Lagi":

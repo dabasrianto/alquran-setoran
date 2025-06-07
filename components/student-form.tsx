@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PlusCircle, X, Save } from "lucide-react"
 import type { Student } from "@/lib/types"
-import { generateId } from "@/lib/utils"
 
 interface StudentFormProps {
-  onAddStudent: (student: Student) => void
-  onUpdateStudent: (student: Student) => void
+  onAddStudent: (student: Omit<Student, "id">) => Promise<void>
+  onUpdateStudent: (student: Student) => Promise<void>
   editingStudent: Student | null
   setEditingStudent: (student: Student | null) => void
   students: Student[]
+  subscriptionStatus: any
 }
 
 export default function StudentForm({
@@ -21,11 +21,13 @@ export default function StudentForm({
   editingStudent,
   setEditingStudent,
   students,
+  subscriptionStatus,
 }: StudentFormProps) {
   const [name, setName] = useState("")
   const [kelas, setKelas] = useState("")
   const [target, setTarget] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (editingStudent) {
@@ -44,43 +46,58 @@ export default function StudentForm({
     setError("")
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("")
+    setLoading(true)
 
-    if (!name.trim()) {
-      setError("Nama murid tidak boleh kosong.")
-      return
+    try {
+      if (!name.trim()) {
+        setError("Nama murid tidak boleh kosong.")
+        return
+      }
+
+      // Cek duplikasi nama
+      const isDuplicate = students.some(
+        (student) =>
+          student.name.toLowerCase() === name.toLowerCase() && (!editingStudent || student.id !== editingStudent.id),
+      )
+
+      if (isDuplicate) {
+        setError("Nama murid sudah ada.")
+        return
+      }
+
+      // Check subscription limits for new students
+      if (!editingStudent && subscriptionStatus && !subscriptionStatus.canAddStudent) {
+        setError(
+          `Limit maksimal ${subscriptionStatus.limits.maxStudents} murid untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak murid.`,
+        )
+        return
+      }
+
+      if (editingStudent) {
+        await onUpdateStudent({
+          ...editingStudent,
+          name: name.trim(),
+          kelas: kelas.trim(),
+          target: target.trim(),
+        })
+      } else {
+        await onAddStudent({
+          name: name.trim(),
+          kelas: kelas.trim(),
+          target: target.trim(),
+          hafalan: [],
+        })
+      }
+
+      resetForm()
+    } catch (err: any) {
+      console.error("Error saving student:", err)
+      setError(err.message || "Terjadi kesalahan saat menyimpan data.")
+    } finally {
+      setLoading(false)
     }
-
-    // Cek duplikasi nama
-    const isDuplicate = students.some(
-      (student) =>
-        student.name.toLowerCase() === name.toLowerCase() && (!editingStudent || student.id !== editingStudent.id),
-    )
-
-    if (isDuplicate) {
-      setError("Nama murid sudah ada.")
-      return
-    }
-
-    if (editingStudent) {
-      onUpdateStudent({
-        ...editingStudent,
-        name: name.trim(),
-        kelas: kelas.trim(),
-        target: target.trim(),
-      })
-    } else {
-      onAddStudent({
-        id: generateId(),
-        name: name.trim(),
-        kelas: kelas.trim(),
-        target: target.trim(),
-        hafalan: [],
-      })
-    }
-
-    resetForm()
   }
 
   const handleCancel = () => {
@@ -98,7 +115,13 @@ export default function StudentForm({
           <label htmlFor="studentName" className="block text-sm font-medium text-gray-600 mb-1">
             Nama Murid:
           </label>
-          <Input id="studentName" placeholder="Nama Murid" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            id="studentName"
+            placeholder="Nama Murid"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={loading}
+          />
         </div>
         <div>
           <label htmlFor="studentKelas" className="block text-sm font-medium text-gray-600 mb-1">
@@ -109,6 +132,7 @@ export default function StudentForm({
             placeholder="Contoh: Kelas A"
             value={kelas}
             onChange={(e) => setKelas(e.target.value)}
+            disabled={loading}
           />
         </div>
         <div className="md:col-span-2">
@@ -120,12 +144,18 @@ export default function StudentForm({
             placeholder="Contoh: Selesai Juz 30"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
+            disabled={loading}
           />
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button onClick={handleSubmit} className="w-full sm:w-auto">
-          {editingStudent ? (
+        <Button onClick={handleSubmit} className="w-full sm:w-auto" disabled={loading}>
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              <span>Menyimpan...</span>
+            </>
+          ) : editingStudent ? (
             <>
               <Save className="w-5 h-5 mr-2" />
               <span>Simpan Perubahan</span>
@@ -138,7 +168,7 @@ export default function StudentForm({
           )}
         </Button>
         {editingStudent && (
-          <Button variant="secondary" onClick={handleCancel} className="w-full sm:w-auto">
+          <Button variant="secondary" onClick={handleCancel} className="w-full sm:w-auto" disabled={loading}>
             <X className="w-5 h-5 mr-2" />
             <span>Batal Edit</span>
           </Button>
