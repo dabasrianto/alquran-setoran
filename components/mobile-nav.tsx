@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Home, BarChart, Users, BookOpen, Menu } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
 export function MobileNav() {
@@ -45,16 +45,16 @@ export function MobileNav() {
             <Users className="w-6 h-6" />
             <span className="text-xs mt-1">Penguji</span>
           </Link>
-          <Sheet>
-            <SheetTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <button className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted">
                 <Menu className="w-6 h-6" />
                 <span className="text-xs mt-1">Menu</span>
               </button>
-            </SheetTrigger>
-            <SheetContent side="right">
+            </DialogTrigger>
+            <DialogContent side="right" className="p-0 w-72 sm:w-80">
               <div className="py-4 space-y-4">
-                <h3 className="text-lg font-medium">Menu Aplikasi</h3>
+                <h3 className="text-lg font-medium px-4">Menu Aplikasi</h3>
                 <div className="space-y-2">
                   <Button asChild variant="ghost" className="w-full justify-start" size="lg">
                     <Link href="/">
@@ -82,8 +82,8 @@ export function MobileNav() {
                   </Button>
                 </div>
               </div>
-            </SheetContent>
-          </Sheet>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
