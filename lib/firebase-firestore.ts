@@ -9,6 +9,7 @@ import {
   orderBy,
   addDoc,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore"
 import { db } from "./firebase"
 import type { Student, Setoran, Penguji } from "./types"
@@ -285,116 +286,425 @@ export const updateSubscription = async (
   }
 }
 
-// Admin functions - Improved with better error handling
-export const getAllUsers = async (): Promise<any[]> => {
+export const isAdmin = (email: string): boolean => {
+  const adminEmails = ["dabasrianto@gmail.com"]
+  return adminEmails.includes(email.toLowerCase())
+}
+
+// Admin Functions - Get all users with their stats
+export const getAllUsersWithStats = async (): Promise<any[]> => {
   try {
+    console.log("🔍 Fetching all users from Firestore...")
+
     const database = ensureDb()
     const usersRef = collection(database, "users")
-
-    console.log("Fetching all users from Firestore...")
-
-    // Try to get all users without ordering first to see if there are permission issues
     const snapshot = await getDocs(usersRef)
 
-    console.log(`Found ${snapshot.size} users in Firestore`)
+    console.log(`📊 Found ${snapshot.size} users in Firestore`)
 
-    const users = snapshot.docs.map((doc) => {
-      const data = doc.data()
-      console.log(`Processing user: ${data.email}`, data)
+    const users = await Promise.all(
+      snapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data()
+        console.log(`👤 Processing user: ${userData.email}`)
 
-      return {
-        id: doc.id,
-        uid: data.uid || doc.id,
-        email: data.email || "",
-        displayName: data.displayName || data.email || "Unknown User",
-        photoURL: data.photoURL || null,
-        subscriptionType: data.subscriptionType || "free",
-        createdAt: convertTimestamp(data.createdAt),
-        updatedAt: convertTimestamp(data.updatedAt),
-        subscriptionExpiry: data.subscriptionExpiry ? convertTimestamp(data.subscriptionExpiry) : null,
-      }
-    })
+        // Get user stats
+        const stats = await getUserDetailedStats(userDoc.id)
+
+        return {
+          id: userDoc.id,
+          uid: userData.uid || userDoc.id,
+          email: userData.email || "",
+          displayName: userData.displayName || userData.email || "Unknown User",
+          photoURL: userData.photoURL || null,
+          subscriptionType: userData.subscriptionType || "free",
+          subscriptionExpiry: userData.subscriptionExpiry ? convertTimestamp(userData.subscriptionExpiry) : null,
+          createdAt: convertTimestamp(userData.createdAt),
+          updatedAt: convertTimestamp(userData.updatedAt),
+          lastLoginAt: userData.lastLoginAt ? convertTimestamp(userData.lastLoginAt) : null,
+          isActive: userData.isActive !== false, // default to true
+          stats,
+        }
+      }),
+    )
 
     // Sort by creation date (newest first)
     users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    console.log("Processed users:", users)
+    console.log("✅ Successfully processed all users with stats")
     return users
   } catch (error) {
-    console.error("Error getting all users:", error)
-    console.error("Error details:", {
-      code: (error as any).code,
-      message: (error as any).message,
-      stack: (error as any).stack,
-    })
+    console.error("❌ Error getting all users:", error)
     throw new Error(`Failed to load users data: ${(error as any).message}`)
   }
 }
 
-export const updateUserSubscription = async (
-  userId: string,
-  subscriptionType: "free" | "premium",
-  expiryDate?: Date,
-): Promise<void> => {
-  try {
-    const database = ensureDb()
-    const userRef = doc(database, "users", userId)
-
-    console.log(`Updating subscription for user ${userId} to ${subscriptionType}`)
-
-    const updateData: any = {
-      subscriptionType,
-      updatedAt: serverTimestamp(),
-    }
-
-    if (subscriptionType === "premium" && expiryDate) {
-      updateData.subscriptionExpiry = expiryDate
-    } else if (subscriptionType === "free") {
-      updateData.subscriptionExpiry = null
-    }
-
-    await updateDoc(userRef, updateData)
-    console.log(`Successfully updated subscription for user ${userId}`)
-  } catch (error) {
-    console.error("Error updating user subscription:", error)
-    throw new Error("Failed to update user subscription")
-  }
-}
-
-export const getUserStats = async (userId: string): Promise<any> => {
+// Get detailed stats for a user
+export const getUserDetailedStats = async (userId: string): Promise<any> => {
   try {
     const database = ensureDb()
     const studentsRef = collection(database, "users", userId, "students")
     const pengujisRef = collection(database, "users", userId, "pengujis")
 
     const [studentsSnapshot, pengujisSnapshot] = await Promise.all([
-      getDocs(studentsRef).catch(() => ({ size: 0 })), // Handle permission errors gracefully
+      getDocs(studentsRef).catch(() => ({ docs: [] })),
       getDocs(pengujisRef).catch(() => ({ docs: [] })),
     ])
 
-    const pengujis = Array.isArray(pengujisSnapshot.docs) ? pengujisSnapshot.docs.map((doc) => doc.data()) : []
+    const students = studentsSnapshot.docs.map((doc) => doc.data())
+    const pengujis = pengujisSnapshot.docs.map((doc) => doc.data())
 
+    // Calculate detailed stats
     const ustadzCount = pengujis.filter((p) => p.gender === "L").length
     const ustadzahCount = pengujis.filter((p) => p.gender === "P").length
 
+    // Calculate total hafalan stats
+    let totalAyatHafal = 0
+    let totalSetoran = 0
+
+    students.forEach((student) => {
+      if (student.hafalan && Array.isArray(student.hafalan)) {
+        totalSetoran += student.hafalan.length
+
+        // Calculate unique verses memorized
+        const uniqueVerses = new Set()
+        student.hafalan.forEach((hafalan: any) => {
+          for (let i = hafalan.start; i <= hafalan.end; i++) {
+            uniqueVerses.add(`${hafalan.surah}-${i}`)
+          }
+        })
+        totalAyatHafal += uniqueVerses.size
+      }
+    })
+
     return {
-      studentsCount: studentsSnapshot.size || 0,
+      studentsCount: students.length,
       ustadzCount,
       ustadzahCount,
       totalPengujis: pengujis.length,
+      totalAyatHafal,
+      totalSetoran,
+      totalSuratSelesai: 0,
+      lastActivity: new Date().toISOString(),
     }
   } catch (error) {
-    console.error("Error getting user stats for user:", userId, error)
+    console.error(`❌ Error getting stats for user ${userId}:`, error)
     return {
       studentsCount: 0,
       ustadzCount: 0,
       ustadzahCount: 0,
       totalPengujis: 0,
+      totalAyatHafal: 0,
+      totalSetoran: 0,
+      totalSuratSelesai: 0,
+      lastActivity: null,
     }
   }
 }
 
-export const isAdmin = (email: string): boolean => {
-  const adminEmails = ["dabasrianto@gmail.com"]
-  return adminEmails.includes(email.toLowerCase())
+// Update user subscription with detailed logging
+export const updateUserSubscription = async (
+  userId: string,
+  subscriptionType: "free" | "premium",
+  expiryDate?: Date,
+): Promise<void> => {
+  try {
+    console.log(`🔄 Updating subscription for user ${userId} to ${subscriptionType}`)
+
+    const database = ensureDb()
+    const userRef = doc(database, "users", userId)
+
+    // First, check if user exists
+    const userDoc = await getDoc(userRef)
+    if (!userDoc.exists()) {
+      throw new Error(`User with ID ${userId} not found`)
+    }
+
+    const updateData: any = {
+      subscriptionType,
+      updatedAt: serverTimestamp(),
+    }
+
+    if (subscriptionType === "premium") {
+      // Set expiry date (default 30 days if not provided)
+      const expiry = expiryDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      updateData.subscriptionExpiry = expiry
+      console.log(`📅 Setting premium expiry to: ${expiry.toISOString()}`)
+    } else {
+      // Remove expiry for free accounts
+      updateData.subscriptionExpiry = null
+      console.log("🆓 Setting to free account, removing expiry")
+    }
+
+    await updateDoc(userRef, updateData)
+
+    console.log(`✅ Successfully updated subscription for user ${userId}`)
+
+    // Log the change for admin tracking
+    console.log("📝 Admin Action Log:", {
+      targetUserId: userId,
+      action: `Subscription changed to ${subscriptionType}`,
+      details: {
+        previousType: userDoc.data()?.subscriptionType || "unknown",
+        newType: subscriptionType,
+        expiryDate: updateData.subscriptionExpiry,
+      },
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error(`❌ Error updating subscription for user ${userId}:`, error)
+    throw new Error(`Failed to update subscription: ${(error as any).message}`)
+  }
 }
+
+// Get subscription analytics
+export const getSubscriptionAnalytics = async (): Promise<any> => {
+  try {
+    console.log("📊 Calculating subscription analytics...")
+
+    const users = await getAllUsersWithStats()
+
+    const analytics = {
+      totalUsers: users.length,
+      freeUsers: users.filter((u) => u.subscriptionType === "free").length,
+      premiumUsers: users.filter((u) => u.subscriptionType === "premium").length,
+      expiredPremium: users.filter(
+        (u) => u.subscriptionType === "premium" && u.subscriptionExpiry && new Date(u.subscriptionExpiry) < new Date(),
+      ).length,
+      totalRevenue: users.filter((u) => u.subscriptionType === "premium").length * 50000, // Rp 50k per user
+      conversionRate:
+        users.length > 0
+          ? ((users.filter((u) => u.subscriptionType === "premium").length / users.length) * 100).toFixed(1)
+          : "0",
+      averageStudentsPerUser:
+        users.length > 0
+          ? (users.reduce((sum, u) => sum + (u.stats?.studentsCount || 0), 0) / users.length).toFixed(1)
+          : "0",
+      totalStudents: users.reduce((sum, u) => sum + (u.stats?.studentsCount || 0), 0),
+      totalPengujis: users.reduce((sum, u) => sum + (u.stats?.totalPengujis || 0), 0),
+      totalAyatHafal: users.reduce((sum, u) => sum + (u.stats?.totalAyatHafal || 0), 0),
+      activeUsers: users.filter((u) => u.isActive !== false).length,
+      inactiveUsers: users.filter((u) => u.isActive === false).length,
+    }
+
+    console.log("✅ Analytics calculated:", analytics)
+    return analytics
+  } catch (error) {
+    console.error("❌ Error calculating analytics:", error)
+    throw new Error(`Failed to calculate analytics: ${(error as any).message}`)
+  }
+}
+
+// Auto-downgrade expired premium users
+export const autoDowngradeExpiredUsers = async (): Promise<number> => {
+  try {
+    console.log("🔄 Checking for expired premium users...")
+
+    const users = await getAllUsersWithStats()
+    const expiredUsers = users.filter(
+      (user) =>
+        user.subscriptionType === "premium" &&
+        user.subscriptionExpiry &&
+        new Date(user.subscriptionExpiry) < new Date(),
+    )
+
+    if (expiredUsers.length === 0) {
+      console.log("✅ No expired premium users found")
+      return 0
+    }
+
+    console.log(`⏰ Found ${expiredUsers.length} expired premium users`)
+
+    const database = ensureDb()
+
+    for (const user of expiredUsers) {
+      const userRef = doc(database, "users", user.id)
+      await updateDoc(userRef, {
+        subscriptionType: "free",
+        subscriptionExpiry: null,
+        updatedAt: serverTimestamp(),
+      })
+
+      console.log(`⬇️ Downgrading expired user: ${user.email}`)
+    }
+
+    console.log(`✅ Successfully downgraded ${expiredUsers.length} expired users`)
+
+    return expiredUsers.length
+  } catch (error) {
+    console.error("❌ Error auto-downgrading expired users:", error)
+    throw new Error(`Failed to auto-downgrade expired users: ${(error as any).message}`)
+  }
+}
+
+// Bulk update multiple users (for admin operations)
+export const bulkUpdateSubscriptions = async (
+  updates: Array<{
+    userId: string
+    subscriptionType: "free" | "premium"
+    expiryDate?: Date
+  }>,
+): Promise<void> => {
+  try {
+    console.log(`🔄 Bulk updating ${updates.length} user subscriptions`)
+
+    const database = ensureDb()
+    const batch = writeBatch(database)
+
+    for (const update of updates) {
+      const userRef = doc(database, "users", update.userId)
+      const updateData: any = {
+        subscriptionType: update.subscriptionType,
+        updatedAt: serverTimestamp(),
+      }
+
+      if (update.subscriptionType === "premium") {
+        updateData.subscriptionExpiry = update.expiryDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      } else {
+        updateData.subscriptionExpiry = null
+      }
+
+      batch.update(userRef, updateData)
+    }
+
+    await batch.commit()
+
+    console.log(`✅ Successfully bulk updated ${updates.length} subscriptions`)
+  } catch (error) {
+    console.error("❌ Error in bulk update:", error)
+    throw new Error(`Failed to bulk update subscriptions: ${(error as any).message}`)
+  }
+}
+
+// Delete user and all their data
+export const deleteUser = async (userId: string): Promise<void> => {
+  try {
+    console.log(`🗑️ Deleting user ${userId} and all their data...`)
+
+    const database = ensureDb()
+    const batch = writeBatch(database)
+
+    // Delete all students
+    const studentsRef = collection(database, "users", userId, "students")
+    const studentsSnapshot = await getDocs(studentsRef)
+    studentsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    // Delete all pengujis
+    const pengujisRef = collection(database, "users", userId, "pengujis")
+    const pengujisSnapshot = await getDocs(pengujisRef)
+    pengujisSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    // Delete user document
+    const userRef = doc(database, "users", userId)
+    batch.delete(userRef)
+
+    await batch.commit()
+
+    console.log(`✅ Successfully deleted user ${userId} and all their data`)
+  } catch (error) {
+    console.error(`❌ Error deleting user ${userId}:`, error)
+    throw new Error(`Failed to delete user: ${(error as any).message}`)
+  }
+}
+
+// Update user profile
+export const updateUserProfile = async (userId: string, updates: any): Promise<void> => {
+  try {
+    console.log(`🔄 Updating profile for user ${userId}`)
+
+    const database = ensureDb()
+    const userRef = doc(database, "users", userId)
+
+    await updateDoc(userRef, {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    })
+
+    console.log(`✅ Successfully updated profile for user ${userId}`)
+  } catch (error) {
+    console.error(`❌ Error updating profile for user ${userId}:`, error)
+    throw new Error(`Failed to update user profile: ${(error as any).message}`)
+  }
+}
+
+// Toggle user active status
+export const toggleUserActiveStatus = async (userId: string, isActive: boolean): Promise<void> => {
+  try {
+    console.log(`🔄 Setting user ${userId} active status to ${isActive}`)
+
+    const database = ensureDb()
+    const userRef = doc(database, "users", userId)
+
+    await updateDoc(userRef, {
+      isActive,
+      updatedAt: serverTimestamp(),
+    })
+
+    console.log(`✅ Successfully updated active status for user ${userId}`)
+  } catch (error) {
+    console.error(`❌ Error updating active status for user ${userId}:`, error)
+    throw new Error(`Failed to update user active status: ${(error as any).message}`)
+  }
+}
+
+// Reset user data (delete all students and pengujis but keep user)
+export const resetUserData = async (userId: string): Promise<void> => {
+  try {
+    console.log(`🔄 Resetting data for user ${userId}...`)
+
+    const database = ensureDb()
+    const batch = writeBatch(database)
+
+    // Delete all students
+    const studentsRef = collection(database, "users", userId, "students")
+    const studentsSnapshot = await getDocs(studentsRef)
+    studentsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    // Delete all pengujis
+    const pengujisRef = collection(database, "users", userId, "pengujis")
+    const pengujisSnapshot = await getDocs(pengujisRef)
+    pengujisSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    await batch.commit()
+
+    console.log(`✅ Successfully reset data for user ${userId}`)
+  } catch (error) {
+    console.error(`❌ Error resetting data for user ${userId}:`, error)
+    throw new Error(`Failed to reset user data: ${(error as any).message}`)
+  }
+}
+
+// Search users
+export const searchUsers = async (searchTerm: string): Promise<any[]> => {
+  try {
+    console.log(`🔍 Searching users with term: ${searchTerm}`)
+
+    const users = await getAllUsersWithStats()
+
+    const filteredUsers = users.filter((user) => {
+      const term = searchTerm.toLowerCase()
+      return (
+        user.email?.toLowerCase().includes(term) ||
+        user.displayName?.toLowerCase().includes(term) ||
+        user.id.toLowerCase().includes(term)
+      )
+    })
+
+    console.log(`✅ Found ${filteredUsers.length} users matching search term`)
+    return filteredUsers
+  } catch (error) {
+    console.error("❌ Error searching users:", error)
+    throw new Error(`Failed to search users: ${(error as any).message}`)
+  }
+}
+
+// Alias for backward compatibility
+export const getAllUsers = getAllUsersWithStats
+export const getUserStats = getUserDetailedStats

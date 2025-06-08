@@ -24,8 +24,8 @@ export default function SubscriptionBanner() {
     alert(
       "Upgrade ke Premium!\n\n" +
         "Untuk upgrade saat ini, silakan hubungi admin:\n\n" +
-        "📱 WhatsApp: +62 812-3456-7890\n" +
-        "📧 Email: admin@tasmi.app\n\n" +
+        "📱 WhatsApp: +628977712345\n" +
+        "📧 Email: akhisejahtera@gmail.com\n\n" +
         `Sertakan email akun Anda: ${userProfile.email}\n\n` +
         "Harga: Rp 50.000/bulan\n" +
         "Benefit: Unlimited murid, ustadz, dan ustadzah",

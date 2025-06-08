@@ -6,17 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, Crown, AlertTriangle, RefreshCw } from "lucide-react"
+import { Shield, AlertTriangle, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import AdminUsersList from "@/components/admin/admin-users-list"
 import AdminStats from "@/components/admin/admin-stats"
 import AdminDebug from "@/components/admin/admin-debug"
+import SubscriptionManager from "@/components/admin/subscription-manager"
+import UserManagement from "@/components/admin/user-management"
 import LoginPage from "@/components/auth/login-page"
 import FirebaseRulesSetup from "@/components/admin/firebase-rules-setup"
 
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth()
-  const { users, loading, error, isAdmin, refreshUsers } = useAdmin()
+  const { users, analytics, loading, error, isAdmin, refreshData } = useAdmin()
 
   console.log("AdminPage render:", {
     user: user?.email,
@@ -24,6 +26,7 @@ export default function AdminPage() {
     usersCount: users?.length,
     loading,
     error,
+    analytics,
   })
 
   if (authLoading) {
@@ -72,7 +75,7 @@ export default function AdminPage() {
             <p className="text-sm text-green-600 mt-1">✅ Logged in as admin: {user.email}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={refreshUsers} disabled={loading}>
+            <Button variant="outline" onClick={refreshData} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Refresh Data
             </Button>
@@ -94,7 +97,7 @@ export default function AdminPage() {
             <AlertDescription>
               <strong>Error:</strong> {error}
               <br />
-              <Button variant="outline" size="sm" onClick={refreshUsers} className="mt-2">
+              <Button variant="outline" size="sm" onClick={refreshData} className="mt-2">
                 Coba Lagi
               </Button>
             </AlertDescription>
@@ -104,8 +107,9 @@ export default function AdminPage() {
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Kelola Pengguna</TabsTrigger>
+            <TabsTrigger value="users">Kelola User</TabsTrigger>
             <TabsTrigger value="subscriptions">Kelola Langganan</TabsTrigger>
+            <TabsTrigger value="data">Data Pengguna</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -113,22 +117,15 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="users">
-            <AdminUsersList users={users} loading={loading} onRefresh={refreshUsers} />
+            <UserManagement users={users} loading={loading} onRefresh={refreshData} />
           </TabsContent>
 
           <TabsContent value="subscriptions">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-amber-600" />
-                  Kelola Langganan
-                </CardTitle>
-                <CardDescription>Kelola paket langganan pengguna dan upgrade/downgrade akun</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AdminUsersList users={users} loading={loading} onRefresh={refreshUsers} showSubscriptionActions />
-              </CardContent>
-            </Card>
+            <SubscriptionManager users={users} analytics={analytics} loading={loading} onRefresh={refreshData} />
+          </TabsContent>
+
+          <TabsContent value="data">
+            <AdminUsersList users={users} loading={loading} onRefresh={refreshData} />
           </TabsContent>
         </Tabs>
       </div>

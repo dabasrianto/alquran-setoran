@@ -71,15 +71,7 @@ export default function LoginPage() {
           </div>
 
           {/* Development info */}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
-            <p>
-              <strong>Info Development:</strong>
-            </p>
-            <p>
-              Jika ada error "unauthorized domain", pastikan domain sudah ditambahkan di Firebase Console →
-              Authentication → Settings → Authorized domains
-            </p>
-          </div>
+       
         </CardContent>
       </Card>
     </div>
