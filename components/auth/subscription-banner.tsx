@@ -20,6 +20,18 @@ export default function SubscriptionBanner() {
 
   const { limits } = subscriptionStatus
 
+  const handleUpgradeClick = () => {
+    alert(
+      "Upgrade ke Premium!\n\n" +
+        "Untuk upgrade saat ini, silakan hubungi admin:\n\n" +
+        "📱 WhatsApp: +62 812-3456-7890\n" +
+        "📧 Email: admin@tasmi.app\n\n" +
+        `Sertakan email akun Anda: ${userProfile.email}\n\n` +
+        "Harga: Rp 50.000/bulan\n" +
+        "Benefit: Unlimited murid, ustadz, dan ustadzah",
+    )
+  }
+
   return (
     <Card className="border-amber-200 bg-amber-50">
       <CardContent className="p-4">
@@ -45,7 +57,7 @@ export default function SubscriptionBanner() {
             </div>
             <p className="text-xs text-amber-700">Upgrade ke Premium untuk unlimited data - hanya Rp 50.000/bulan</p>
           </div>
-          <Button size="sm" className="bg-amber-600 hover:bg-amber-700">
+          <Button size="sm" className="bg-amber-600 hover:bg-amber-700" onClick={handleUpgradeClick}>
             Upgrade Premium
           </Button>
         </div>

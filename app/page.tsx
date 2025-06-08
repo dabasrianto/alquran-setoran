@@ -3,14 +3,14 @@
 import TasmiApp from "@/components/tasmi-app"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BarChart, Users, BookOpen } from "lucide-react"
+import { BarChart, Users, BookOpen, Shield } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import LoginPage from "@/components/auth/login-page"
 import SubscriptionBanner from "@/components/auth/subscription-banner"
 import UserMenu from "@/components/auth/user-menu"
 
 export default function Home() {
-  const { user, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
 
   if (loading) {
     return (
@@ -48,6 +48,14 @@ export default function Home() {
                 Dashboard
               </Link>
             </Button>
+            {isAdmin && (
+              <Button asChild variant="destructive">
+                <Link href="/admin">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin
+                </Link>
+              </Button>
+            )}
             <UserMenu />
           </div>
         </div>

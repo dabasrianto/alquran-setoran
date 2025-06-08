@@ -21,54 +21,19 @@ if (missingKeys.length > 0) {
 }
 
 // Initialize Firebase app
-let app
-try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-} catch (error) {
-  console.error("Error initializing Firebase app:", error)
-  throw error
-}
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 // Initialize Firebase Auth
-let auth
-let googleProvider
-try {
-  auth = getAuth(app)
-  googleProvider = new GoogleAuthProvider()
+const auth = getAuth(app)
 
-  // Configure Google provider
-  googleProvider.setCustomParameters({
-    prompt: "select_account",
-  })
-} catch (error) {
-  console.error("Error initializing Firebase Auth:", error)
-  throw error
-}
+// Initialize Google Provider
+const googleProvider = new GoogleAuthProvider()
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+})
 
 // Initialize Firestore
-let db
-try {
-  db = getFirestore(app)
-} catch (error) {
-  console.error("Error initializing Firestore:", error)
-  throw error
-}
-
-// Only connect to emulators in development and if not already connected
-if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
-  try {
-    // Check if emulators are already connected
-    if (!auth._delegate._config?.emulator) {
-      // connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true })
-    }
-    // if (!db._delegate._databaseId?.projectId?.includes('demo-')) {
-    //   connectFirestoreEmulator(db, 'localhost', 8080)
-    // }
-  } catch (error) {
-    // Emulator connection errors are non-critical in production
-    console.warn("Could not connect to Firebase emulators:", error)
-  }
-}
+const db = getFirestore(app)
 
 export { auth, googleProvider, db }
 export default app

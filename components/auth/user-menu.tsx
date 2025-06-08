@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, Crown, User } from "lucide-react"
+import { LogOut, Crown, User, Sparkles } from "lucide-react"
 
 export default function UserMenu() {
   const { user, userProfile, signOut } = useAuth()
@@ -29,7 +29,14 @@ export default function UserMenu() {
     }
   }
 
+  const handleUpgradeClick = () => {
+    // Simple alert for now to test if click works
+    alert("Upgrade feature clicked! Modal akan segera ditampilkan.")
+  }
+
   if (!user) return null
+
+  const isPremium = userProfile?.subscriptionType === "premium"
 
   return (
     <DropdownMenu>
@@ -47,10 +54,10 @@ export default function UserMenu() {
             <p className="text-sm font-medium leading-none">{user.displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             <div className="flex items-center gap-1 mt-1">
-              {userProfile?.subscriptionType === "premium" ? (
+              {isPremium ? (
                 <>
                   <Crown className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs text-yellow-600">Premium</span>
+                  <span className="text-xs text-yellow-600 font-medium">Premium</span>
                 </>
               ) : (
                 <>
@@ -62,6 +69,17 @@ export default function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+
+        {!isPremium && (
+          <>
+            <DropdownMenuItem onClick={handleUpgradeClick}>
+              <Sparkles className="mr-2 h-4 w-4 text-amber-600" />
+              <span className="text-amber-600 font-medium">Upgrade Premium</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         <DropdownMenuItem onClick={handleSignOut} disabled={loading}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>

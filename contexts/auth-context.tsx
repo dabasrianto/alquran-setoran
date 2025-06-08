@@ -4,12 +4,13 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "firebase/auth"
 import { onAuthStateChange, signInWithGoogle, signOut } from "@/lib/firebase-auth"
-import { getUserProfile } from "@/lib/firebase-firestore"
+import { getUserProfile, isAdmin } from "@/lib/firebase-firestore"
 
 interface AuthContextType {
   user: User | null
   userProfile: any | null
   loading: boolean
+  isAdmin: boolean
   signIn: () => Promise<void>
   signOut: () => Promise<void>
   error: string | null
@@ -22,34 +23,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isUserAdmin, setIsUserAdmin] = useState(false)
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined
 
-    try {
-      unsubscribe = onAuthStateChange(async (user) => {
-        setUser(user)
-        setError(null)
+    // Add a small delay to ensure Firebase is fully initialized
+    const initializeAuth = async () => {
+      try {
+        // Wait a bit for Firebase to initialize
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
-        if (user) {
-          try {
-            const profile = await getUserProfile(user.uid)
-            setUserProfile(profile)
-          } catch (error) {
-            console.error("Error fetching user profile:", error)
-            setError("Failed to load user profile")
+        unsubscribe = onAuthStateChange(async (user) => {
+          setUser(user)
+          setError(null)
+
+          if (user) {
+            try {
+              const profile = await getUserProfile(user.uid)
+              setUserProfile(profile)
+              setIsUserAdmin(isAdmin(user.email || ""))
+            } catch (error) {
+              console.error("Error fetching user profile:", error)
+              setError("Failed to load user profile")
+            }
+          } else {
+            setUserProfile(null)
+            setIsUserAdmin(false)
           }
-        } else {
-          setUserProfile(null)
-        }
 
+          setLoading(false)
+        })
+      } catch (error: any) {
+        console.error("Error setting up auth state listener:", error)
+        setError("Failed to initialize authentication")
         setLoading(false)
-      })
-    } catch (error: any) {
-      console.error("Error setting up auth state listener:", error)
-      setError("Failed to initialize authentication")
-      setLoading(false)
+      }
     }
+
+    initializeAuth()
 
     return () => {
       if (unsubscribe) {
@@ -84,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     userProfile,
     loading,
+    isAdmin: isUserAdmin,
     signIn: handleSignIn,
     signOut: handleSignOut,
     error,

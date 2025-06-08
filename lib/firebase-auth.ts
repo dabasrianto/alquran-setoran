@@ -15,7 +15,7 @@ export interface UserProfile {
 
 export const signInWithGoogle = async (): Promise<UserProfile | null> => {
   try {
-    // Check if auth is properly initialized
+    // Wait for auth to be ready
     if (!auth) {
       throw new Error("Firebase Auth not initialized")
     }

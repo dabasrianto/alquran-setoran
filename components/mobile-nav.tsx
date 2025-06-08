@@ -2,13 +2,18 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, BarChart, Users, BookOpen, Menu } from "lucide-react"
+import { Home, BarChart, Users, BookOpen, Menu, Crown, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
+import UpgradeModal from "@/components/auth/upgrade-modal"
 
 export function MobileNav() {
   const pathname = usePathname()
+  const { userProfile, isAdmin } = useAuth()
+
+  const isPremium = userProfile?.subscriptionType === "premium"
 
   return (
     <>
@@ -55,7 +60,7 @@ export function MobileNav() {
             <DialogContent side="right" className="p-0 w-72 sm:w-80">
               <div className="py-4 space-y-4">
                 <h3 className="text-lg font-medium px-4">Menu Aplikasi</h3>
-                <div className="space-y-2">
+                <div className="space-y-2 px-4">
                   <Button asChild variant="ghost" className="w-full justify-start" size="lg">
                     <Link href="/">
                       <Home className="mr-2 h-5 w-5" />
@@ -80,6 +85,22 @@ export function MobileNav() {
                       Panduan
                     </Link>
                   </Button>
+                  {isAdmin && (
+                    <Button asChild variant="ghost" className="w-full justify-start text-red-600" size="lg">
+                      <Link href="/admin">
+                        <Shield className="mr-2 h-5 w-5" />
+                        Admin Panel
+                      </Link>
+                    </Button>
+                  )}
+                  {!isPremium && (
+                    <UpgradeModal>
+                      <Button variant="ghost" className="w-full justify-start text-amber-600" size="lg">
+                        <Crown className="mr-2 h-5 w-5" />
+                        Upgrade Premium
+                      </Button>
+                    </UpgradeModal>
+                  )}
                 </div>
               </div>
             </DialogContent>

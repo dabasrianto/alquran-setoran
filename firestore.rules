@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in [
+        'dabasrianto@gmail.com'
+      ];
+    }
+    
+    // Function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users collection - Admin can read all, users can read/write their own
+    match /users/{userId} {
+      // Admin can read all user documents
+      allow read: if isAdmin();
+      
+      // Users can read and write their own profile
+      allow read, write: if isOwner(userId);
+      
+      // Admin can update any user (for subscription management)
+      allow write: if isAdmin();
+      
+      // Allow user creation during signup
+      allow create: if isAuthenticated() && isOwner(userId);
+      
+      // Students subcollection
+      match /students/{studentId} {
+        allow read, write: if isOwner(userId);
+        allow read: if isAdmin(); // Admin can read all students
+      }
+      
+      // Pengujis subcollection  
+      match /pengujis/{pengujiId} {
+        allow read, write: if isOwner(userId);
+        allow read: if isAdmin(); // Admin can read all pengujis
+      }
+    }
+    
+    // Admin-only collections (if needed in future)
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System logs (admin only)
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

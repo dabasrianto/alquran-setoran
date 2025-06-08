@@ -24,14 +24,19 @@ const convertTimestamp = (timestamp: any): string => {
   return timestamp || new Date().toISOString()
 }
 
+// Helper function to ensure db is available
+const ensureDb = () => {
+  if (!db) {
+    throw new Error("Firestore not initialized. Please check your Firebase configuration.")
+  }
+  return db
+}
+
 // Students
 export const getStudents = async (userId: string): Promise<Student[]> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentsRef = collection(db, "users", userId, "students")
+    const database = ensureDb()
+    const studentsRef = collection(database, "users", userId, "students")
     const q = query(studentsRef, orderBy("name"))
     const snapshot = await getDocs(q)
 
@@ -56,11 +61,8 @@ export const getStudents = async (userId: string): Promise<Student[]> => {
 
 export const addStudent = async (userId: string, student: Omit<Student, "id">): Promise<string> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentsRef = collection(db, "users", userId, "students")
+    const database = ensureDb()
+    const studentsRef = collection(database, "users", userId, "students")
     const docRef = await addDoc(studentsRef, {
       ...student,
       createdAt: serverTimestamp(),
@@ -75,11 +77,8 @@ export const addStudent = async (userId: string, student: Omit<Student, "id">): 
 
 export const updateStudent = async (userId: string, studentId: string, updates: Partial<Student>): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentRef = doc(db, "users", userId, "students", studentId)
+    const database = ensureDb()
+    const studentRef = doc(database, "users", userId, "students", studentId)
     await updateDoc(studentRef, {
       ...updates,
       updatedAt: serverTimestamp(),
@@ -92,11 +91,8 @@ export const updateStudent = async (userId: string, studentId: string, updates: 
 
 export const deleteStudent = async (userId: string, studentId: string): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentRef = doc(db, "users", userId, "students", studentId)
+    const database = ensureDb()
+    const studentRef = doc(database, "users", userId, "students", studentId)
     await deleteDoc(studentRef)
   } catch (error) {
     console.error("Error deleting student:", error)
@@ -106,11 +102,8 @@ export const deleteStudent = async (userId: string, studentId: string): Promise<
 
 export const addSetoran = async (userId: string, studentId: string, setoran: Omit<Setoran, "id">): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentRef = doc(db, "users", userId, "students", studentId)
+    const database = ensureDb()
+    const studentRef = doc(database, "users", userId, "students", studentId)
     const studentDoc = await getDoc(studentRef)
 
     if (studentDoc.exists()) {
@@ -143,11 +136,8 @@ export const updateSetoran = async (
   updates: Partial<Setoran>,
 ): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentRef = doc(db, "users", userId, "students", studentId)
+    const database = ensureDb()
+    const studentRef = doc(database, "users", userId, "students", studentId)
     const studentDoc = await getDoc(studentRef)
 
     if (studentDoc.exists()) {
@@ -171,11 +161,8 @@ export const updateSetoran = async (
 
 export const deleteSetoran = async (userId: string, studentId: string, setoranId: string): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const studentRef = doc(db, "users", userId, "students", studentId)
+    const database = ensureDb()
+    const studentRef = doc(database, "users", userId, "students", studentId)
     const studentDoc = await getDoc(studentRef)
 
     if (studentDoc.exists()) {
@@ -200,11 +187,8 @@ export const deleteSetoran = async (userId: string, studentId: string, setoranId
 // Penguji/Ustadz
 export const getPengujis = async (userId: string): Promise<Penguji[]> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const pengujisRef = collection(db, "users", userId, "pengujis")
+    const database = ensureDb()
+    const pengujisRef = collection(database, "users", userId, "pengujis")
     const q = query(pengujisRef, orderBy("name"))
     const snapshot = await getDocs(q)
 
@@ -220,11 +204,8 @@ export const getPengujis = async (userId: string): Promise<Penguji[]> => {
 
 export const addPenguji = async (userId: string, penguji: Omit<Penguji, "id">): Promise<string> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const pengujisRef = collection(db, "users", userId, "pengujis")
+    const database = ensureDb()
+    const pengujisRef = collection(database, "users", userId, "pengujis")
     const docRef = await addDoc(pengujisRef, {
       ...penguji,
       createdAt: serverTimestamp(),
@@ -239,11 +220,8 @@ export const addPenguji = async (userId: string, penguji: Omit<Penguji, "id">): 
 
 export const updatePenguji = async (userId: string, pengujiId: string, updates: Partial<Penguji>): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const pengujiRef = doc(db, "users", userId, "pengujis", pengujiId)
+    const database = ensureDb()
+    const pengujiRef = doc(database, "users", userId, "pengujis", pengujiId)
     await updateDoc(pengujiRef, {
       ...updates,
       updatedAt: serverTimestamp(),
@@ -256,11 +234,8 @@ export const updatePenguji = async (userId: string, pengujiId: string, updates: 
 
 export const deletePenguji = async (userId: string, pengujiId: string): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const pengujiRef = doc(db, "users", userId, "pengujis", pengujiId)
+    const database = ensureDb()
+    const pengujiRef = doc(database, "users", userId, "pengujis", pengujiId)
     await deleteDoc(pengujiRef)
   } catch (error) {
     console.error("Error deleting penguji:", error)
@@ -271,11 +246,8 @@ export const deletePenguji = async (userId: string, pengujiId: string): Promise<
 // User subscription management
 export const getUserProfile = async (userId: string): Promise<any> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const userRef = doc(db, "users", userId)
+    const database = ensureDb()
+    const userRef = doc(database, "users", userId)
     const userDoc = await getDoc(userRef)
 
     if (userDoc.exists()) {
@@ -300,11 +272,8 @@ export const updateSubscription = async (
   expiryDate?: Date,
 ): Promise<void> => {
   try {
-    if (!db) {
-      throw new Error("Firestore not initialized")
-    }
-
-    const userRef = doc(db, "users", userId)
+    const database = ensureDb()
+    const userRef = doc(database, "users", userId)
     await updateDoc(userRef, {
       subscriptionType,
       subscriptionExpiry: expiryDate ? expiryDate : null,
@@ -314,4 +283,118 @@ export const updateSubscription = async (
     console.error("Error updating subscription:", error)
     throw new Error("Failed to update subscription")
   }
+}
+
+// Admin functions - Improved with better error handling
+export const getAllUsers = async (): Promise<any[]> => {
+  try {
+    const database = ensureDb()
+    const usersRef = collection(database, "users")
+
+    console.log("Fetching all users from Firestore...")
+
+    // Try to get all users without ordering first to see if there are permission issues
+    const snapshot = await getDocs(usersRef)
+
+    console.log(`Found ${snapshot.size} users in Firestore`)
+
+    const users = snapshot.docs.map((doc) => {
+      const data = doc.data()
+      console.log(`Processing user: ${data.email}`, data)
+
+      return {
+        id: doc.id,
+        uid: data.uid || doc.id,
+        email: data.email || "",
+        displayName: data.displayName || data.email || "Unknown User",
+        photoURL: data.photoURL || null,
+        subscriptionType: data.subscriptionType || "free",
+        createdAt: convertTimestamp(data.createdAt),
+        updatedAt: convertTimestamp(data.updatedAt),
+        subscriptionExpiry: data.subscriptionExpiry ? convertTimestamp(data.subscriptionExpiry) : null,
+      }
+    })
+
+    // Sort by creation date (newest first)
+    users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    console.log("Processed users:", users)
+    return users
+  } catch (error) {
+    console.error("Error getting all users:", error)
+    console.error("Error details:", {
+      code: (error as any).code,
+      message: (error as any).message,
+      stack: (error as any).stack,
+    })
+    throw new Error(`Failed to load users data: ${(error as any).message}`)
+  }
+}
+
+export const updateUserSubscription = async (
+  userId: string,
+  subscriptionType: "free" | "premium",
+  expiryDate?: Date,
+): Promise<void> => {
+  try {
+    const database = ensureDb()
+    const userRef = doc(database, "users", userId)
+
+    console.log(`Updating subscription for user ${userId} to ${subscriptionType}`)
+
+    const updateData: any = {
+      subscriptionType,
+      updatedAt: serverTimestamp(),
+    }
+
+    if (subscriptionType === "premium" && expiryDate) {
+      updateData.subscriptionExpiry = expiryDate
+    } else if (subscriptionType === "free") {
+      updateData.subscriptionExpiry = null
+    }
+
+    await updateDoc(userRef, updateData)
+    console.log(`Successfully updated subscription for user ${userId}`)
+  } catch (error) {
+    console.error("Error updating user subscription:", error)
+    throw new Error("Failed to update user subscription")
+  }
+}
+
+export const getUserStats = async (userId: string): Promise<any> => {
+  try {
+    const database = ensureDb()
+    const studentsRef = collection(database, "users", userId, "students")
+    const pengujisRef = collection(database, "users", userId, "pengujis")
+
+    const [studentsSnapshot, pengujisSnapshot] = await Promise.all([
+      getDocs(studentsRef).catch(() => ({ size: 0 })), // Handle permission errors gracefully
+      getDocs(pengujisRef).catch(() => ({ docs: [] })),
+    ])
+
+    const pengujis = Array.isArray(pengujisSnapshot.docs) ? pengujisSnapshot.docs.map((doc) => doc.data()) : []
+
+    const ustadzCount = pengujis.filter((p) => p.gender === "L").length
+    const ustadzahCount = pengujis.filter((p) => p.gender === "P").length
+
+    return {
+      studentsCount: studentsSnapshot.size || 0,
+      ustadzCount,
+      ustadzahCount,
+      totalPengujis: pengujis.length,
+    }
+  } catch (error) {
+    console.error("Error getting user stats for user:", userId, error)
+    return {
+      studentsCount: 0,
+      ustadzCount: 0,
+      ustadzahCount: 0,
+      totalPengujis: 0,
+    }
+  }
+}
+
+export const isAdmin = (email: string): boolean => {
+  const adminEmails = ["dabasrianto@gmail.com"]
+  return adminEmails.includes(email.toLowerCase())
 }
