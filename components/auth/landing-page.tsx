@@ -194,89 +194,42 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="login">Login</TabsTrigger>
-                      <TabsTrigger value="register">Daftar</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="login" className="space-y-4">
-                      {displayError && (
-                        <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{displayError}</AlertDescription>
-                        </Alert>
-                      )}
+                  {displayError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{displayError}</AlertDescription>
+                    </Alert>
+                  )}
 
-                      {/* Email Auth Form */}
-                      <EmailAuthForm onSuccess={() => {
-                        // Login berhasil, akan redirect otomatis
-                      }} />
+                  {/* Email Auth Form */}
+                  <EmailAuthForm onSuccess={() => {
+                    // Login berhasil, akan redirect otomatis
+                  }} />
 
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">Atau</span>
-                        </div>
-                      </div>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Atau</span>
+                    </div>
+                  </div>
 
-                      <Button 
-                        onClick={handleGoogleSignIn} 
-                        disabled={loading} 
-                        variant="outline" 
-                        className="w-full"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Signing in...
-                          </>
-                        ) : (
-                          "Masuk dengan Google"
-                        )}
-                      </Button>
-                    </TabsContent>
-
-                    <TabsContent value="register" className="space-y-4">
-                      {displayError && (
-                        <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{displayError}</AlertDescription>
-                        </Alert>
-                      )}
-
-                      {/* Email Auth Form for Registration */}
-                      <EmailAuthForm onSuccess={() => {
-                        // Registration berhasil, akan redirect otomatis
-                      }} />
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">Atau</span>
-                        </div>
-                      </div>
-
-                      <Button 
-                        onClick={handleGoogleSignIn} 
-                        disabled={loading} 
-                        className="w-full"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Signing in...
-                          </>
-                        ) : (
-                          "Daftar dengan Google"
-                        )}
-                      </Button>
-                    </TabsContent>
-                  </Tabs>
+                  <Button 
+                    onClick={handleGoogleSignIn} 
+                    disabled={loading} 
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      "Masuk dengan Google"
+                    )}
+                  </Button>
 
                   <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <h4 className="font-semibold text-amber-800 mb-2">Paket Langganan:</h4>
