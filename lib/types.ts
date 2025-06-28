@@ -51,3 +51,82 @@ export interface StudentSummary {
 export interface StudentWithSummary extends Student {
   summary: StudentSummary
 }
+
+// Premium Tier Types
+export type SubscriptionTier = "basic" | "premium" | "pro" | "institution"
+
+export interface TierFeatures {
+  maxStudents: number
+  maxUstadz: number
+  maxUstadzah: number
+  exportPDF: boolean
+  prioritySupport: boolean
+  customReports: boolean
+  multipleInstitutions: boolean
+  apiAccess: boolean
+  advancedAnalytics: boolean
+  bulkImport: boolean
+}
+
+export interface SubscriptionTierInfo {
+  id: SubscriptionTier
+  name: string
+  description: string
+  price: number
+  currency: string
+  billingPeriod: "monthly" | "yearly"
+  features: TierFeatures
+  popular?: boolean
+  recommended?: boolean
+}
+
+// Upgrade Request Types
+export interface UpgradeRequest {
+  id: string
+  userId: string
+  userEmail: string
+  userName: string
+  currentTier: SubscriptionTier
+  requestedTier: SubscriptionTier
+  status: "pending" | "approved" | "rejected" | "payment_pending" | "completed"
+  paymentStatus: "none" | "pending" | "processing" | "completed" | "failed" | "refunded"
+  paymentId?: string
+  paymentMethod?: string
+  amount: number
+  currency: string
+  requestDate: string
+  processedDate?: string
+  processedBy?: string
+  notes?: string
+  paymentUrl?: string
+  expiryDate?: string
+}
+
+// Payment Types
+export interface PaymentInfo {
+  id: string
+  upgradeRequestId: string
+  userId: string
+  amount: number
+  currency: string
+  method: "bank_transfer" | "ewallet" | "credit_card" | "qris"
+  status: "pending" | "processing" | "completed" | "failed" | "refunded"
+  gatewayTransactionId?: string
+  gatewayResponse?: any
+  createdAt: string
+  completedAt?: string
+  failureReason?: string
+}
+
+// Admin Action Log
+export interface AdminActionLog {
+  id: string
+  adminId: string
+  adminEmail: string
+  action: string
+  targetType: "user" | "upgrade_request" | "payment"
+  targetId: string
+  details: any
+  timestamp: string
+  ipAddress?: string
+}

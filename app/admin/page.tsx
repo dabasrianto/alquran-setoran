@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, AlertTriangle, RefreshCw } from "lucide-react"
+import { Shield, AlertTriangle, RefreshCw, Crown } from "lucide-react"
 import Link from "next/link"
 import AdminUsersList from "@/components/admin/admin-users-list"
 import AdminStats from "@/components/admin/admin-stats"
 import AdminDebug from "@/components/admin/admin-debug"
 import SubscriptionManager from "@/components/admin/subscription-manager"
 import UserManagement from "@/components/admin/user-management"
+import PremiumDashboard from "@/components/admin/premium-dashboard"
 import LoginPage from "@/components/auth/login-page"
 import FirebaseRulesSetup from "@/components/admin/firebase-rules-setup"
 
@@ -71,7 +72,7 @@ export default function AdminPage() {
               <Shield className="h-8 w-8 text-red-600" />
               Admin Dashboard
             </h1>
-            <p className="text-muted-foreground mt-1">Kelola pengguna dan langganan aplikasi Tasmi'</p>
+            <p className="text-muted-foreground mt-1">Kelola pengguna, langganan, dan premium upgrades</p>
             <p className="text-sm text-green-600 mt-1">✅ Logged in as admin: {user.email}</p>
           </div>
           <div className="flex gap-2">
@@ -104,13 +105,21 @@ export default function AdminPage() {
           </Alert>
         )}
 
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="premium" className="w-full">
           <TabsList className="mb-6">
+            <TabsTrigger value="premium" className="flex items-center gap-2">
+              <Crown className="h-4 w-4" />
+              Premium Management
+            </TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Kelola User</TabsTrigger>
             <TabsTrigger value="subscriptions">Kelola Langganan</TabsTrigger>
             <TabsTrigger value="data">Data Pengguna</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="premium">
+            <PremiumDashboard />
+          </TabsContent>
 
           <TabsContent value="overview">
             <AdminStats users={users} loading={loading} />
