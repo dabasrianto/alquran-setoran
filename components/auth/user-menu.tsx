@@ -30,8 +30,12 @@ export default function UserMenu() {
   }
 
   const handleUpgradeClick = () => {
-    // Simple alert for now to test if click works
-    alert("Upgrade feature clicked! Modal akan segera ditampilkan.")
+    const phoneNumber = "+628977712345"
+    const message = "Bismillah, afwan Admin saya ingin upgrade ke premium"
+    const encodedMessage = encodeURIComponent(message)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+    
+    window.open(whatsappUrl, '_blank')
   }
 
   if (!user) return null

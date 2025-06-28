@@ -7,13 +7,21 @@ import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
-import UpgradeModal from "@/components/auth/upgrade-modal"
 
 export function MobileNav() {
   const pathname = usePathname()
   const { userProfile, isAdmin } = useAuth()
 
   const isPremium = userProfile?.subscriptionType === "premium"
+
+  const handleUpgradeClick = () => {
+    const phoneNumber = "+628977712345"
+    const message = "Bismillah, afwan Admin saya ingin upgrade ke premium"
+    const encodedMessage = encodeURIComponent(message)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+    
+    window.open(whatsappUrl, '_blank')
+  }
 
   return (
     <>
@@ -94,12 +102,15 @@ export function MobileNav() {
                     </Button>
                   )}
                   {!isPremium && (
-                    <UpgradeModal>
-                      <Button variant="ghost" className="w-full justify-start text-amber-600" size="lg">
-                        <Crown className="mr-2 h-5 w-5" />
-                        Upgrade Premium
-                      </Button>
-                    </UpgradeModal>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-amber-600" 
+                      size="lg"
+                      onClick={handleUpgradeClick}
+                    >
+                      <Crown className="mr-2 h-5 w-5" />
+                      Upgrade Premium
+                    </Button>
                   )}
                 </div>
               </div>

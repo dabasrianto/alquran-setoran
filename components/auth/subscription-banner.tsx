@@ -21,15 +21,12 @@ export default function SubscriptionBanner() {
   const { limits } = subscriptionStatus
 
   const handleUpgradeClick = () => {
-    alert(
-      "Upgrade ke Premium!\n\n" +
-        "Untuk upgrade saat ini, silakan hubungi admin:\n\n" +
-        "📱 WhatsApp: +628977712345\n" +
-        "📧 Email: akhisejahtera@gmail.com\n\n" +
-        `Sertakan email akun Anda: ${userProfile.email}\n\n` +
-        "Harga: Rp 50.000/bulan\n" +
-        "Benefit: Unlimited murid, ustadz, dan ustadzah",
-    )
+    const phoneNumber = "+628977712345"
+    const message = "Bismillah, afwan Admin saya ingin upgrade ke premium"
+    const encodedMessage = encodeURIComponent(message)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+    
+    window.open(whatsappUrl, '_blank')
   }
 
   return (
