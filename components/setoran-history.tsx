@@ -29,7 +29,7 @@ export default function SetoranHistory({ student, pengujis, onDeleteSetoran, onE
   }
 
   const getPengujiName = (pengujiId?: string) => {
-    if (!pengujiId) return null
+    if (!pengujiId || pengujiId === "no-penguji") return null
     const penguji = pengujis.find((p) => p.id === pengujiId)
     if (!penguji) return null
     return `${penguji.gender === "L" ? "Ustadz" : "Ustadzah"} ${penguji.name}`

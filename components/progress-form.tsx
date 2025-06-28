@@ -36,7 +36,7 @@ export default function ProgressForm({
   const [endAyah, setEndAyah] = useState("")
   const [penilaian, setPenilaian] = useState("")
   const [catatan, setCatatan] = useState("")
-  const [pengujiId, setPengujiId] = useState("")
+  const [pengujiId, setPengujiId] = useState("no-penguji")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -50,7 +50,7 @@ export default function ProgressForm({
       setEndAyah(setoran.end.toString())
       setPenilaian(setoran.penilaian || "")
       setCatatan(setoran.catatan || "")
-      setPengujiId(setoran.pengujiId || "")
+      setPengujiId(setoran.pengujiId || "no-penguji")
     } else {
       resetForm()
     }
@@ -62,7 +62,7 @@ export default function ProgressForm({
     setEndAyah("")
     setPenilaian("")
     setCatatan("")
-    setPengujiId("")
+    setPengujiId("no-penguji")
     setError("")
     setShowPreview(false)
   }
@@ -130,7 +130,7 @@ export default function ProgressForm({
         penilaian,
         catatan: catatan.trim(),
         timestamp: editingSetoran?.setoran.timestamp || new Date().toISOString(),
-        pengujiId: pengujiId || undefined,
+        pengujiId: pengujiId === "no-penguji" ? undefined : pengujiId,
       }
 
       await onSubmit(setoranData)
@@ -344,7 +344,7 @@ export default function ProgressForm({
                 <SelectValue placeholder="-- Pilih Penguji --" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tidak Ada</SelectItem>
+                <SelectItem value="no-penguji">Tidak Ada</SelectItem>
                 {pengujis.map((penguji) => (
                   <SelectItem key={penguji.id} value={penguji.id}>
                     {penguji.gender === "L" ? "Ustadz" : "Ustadzah"} {penguji.name}
