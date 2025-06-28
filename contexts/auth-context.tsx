@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "firebase/auth"
 import { onAuthStateChange, signInWithGoogle, signOut } from "@/lib/firebase-auth"
+import { signInWithEmail, signUpWithEmail, resetPassword } from "@/lib/firebase-email-auth"
 import { getUserProfile, isAdmin } from "@/lib/firebase-firestore"
 
 interface AuthContextType {
@@ -12,6 +13,9 @@ interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   signIn: () => Promise<void>
+  signInEmail: (email: string, password: string) => Promise<void>
+  signUpEmail: (email: string, password: string, displayName: string) => Promise<void>
+  resetPasswordEmail: (email: string) => Promise<void>
   signOut: () => Promise<void>
   error: string | null
 }
@@ -81,6 +85,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const handleSignInEmail = async (email: string, password: string) => {
+    try {
+      setError(null)
+      await signInWithEmail(email, password)
+    } catch (error: any) {
+      console.error("Error signing in with email:", error)
+      setError(error.message || "Failed to sign in with email")
+      throw error
+    }
+  }
+
+  const handleSignUpEmail = async (email: string, password: string, displayName: string) => {
+    try {
+      setError(null)
+      await signUpWithEmail(email, password, displayName)
+    } catch (error: any) {
+      console.error("Error signing up with email:", error)
+      setError(error.message || "Failed to sign up with email")
+      throw error
+    }
+  }
+
+  const handleResetPasswordEmail = async (email: string) => {
+    try {
+      setError(null)
+      await resetPassword(email)
+    } catch (error: any) {
+      console.error("Error resetting password:", error)
+      setError(error.message || "Failed to reset password")
+      throw error
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       setError(null)
@@ -98,6 +135,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     isAdmin: isUserAdmin,
     signIn: handleSignIn,
+    signInEmail: handleSignInEmail,
+    signUpEmail: handleSignUpEmail,
+    resetPasswordEmail: handleResetPasswordEmail,
     signOut: handleSignOut,
     error,
   }

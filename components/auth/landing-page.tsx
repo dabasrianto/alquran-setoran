@@ -3,10 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   BookOpen, 
   Users, 
@@ -20,21 +18,16 @@ import {
   Cloud,
   Smartphone,
   Loader2,
-  AlertCircle,
-  Mail
+  AlertCircle
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import EmailAuthForm from "./email-auth-form"
 
 export default function LandingPage() {
   const { signIn, error: authError } = useAuth()
   const [activeTab, setActiveTab] = useState("login")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  // Email login states
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSignUp, setIsSignUp] = useState(false)
 
   const handleGoogleSignIn = async () => {
     try {
@@ -47,11 +40,6 @@ export default function LandingPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("Fitur login email sedang dalam pengembangan. Silakan gunakan login Google untuk saat ini.")
   }
 
   const displayError = error || authError
@@ -93,7 +81,7 @@ export default function LandingPage() {
     {
       number: "1",
       title: "Daftar & Login",
-      description: "Masuk dengan akun Google untuk mulai menggunakan aplikasi"
+      description: "Masuk dengan akun Google atau email untuk mulai menggunakan aplikasi"
     },
     {
       number: "2", 
@@ -220,43 +208,10 @@ export default function LandingPage() {
                         </Alert>
                       )}
 
-                      <form onSubmit={handleEmailAuth} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="nama@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="password">Password</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <Button type="submit" className="w-full" disabled={loading}>
-                          {loading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Masuk...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="mr-2 h-4 w-4" />
-                              Masuk dengan Email
-                            </>
-                          )}
-                        </Button>
-                      </form>
+                      {/* Email Auth Form */}
+                      <EmailAuthForm onSuccess={() => {
+                        // Login berhasil, akan redirect otomatis
+                      }} />
 
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
@@ -285,12 +240,26 @@ export default function LandingPage() {
                     </TabsContent>
 
                     <TabsContent value="register" className="space-y-4">
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Untuk saat ini, silakan gunakan login Google untuk mendaftar akun baru.
-                        </AlertDescription>
-                      </Alert>
+                      {displayError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{displayError}</AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Email Auth Form for Registration */}
+                      <EmailAuthForm onSuccess={() => {
+                        // Registration berhasil, akan redirect otomatis
+                      }} />
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">Atau</span>
+                        </div>
+                      </div>
 
                       <Button 
                         onClick={handleGoogleSignIn} 
