@@ -32,7 +32,6 @@ export const signInWithGoogle = async (): Promise<UserProfile | null> => {
       uid: user.uid,
       email: user.email,
       displayName: user.displayName || user.email,
-      photoURL: user.photoURL || undefined,
       subscriptionType: "free",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -44,24 +43,25 @@ export const signInWithGoogle = async (): Promise<UserProfile | null> => {
 
     if (!userDoc.exists()) {
       // New user - set initial profile
-      await setDoc(userDocRef, {
+      const firestoreData = {
         ...userProfile,
+        photoURL: user.photoURL || null, // Use null instead of undefined
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      })
+      }
+
+      await setDoc(userDocRef, firestoreData)
     } else {
       // Existing user - update last login
       const existingData = userDoc.data()
-      await setDoc(
-        userDocRef,
-        {
-          ...existingData,
-          displayName: user.displayName || existingData.displayName,
-          photoURL: user.photoURL || existingData.photoURL,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true },
-      )
+      const updateData = {
+        ...existingData,
+        displayName: user.displayName || existingData.displayName,
+        photoURL: user.photoURL || existingData.photoURL || null, // Use null instead of undefined
+        updatedAt: serverTimestamp(),
+      }
+
+      await setDoc(userDocRef, updateData, { merge: true })
     }
 
     return userProfile

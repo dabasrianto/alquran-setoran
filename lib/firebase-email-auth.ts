@@ -52,18 +52,20 @@ export const signUpWithEmail = async (
       uid: user.uid,
       email: user.email!,
       displayName: displayName,
-      photoURL: undefined,
       subscriptionType: "free",
       createdAt: new Date(),
       updatedAt: new Date(),
     }
 
     const userDocRef = doc(db, "users", user.uid)
-    await setDoc(userDocRef, {
+    const firestoreData = {
       ...userProfile,
+      photoURL: null, // Use null instead of undefined
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    })
+    }
+
+    await setDoc(userDocRef, firestoreData)
 
     return userProfile
   } catch (error: any) {
@@ -120,28 +122,28 @@ export const signInWithEmail = async (email: string, password: string): Promise<
         uid: user.uid,
         email: user.email!,
         displayName: user.displayName || user.email!,
-        photoURL: user.photoURL || undefined,
         subscriptionType: "free",
         createdAt: new Date(),
         updatedAt: new Date(),
       }
 
-      await setDoc(userDocRef, {
+      const firestoreData = {
         ...userProfile,
+        photoURL: user.photoURL || null, // Use null instead of undefined
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      })
+      }
+
+      await setDoc(userDocRef, firestoreData)
     } else {
       // Update last login
       const existingData = userDoc.data()
-      await setDoc(
-        userDocRef,
-        {
-          ...existingData,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      )
+      const updateData = {
+        ...existingData,
+        updatedAt: serverTimestamp(),
+      }
+
+      await setDoc(userDocRef, updateData, { merge: true })
 
       userProfile = {
         ...existingData,
