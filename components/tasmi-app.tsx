@@ -8,6 +8,7 @@ import SetoranForm from "@/components/setoran-form"
 import StudentList from "@/components/student-list"
 import OverallStats from "@/components/overall-stats"
 import DataManagement from "@/components/data-management"
+import SetoranProgressTable from "@/components/setoran-progress-table"
 import type { Student, Setoran } from "@/lib/types"
 import { calculateStudentSummary } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -215,18 +216,13 @@ export default function TasmiApp() {
         </TabsContent>
 
         <TabsContent value="setoran">
-          <Card className="mb-6">
-            <CardContent className="p-4 md:p-6">
-              <SetoranForm
-                students={students}
-                pengujis={pengujis}
-                onAddSetoran={handleAddSetoran}
-                onUpdateSetoran={handleUpdateSetoran}
-                editingSetoran={editingSetoran}
-                setEditingSetoran={setEditingSetoran}
-              />
-            </CardContent>
-          </Card>
+          <SetoranProgressTable
+            students={students}
+            pengujis={pengujis}
+            onAddSetoran={handleAddSetoran}
+            onUpdateSetoran={handleUpdateSetoran}
+            onDeleteSetoran={handleDeleteSetoran}
+          />
         </TabsContent>
 
         <TabsContent value="stats">
