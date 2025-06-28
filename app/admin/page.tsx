@@ -18,17 +18,22 @@ import LoginPage from "@/components/auth/login-page"
 import FirebaseRulesSetup from "@/components/admin/firebase-rules-setup"
 
 export default function AdminPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isAdmin: userIsAdmin } = useAuth()
   const { users, analytics, loading, error, isAdmin, refreshData } = useAdmin()
 
-  console.log("AdminPage render:", {
-    user: user?.email,
-    isAdmin,
-    usersCount: users?.length,
-    loading,
-    error,
-    analytics,
-  })
+  // Only log when there's meaningful state change
+  if (process.env.NODE_ENV === 'development') {
+    console.log("AdminPage render:", {
+      user: user?.email || 'undefined',
+      userIsAdmin,
+      hookIsAdmin: isAdmin,
+      usersCount: users?.length || 0,
+      authLoading,
+      dataLoading: loading,
+      error,
+      analytics: analytics ? 'loaded' : 'null',
+    })
+  }
 
   if (authLoading) {
     return (
@@ -42,7 +47,7 @@ export default function AdminPage() {
     return <LoginPage />
   }
 
-  if (!isAdmin) {
+  if (!userIsAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -51,6 +56,9 @@ export default function AdminPage() {
             <CardTitle className="text-2xl font-bold text-red-600">Akses Ditolak</CardTitle>
             <CardDescription>Anda tidak memiliki akses ke halaman admin</CardDescription>
             <p className="text-sm text-muted-foreground mt-2">Email Anda: {user.email}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Admin email yang diizinkan: dabasrianto@gmail.com
+            </p>
           </CardHeader>
           <CardContent className="text-center">
             <Button asChild>

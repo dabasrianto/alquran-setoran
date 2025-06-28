@@ -17,7 +17,7 @@ import {
 } from "@/lib/firebase-firestore"
 
 export function useAdmin() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [users, setUsers] = useState<any[]>([])
   const [analytics, setAnalytics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -26,8 +26,8 @@ export function useAdmin() {
   const isUserAdmin = user?.email ? isAdmin(user.email) : false
 
   const loadUsers = async () => {
-    if (!isUserAdmin) {
-      console.log("👤 User is not admin, skipping user load")
+    if (!user || !isUserAdmin) {
+      console.log("👤 User is not admin or not authenticated, skipping user load")
       setLoading(false)
       return
     }
@@ -36,7 +36,7 @@ export function useAdmin() {
       setLoading(true)
       setError(null)
 
-      console.log("🔄 Loading users for admin...")
+      console.log("🔄 Loading users for admin:", user.email)
       const usersData = await getAllUsersWithStats()
       console.log(`✅ Loaded ${usersData.length} users with stats`)
 
@@ -51,7 +51,7 @@ export function useAdmin() {
   }
 
   const loadAnalytics = async () => {
-    if (!isUserAdmin) return
+    if (!user || !isUserAdmin) return
 
     try {
       console.log("📊 Loading subscription analytics...")
@@ -65,7 +65,7 @@ export function useAdmin() {
   }
 
   const updateSubscription = async (userId: string, subscriptionType: "free" | "premium", expiryDate?: Date) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -91,7 +91,7 @@ export function useAdmin() {
       expiryDate?: Date
     }>,
   ) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -111,7 +111,7 @@ export function useAdmin() {
   }
 
   const checkExpiredUsers = async () => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -133,7 +133,7 @@ export function useAdmin() {
   }
 
   const deleteUser = async (userId: string) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -153,7 +153,7 @@ export function useAdmin() {
   }
 
   const updateUserProfile = async (userId: string, updates: any) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -172,7 +172,7 @@ export function useAdmin() {
   }
 
   const toggleUserActiveStatus = async (userId: string, isActive: boolean) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -191,7 +191,7 @@ export function useAdmin() {
   }
 
   const resetUserData = async (userId: string) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -210,7 +210,7 @@ export function useAdmin() {
   }
 
   const searchUsers = async (searchTerm: string) => {
-    if (!isUserAdmin) {
+    if (!user || !isUserAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
 
@@ -231,19 +231,25 @@ export function useAdmin() {
   }
 
   useEffect(() => {
-    if (user) {
-      console.log("👤 User changed, loading admin data. Is admin:", isUserAdmin)
+    // Only load data when auth is complete and user is available
+    if (!authLoading && user) {
+      console.log("👤 Auth complete, user available. Is admin:", isUserAdmin)
       if (isUserAdmin) {
         loadUsers()
         loadAnalytics()
+      } else {
+        console.log("👤 User is not admin, clearing admin data")
+        setUsers([])
+        setAnalytics(null)
+        setLoading(false)
       }
-    } else {
-      console.log("👤 No user, clearing admin data")
+    } else if (!authLoading && !user) {
+      console.log("👤 No user after auth complete, clearing admin data")
       setUsers([])
       setAnalytics(null)
       setLoading(false)
     }
-  }, [user, isUserAdmin])
+  }, [user, isUserAdmin, authLoading])
 
   return {
     users,
