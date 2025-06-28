@@ -122,10 +122,9 @@ export default function EmailAuthForm({ onSuccess }: EmailAuthFormProps) {
   return (
     <div className="w-full max-w-md mx-auto">
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="register">Daftar</TabsTrigger>
-          <TabsTrigger value="reset">Reset</TabsTrigger>
         </TabsList>
 
         {/* Login Tab */}
@@ -194,6 +193,17 @@ export default function EmailAuthForm({ onSuccess }: EmailAuthFormProps) {
               )}
             </Button>
           </form>
+
+          <div className="text-center">
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => setActiveTab("reset")}
+              className="text-sm text-muted-foreground"
+            >
+              Lupa password?
+            </Button>
+          </div>
         </TabsContent>
 
         {/* Register Tab */}
@@ -366,6 +376,17 @@ export default function EmailAuthForm({ onSuccess }: EmailAuthFormProps) {
               Kembali ke Login
             </Button>
           )}
+
+          <div className="text-center">
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => setActiveTab("login")}
+              className="text-sm text-muted-foreground"
+            >
+              Kembali ke Login
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

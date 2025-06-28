@@ -55,8 +55,8 @@ export default function LoginPage() {
             <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
               <BookOpen className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold">Login dengan Email</CardTitle>
-            <CardDescription>Masuk ke akun Tasmi' Anda</CardDescription>
+            <CardTitle className="text-2xl font-bold">Masuk ke Tasmi'</CardTitle>
+            <CardDescription>Kelola hafalan Al-Quran dengan mudah dan efektif</CardDescription>
           </CardHeader>
           <CardContent>
             <EmailAuthForm onSuccess={() => {
@@ -89,20 +89,6 @@ export default function LoginPage() {
                 <AlertDescription>{displayError}</AlertDescription>
               </Alert>
             )}
-
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <h3 className="font-semibold text-amber-800 mb-2">Paket Langganan:</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>🆓 Gratis:</span>
-                  <span>1 Ustadz, 1 Ustadzah, 5 Murid</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>⭐ Premium:</span>
-                  <span>Unlimited - Rp 50.000/bulan</span>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -161,22 +147,8 @@ export default function LoginPage() {
               <AlertDescription>{displayError}</AlertDescription>
             </Alert>
           )}
-
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <h3 className="font-semibold text-amber-800 mb-2">Paket Langganan:</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>🆓 Gratis:</span>
-                <span>1 Ustadz, 1 Ustadzah, 5 Murid</span>
-              </div>
-              <div className="flex justify-between">
-                <span>⭐ Premium:</span>
-                <span>Unlimited - Rp 50.000/bulan</span>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
-    </div>
-  )
+    )
+  }
 }
