@@ -70,7 +70,7 @@ export default function StudentForm({
       // Check subscription limits for new students
       if (!editingStudent && subscriptionStatus && !subscriptionStatus.canAddStudent) {
         setError(
-          `Limit maksimal ${subscriptionStatus.limits.maxStudents} murid untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak murid.`,
+          `Limit maksimal ${subscriptionStatus.limits.maxStudents} murid untuk paket saat ini. Upgrade untuk menambah lebih banyak murid.`,
         )
         return
       }

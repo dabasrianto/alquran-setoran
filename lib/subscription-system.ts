@@ -1,157 +1,198 @@
-export interface SubscriptionPlan {
-  id: string
-  name: string
-  price: number
-  duration: number // in days, 0 for lifetime
-  maxTeachers: number
+export type SubscriptionType = "trial" | "premium" | "pro"
+
+export interface SubscriptionLimits {
   maxStudents: number
-  features: string[]
-  isActive: boolean
+  maxUstadz: number
+  maxUstadzah: number
+  trialDays?: number
 }
 
 export interface UserSubscription {
+  id?: string
   userId: string
-  subscriptionType: 'trial' | 'premium' | 'unlimited'
-  trialStartDate?: Date
+  subscriptionType: SubscriptionType
+  status: "active" | "expired" | "cancelled"
+  startDate: Date
+  endDate?: Date
   trialEndDate?: Date
-  subscriptionStartDate?: Date
-  subscriptionEndDate?: Date
-  isActive: boolean
-  maxTeachers: number
-  maxStudents: number
-  currentTeachers: number
-  currentStudents: number
+  isTrialExpired: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
-export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
+export const SUBSCRIPTION_PLANS: Record<SubscriptionType, {
+  name: string
+  price: number
+  currency: string
+  billingPeriod: "trial" | "monthly"
+  limits: SubscriptionLimits
+  features: string[]
+  description: string
+}> = {
   trial: {
-    id: 'trial',
-    name: 'Trial Gratis',
+    name: "Trial Gratis",
     price: 0,
-    duration: 7,
-    maxTeachers: 1,
-    maxStudents: 5,
+    currency: "IDR",
+    billingPeriod: "trial",
+    limits: {
+      maxStudents: 3,
+      maxUstadz: 1,
+      maxUstadzah: 1,
+      trialDays: 14,
+    },
     features: [
-      'Akses fitur dasar',
-      'Coba semua fungsi utama',
-      'Dukungan teknis',
-      'Manajemen kelas digital',
-      'Tracking progress pembelajaran'
+      "1 ustadz",
+      "Maksimal 3 murid",
+      "Akses semua fitur dasar",
+      "Dukungan teknis",
+      "Manajemen kelas digital",
+      "Tracking progress pembelajaran"
     ],
-    isActive: true
+    description: "Coba semua fitur selama 14 hari"
   },
   premium: {
-    id: 'premium',
-    name: 'Premium',
-    price: 150000,
-    duration: 0, // lifetime
-    maxTeachers: 3,
-    maxStudents: 10,
+    name: "Premium",
+    price: 50000,
+    currency: "IDR",
+    billingPeriod: "monthly",
+    limits: {
+      maxStudents: 5,
+      maxUstadz: 2,
+      maxUstadzah: 2,
+    },
     features: [
-      'Maksimal 3 ustadz',
-      'Maksimal 10 murid',
-      'Akses seumur hidup',
-      'Semua fitur premium',
-      'Resource sharing',
-      'Advanced analytics',
-      'Export data'
+      "Maksimal 2 ustadz",
+      "Maksimal 5 murid",
+      "Perpanjangan otomatis",
+      "Semua fitur premium",
+      "Resource sharing",
+      "Advanced analytics",
+      "Export data"
     ],
-    isActive: true
+    description: "Untuk ustadz/ustadzah profesional"
   },
-  unlimited: {
-    id: 'unlimited',
-    name: 'Unlimited',
-    price: 0, // custom pricing
-    duration: 0, // lifetime
-    maxTeachers: Number.POSITIVE_INFINITY,
-    maxStudents: Number.POSITIVE_INFINITY,
+  pro: {
+    name: "Pro",
+    price: 150000,
+    currency: "IDR",
+    billingPeriod: "monthly",
+    limits: {
+      maxStudents: 15,
+      maxUstadz: 5,
+      maxUstadzah: 5,
+    },
     features: [
-      'Ustadz & murid unlimited',
-      'Semua fitur premium',
-      'Dukungan prioritas',
-      'Konsultasi personal',
-      'White-label options',
-      'Custom integrations',
-      'Dedicated support'
+      "Maksimal 5 ustadz",
+      "Maksimal 15 murid",
+      "Perpanjangan otomatis",
+      "Semua fitur premium",
+      "Priority support",
+      "Custom reports",
+      "Bulk import/export"
     ],
-    isActive: true
+    description: "Untuk institusi dan madrasah"
   }
-}
-
-export const checkSubscriptionLimits = (
-  subscription: UserSubscription,
-  action: 'add_teacher' | 'add_student'
-): { canAdd: boolean; message?: string } => {
-  if (!subscription.isActive) {
-    return {
-      canAdd: false,
-      message: 'Langganan Anda tidak aktif. Silakan hubungi admin untuk mengaktifkan kembali.'
-    }
-  }
-
-  // Check if trial has expired
-  if (subscription.subscriptionType === 'trial' && subscription.trialEndDate) {
-    const now = new Date()
-    if (now > subscription.trialEndDate) {
-      return {
-        canAdd: false,
-        message: 'Trial period Anda telah berakhir. Upgrade ke Premium untuk melanjutkan.'
-      }
-    }
-  }
-
-  if (action === 'add_teacher') {
-    if (subscription.currentTeachers >= subscription.maxTeachers) {
-      return {
-        canAdd: false,
-        message: `Anda telah mencapai batas maksimal ${subscription.maxTeachers} ustadz. Upgrade untuk menambah lebih banyak ustadz.`
-      }
-    }
-  }
-
-  if (action === 'add_student') {
-    if (subscription.currentStudents >= subscription.maxStudents) {
-      return {
-        canAdd: false,
-        message: `Anda telah mencapai batas maksimal ${subscription.maxStudents} murid. Upgrade untuk menambah lebih banyak murid.`
-      }
-    }
-  }
-
-  return { canAdd: true }
 }
 
 export const calculateTrialEndDate = (startDate: Date): Date => {
   const endDate = new Date(startDate)
-  endDate.setDate(endDate.getDate() + 7)
+  endDate.setDate(endDate.getDate() + 14) // 14 days trial
   return endDate
 }
 
 export const isTrialExpired = (subscription: UserSubscription): boolean => {
-  if (subscription.subscriptionType !== 'trial' || !subscription.trialEndDate) {
-    return false
-  }
+  if (subscription.subscriptionType !== "trial") return false
+  if (!subscription.trialEndDate) return true
   
   return new Date() > subscription.trialEndDate
 }
 
+export const canAddStudent = (
+  subscription: UserSubscription,
+  currentStudentCount: number
+): boolean => {
+  if (isTrialExpired(subscription)) return false
+  
+  const limits = SUBSCRIPTION_PLANS[subscription.subscriptionType].limits
+  return currentStudentCount < limits.maxStudents
+}
+
+export const canAddUstadz = (
+  subscription: UserSubscription,
+  currentUstadzCount: number
+): boolean => {
+  if (isTrialExpired(subscription)) return false
+  
+  const limits = SUBSCRIPTION_PLANS[subscription.subscriptionType].limits
+  return currentUstadzCount < limits.maxUstadz
+}
+
+export const canAddUstadzah = (
+  subscription: UserSubscription,
+  currentUstadzahCount: number
+): boolean => {
+  if (isTrialExpired(subscription)) return false
+  
+  const limits = SUBSCRIPTION_PLANS[subscription.subscriptionType].limits
+  return currentUstadzahCount < limits.maxUstadzah
+}
+
 export const getDaysRemaining = (subscription: UserSubscription): number => {
-  if (subscription.subscriptionType !== 'trial' || !subscription.trialEndDate) {
+  if (subscription.subscriptionType !== "trial" || !subscription.trialEndDate) {
     return 0
   }
   
   const now = new Date()
-  const diffTime = subscription.trialEndDate.getTime() - now.getTime()
+  const endDate = subscription.trialEndDate
+  const diffTime = endDate.getTime() - now.getTime()
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   
   return Math.max(0, diffDays)
 }
 
-export const formatPrice = (price: number): string => {
-  if (price === 0) return 'Gratis'
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
+export const formatPrice = (price: number, currency: string = "IDR"): string => {
+  if (price === 0) return "Gratis"
+  
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(price)
+}
+
+export const getSubscriptionStatus = (subscription: UserSubscription): {
+  canUseApp: boolean
+  needsUpgrade: boolean
+  message: string
+  daysRemaining?: number
+} => {
+  if (subscription.subscriptionType === "trial") {
+    const expired = isTrialExpired(subscription)
+    const daysRemaining = getDaysRemaining(subscription)
+    
+    if (expired) {
+      return {
+        canUseApp: false,
+        needsUpgrade: true,
+        message: "Trial Anda telah berakhir. Silakan upgrade ke paket premium untuk melanjutkan.",
+      }
+    }
+    
+    return {
+      canUseApp: true,
+      needsUpgrade: daysRemaining <= 3,
+      message: daysRemaining <= 3 
+        ? `Trial berakhir dalam ${daysRemaining} hari. Upgrade sekarang untuk akses tanpa batas.`
+        : `Trial aktif - ${daysRemaining} hari tersisa`,
+      daysRemaining,
+    }
+  }
+  
+  // Premium and Pro subscriptions
+  return {
+    canUseApp: true,
+    needsUpgrade: false,
+    message: `Paket ${subscription.subscriptionType} aktif`,
+  }
 }

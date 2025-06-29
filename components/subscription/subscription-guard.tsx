@@ -2,23 +2,23 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getUserSubscription, createTrialSubscription } from "@/lib/firebase-subscription"
+import { getSubscriptionStatus } from "@/lib/subscription-system"
+import type { UserSubscription } from "@/lib/subscription-system"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Crown, AlertTriangle, Clock } from "lucide-react"
-import { getUserSubscription } from "@/lib/firebase-subscription"
-import { isTrialExpired, getDaysRemaining } from "@/lib/subscription-system"
-import type { UserSubscription } from "@/lib/subscription-system"
+import { Crown, Clock, AlertTriangle } from "lucide-react"
 
 interface SubscriptionGuardProps {
   children: React.ReactNode
-  requiredFeature?: 'add_teacher' | 'add_student'
 }
 
-export default function SubscriptionGuard({ children, requiredFeature }: SubscriptionGuardProps) {
-  const { user } = useAuth()
+export default function SubscriptionGuard({ children }: SubscriptionGuardProps) {
+  const { user, loading: authLoading } = useAuth()
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -28,17 +28,31 @@ export default function SubscriptionGuard({ children, requiredFeature }: Subscri
       }
 
       try {
-        const userSubscription = await getUserSubscription(user.uid)
+        setLoading(true)
+        let userSubscription = await getUserSubscription(user.uid)
+
+        // If no subscription exists, create a trial
+        if (!userSubscription) {
+          console.log("No subscription found, creating trial for user:", user.uid)
+          userSubscription = await createTrialSubscription(user.uid)
+        }
+
         setSubscription(userSubscription)
-      } catch (error) {
-        console.error("Error loading subscription:", error)
+        setError(null)
+      } catch (err: any) {
+        console.error("Error loading subscription:", err)
+        setError(err.message || "Failed to load subscription")
       } finally {
         setLoading(false)
       }
     }
 
-    loadSubscription()
-  }, [user?.uid])
+    if (!authLoading && user) {
+      loadSubscription()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [user, authLoading])
 
   const handleUpgradeClick = () => {
     const phoneNumber = "+628977712345"
@@ -49,109 +63,155 @@ export default function SubscriptionGuard({ children, requiredFeature }: Subscri
     window.open(whatsappUrl, '_blank')
   }
 
-  if (loading) {
+  const handleProUpgradeClick = () => {
+    const phoneNumber = "+628977712345"
+    const message = "Bismillah, afwan Admin saya ingin upgrade ke paket pro"
+    const encodedMessage = encodeURIComponent(message)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+    
+    window.open(whatsappUrl, '_blank')
+  }
+
+  if (authLoading || loading) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <CardTitle className="text-2xl font-bold text-red-600">Error</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button onClick={() => window.location.reload()}>
+              Coba Lagi
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   if (!subscription) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          Gagal memuat informasi langganan. Silakan refresh halaman.
-        </AlertDescription>
-      </Alert>
-    )
-  }
-
-  // Check if trial has expired
-  if (subscription.subscriptionType === 'trial' && isTrialExpired(subscription)) {
-    return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <CardTitle className="text-2xl font-bold text-red-600">Trial Berakhir</CardTitle>
+            <AlertTriangle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+            <CardTitle className="text-2xl font-bold">Subscription Required</CardTitle>
+            <CardDescription>Unable to load subscription information</CardDescription>
           </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Trial period 7 hari Anda telah berakhir. Upgrade ke Premium untuk melanjutkan menggunakan aplikasi.
-            </p>
-            
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h3 className="font-semibold text-amber-800 mb-2">Premium Benefits:</h3>
-              <ul className="text-sm text-amber-700 space-y-1">
-                <li>• Maksimal 3 ustadz</li>
-                <li>• Maksimal 10 murid</li>
-                <li>• Akses seumur hidup</li>
-                <li>• Semua fitur premium</li>
-              </ul>
-              <p className="text-sm font-semibold text-amber-800 mt-2">
-                Hanya Rp 150.000 (sekali bayar)
-              </p>
+          <CardContent className="text-center">
+            <Button onClick={() => window.location.reload()}>
+              Refresh
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const status = getSubscriptionStatus(subscription)
+
+  // If trial expired, show upgrade screen
+  if (!status.canUseApp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 to-orange-50">
+        <Card className="w-full max-w-2xl">
+          <CardHeader className="text-center">
+            <Clock className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <CardTitle className="text-2xl font-bold text-red-600">Trial Berakhir</CardTitle>
+            <CardDescription className="text-lg">
+              Trial 14 hari Anda telah berakhir. Pilih paket premium untuk melanjutkan menggunakan aplikasi.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Premium Plan */}
+              <Card className="border-2 border-amber-200 bg-amber-50">
+                <CardHeader className="text-center pb-2">
+                  <Crown className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+                  <CardTitle className="text-xl">Premium</CardTitle>
+                  <div className="text-2xl font-bold text-amber-600">Rp 50.000</div>
+                  <div className="text-sm text-muted-foreground">Per bulan</div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="space-y-1 text-sm">
+                    <div>✓ Maksimal 2 ustadz</div>
+                    <div>✓ Maksimal 5 murid</div>
+                    <div>✓ Semua fitur premium</div>
+                    <div>✓ Export data</div>
+                  </div>
+                  <Button 
+                    className="w-full bg-amber-600 hover:bg-amber-700" 
+                    onClick={handleUpgradeClick}
+                  >
+                    Upgrade Premium
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Pro Plan */}
+              <Card className="border-2 border-purple-200 bg-purple-50">
+                <CardHeader className="text-center pb-2">
+                  <Crown className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <CardTitle className="text-xl">Pro</CardTitle>
+                  <div className="text-2xl font-bold text-purple-600">Rp 150.000</div>
+                  <div className="text-sm text-muted-foreground">Per bulan</div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="space-y-1 text-sm">
+                    <div>✓ Maksimal 5 ustadz</div>
+                    <div>✓ Maksimal 15 murid</div>
+                    <div>✓ Priority support</div>
+                    <div>✓ Custom reports</div>
+                  </div>
+                  <Button 
+                    className="w-full bg-purple-600 hover:bg-purple-700" 
+                    onClick={handleProUpgradeClick}
+                  >
+                    Upgrade Pro
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
 
-            <Button onClick={handleUpgradeClick} className="w-full">
-              <Crown className="mr-2 h-4 w-4" />
-              Upgrade ke Premium
-            </Button>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Hubungi admin melalui WhatsApp untuk proses upgrade
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  // Check if subscription is inactive
-  if (!subscription.isActive) {
+  // Show warning if trial is ending soon
+  if (status.needsUpgrade && subscription.subscriptionType === "trial") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <CardTitle className="text-2xl font-bold text-red-600">Akun Tidak Aktif</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Akun Anda saat ini tidak aktif. Silakan hubungi admin untuk mengaktifkan kembali.
-            </p>
-            <Button onClick={handleUpgradeClick} className="w-full">
-              Hubungi Admin
+      <div className="min-h-screen">
+        <Alert className="m-4 border-orange-200 bg-orange-50">
+          <Clock className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{status.message}</span>
+            <Button size="sm" onClick={handleUpgradeClick} className="bg-orange-600 hover:bg-orange-700">
+              Upgrade Sekarang
             </Button>
-          </CardContent>
-        </Card>
+          </AlertDescription>
+        </Alert>
+        {children}
       </div>
     )
   }
 
-  // Show trial warning if less than 2 days remaining
-  if (subscription.subscriptionType === 'trial') {
-    const daysRemaining = getDaysRemaining(subscription)
-    if (daysRemaining <= 2) {
-      return (
-        <div className="space-y-4">
-          <Alert className="border-amber-200 bg-amber-50">
-            <Clock className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                <span>
-                  Trial Anda akan berakhir dalam {daysRemaining} hari. Upgrade sekarang untuk melanjutkan akses.
-                </span>
-                <Button size="sm" onClick={handleUpgradeClick}>
-                  <Crown className="mr-2 h-4 w-4" />
-                  Upgrade
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-          {children}
-        </div>
-      )
-    }
-  }
-
+  // Allow access to app
   return <>{children}</>
 }

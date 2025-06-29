@@ -35,9 +35,9 @@ export default function HeroSection() {
     window.open(whatsappUrl, '_blank')
   }
 
-  const handleUnlimitedClick = () => {
+  const handleProClick = () => {
     const phoneNumber = "+628977712345"
-    const message = "Bismillah, afwan Admin saya ingin konsultasi paket unlimited"
+    const message = "Bismillah, afwan Admin saya ingin konsultasi paket pro"
     const encodedMessage = encodeURIComponent(message)
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
     
@@ -76,7 +76,7 @@ export default function HeroSection() {
                 onClick={handleTrialClick}
               >
                 <Play className="mr-2 h-5 w-5" />
-                Mulai Trial Gratis 7 Hari
+                Mulai Trial Gratis 14 Hari
               </Button>
               <Button 
                 variant="outline" 
@@ -176,7 +176,7 @@ export default function HeroSection() {
               Pilih Paket yang Sesuai
             </h2>
             <p className="text-lg text-gray-600">
-              Mulai dengan trial gratis, upgrade sesuai kebutuhan
+              Mulai dengan trial gratis 14 hari, upgrade sesuai kebutuhan
             </p>
           </div>
 
@@ -188,15 +188,16 @@ export default function HeroSection() {
                   <Target className="w-8 h-8" />
                 </div>
                 <CardTitle className="text-2xl">Trial Gratis</CardTitle>
-                <CardDescription>Coba semua fitur selama 7 hari</CardDescription>
+                <CardDescription>Coba semua fitur selama 14 hari</CardDescription>
                 <div className="text-3xl font-bold mt-4">Gratis</div>
-                <div className="text-gray-500">7 hari</div>
+                <div className="text-gray-500">14 hari</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    "Akses fitur dasar",
-                    "Coba semua fungsi utama",
+                    "1 ustadz",
+                    "Maksimal 3 murid",
+                    "Akses semua fitur dasar",
                     "Dukungan teknis",
                     "Manajemen kelas digital",
                     "Tracking progress pembelajaran"
@@ -226,15 +227,15 @@ export default function HeroSection() {
                 </div>
                 <CardTitle className="text-2xl">Premium</CardTitle>
                 <CardDescription>Untuk ustadz/ustadzah profesional</CardDescription>
-                <div className="text-3xl font-bold mt-4">Rp 150.000</div>
-                <div className="text-gray-500">Akses seumur hidup</div>
+                <div className="text-3xl font-bold mt-4">Rp 50.000</div>
+                <div className="text-gray-500">Per bulan</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    "Maksimal 3 ustadz",
-                    "Maksimal 10 murid",
-                    "Akses seumur hidup",
+                    "Maksimal 2 ustadz",
+                    "Maksimal 5 murid",
+                    "Perpanjangan otomatis",
                     "Semua fitur premium",
                     "Resource sharing",
                     "Advanced analytics",
@@ -253,27 +254,27 @@ export default function HeroSection() {
               </CardContent>
             </Card>
 
-            {/* Unlimited Plan */}
+            {/* Pro Plan */}
             <Card className="border-2 border-purple-200 bg-purple-50">
               <CardHeader className="text-center">
                 <div className="bg-purple-100 text-purple-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <Star className="w-8 h-8" />
                 </div>
-                <CardTitle className="text-2xl">Unlimited</CardTitle>
+                <CardTitle className="text-2xl">Pro</CardTitle>
                 <CardDescription>Untuk institusi dan madrasah</CardDescription>
-                <div className="text-3xl font-bold mt-4">Custom</div>
-                <div className="text-gray-500">Harga khusus</div>
+                <div className="text-3xl font-bold mt-4">Rp 150.000</div>
+                <div className="text-gray-500">Per bulan</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    "Ustadz & murid unlimited",
+                    "Maksimal 5 ustadz",
+                    "Maksimal 15 murid",
+                    "Perpanjangan otomatis",
                     "Semua fitur premium",
-                    "Dukungan prioritas",
-                    "Konsultasi personal",
-                    "White-label options",
-                    "Custom integrations",
-                    "Dedicated support"
+                    "Priority support",
+                    "Custom reports",
+                    "Bulk import/export"
                   ].map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -281,9 +282,9 @@ export default function HeroSection() {
                     </div>
                   ))}
                 </div>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={handleUnlimitedClick}>
+                <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={handleProClick}>
                   <Star className="mr-2 h-4 w-4" />
-                  Konsultasi Unlimited
+                  Upgrade Pro
                 </Button>
               </CardContent>
             </Card>
@@ -308,7 +309,7 @@ export default function HeroSection() {
               onClick={handleTrialClick}
             >
               <Play className="mr-2 h-5 w-5" />
-              Mulai Trial Gratis 7 Hari
+              Mulai Trial Gratis 14 Hari
             </Button>
             <Button 
               size="lg" 

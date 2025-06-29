@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { getUserSubscription } from "@/lib/firebase-subscription"
+import { getSubscriptionStatus, SUBSCRIPTION_PLANS } from "@/lib/subscription-system"
+import type { UserSubscription } from "@/lib/subscription-system"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Crown, Users, GraduationCap, Clock, AlertTriangle } from "lucide-react"
-import { getUserSubscription } from "@/lib/firebase-subscription"
-import { getDaysRemaining, isTrialExpired } from "@/lib/subscription-system"
-import type { UserSubscription } from "@/lib/subscription-system"
+import { Crown, Clock, Users, GraduationCap } from "lucide-react"
 
 export default function SubscriptionBanner() {
   const { user } = useAuth()
@@ -27,7 +25,7 @@ export default function SubscriptionBanner() {
         const userSubscription = await getUserSubscription(user.uid)
         setSubscription(userSubscription)
       } catch (error) {
-        console.error("Error loading subscription:", error)
+        console.error("Error loading subscription for banner:", error)
       } finally {
         setLoading(false)
       }
@@ -49,91 +47,55 @@ export default function SubscriptionBanner() {
     return null
   }
 
-  // Don't show banner for premium/unlimited users
-  if (subscription.subscriptionType === 'premium' || subscription.subscriptionType === 'unlimited') {
+  const status = getSubscriptionStatus(subscription)
+  const plan = SUBSCRIPTION_PLANS[subscription.subscriptionType]
+
+  // Don't show banner for premium/pro users
+  if (subscription.subscriptionType !== "trial") {
     return null
   }
 
-  const daysRemaining = getDaysRemaining(subscription)
-  const expired = isTrialExpired(subscription)
-  const teacherUsage = (subscription.currentTeachers / subscription.maxTeachers) * 100
-  const studentUsage = (subscription.currentStudents / subscription.maxStudents) * 100
-
+  // Show trial banner
   return (
-    <Card className={`border-2 ${expired ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'} mb-6`}>
+    <Card className="border-blue-200 bg-blue-50 mb-6">
       <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              {expired ? (
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              ) : (
-                <Clock className="h-5 w-5 text-amber-600" />
+              <Clock className="h-5 w-5 text-blue-600" />
+              <h3 className="font-semibold text-blue-800">Trial Gratis</h3>
+              {status.daysRemaining !== undefined && (
+                <span className="text-sm text-blue-600 font-medium">
+                  {status.daysRemaining} hari tersisa
+                </span>
               )}
-              <h3 className={`font-semibold ${expired ? 'text-red-800' : 'text-amber-800'}`}>
-                {expired ? 'Trial Berakhir' : `Trial - ${daysRemaining} hari tersisa`}
-              </h3>
-              <Badge variant={expired ? "destructive" : "secondary"}>
-                {subscription.subscriptionType.toUpperCase()}
-              </Badge>
             </div>
-
-            {expired ? (
-              <p className="text-red-700 text-sm mb-3">
-                Trial period Anda telah berakhir. Upgrade ke Premium untuk melanjutkan menggunakan aplikasi.
-              </p>
-            ) : (
-              <div className="space-y-2 mb-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="flex items-center gap-1">
-                        <GraduationCap className="h-4 w-4 text-amber-600" />
-                        Ustadz: {subscription.currentTeachers}/{subscription.maxTeachers}
-                      </span>
-                      <span className="text-xs text-amber-700">{Math.round(teacherUsage)}%</span>
-                    </div>
-                    <Progress value={teacherUsage} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4 text-amber-600" />
-                        Murid: {subscription.currentStudents}/{subscription.maxStudents}
-                      </span>
-                      <span className="text-xs text-amber-700">{Math.round(studentUsage)}%</span>
-                    </div>
-                    <Progress value={studentUsage} className="h-2" />
-                  </div>
-                </div>
+            <div className="grid grid-cols-3 gap-4 text-sm mb-3">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4 text-blue-600" />
+                <span>Murid: {plan.limits.maxStudents}</span>
               </div>
-            )}
-
-            <p className="text-xs text-amber-700">
-              Upgrade ke Premium untuk unlimited ustadz & murid - hanya Rp 150.000 (akses seumur hidup)
+              <div className="flex items-center gap-1">
+                <GraduationCap className="h-4 w-4 text-blue-600" />
+                <span>Ustadz: {plan.limits.maxUstadz}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <GraduationCap className="h-4 w-4 text-blue-600" />
+                <span>Ustadzah: {plan.limits.maxUstadzah}</span>
+              </div>
+            </div>
+            <p className="text-xs text-blue-700">
+              Upgrade ke Premium untuk unlimited data - hanya Rp 50.000/bulan
             </p>
           </div>
-
-          <div className="flex flex-col gap-2">
-            <Button 
-              size="sm" 
-              className="bg-amber-600 hover:bg-amber-700" 
-              onClick={handleUpgradeClick}
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              Upgrade Premium
-            </Button>
-            {subscription.subscriptionType === 'trial' && !expired && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={handleUpgradeClick}
-                className="text-xs"
-              >
-                Konsultasi Unlimited
-              </Button>
-            )}
-          </div>
+          <Button 
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700" 
+            onClick={handleUpgradeClick}
+          >
+            <Crown className="h-4 w-4 mr-1" />
+            Upgrade Premium
+          </Button>
         </div>
       </CardContent>
     </Card>

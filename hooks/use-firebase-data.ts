@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/hooks/use-subscription"
 import {
   getStudents,
   getPengujis,
@@ -15,11 +16,11 @@ import {
   updatePenguji,
   deletePenguji,
 } from "@/lib/firebase-firestore"
-import { checkSubscriptionLimits } from "@/lib/subscription-limits"
 import type { Student, Penguji, Setoran } from "@/lib/types"
 
 export function useFirebaseData() {
-  const { user, userProfile } = useAuth()
+  const { user } = useAuth()
+  const { subscription, checkLimits } = useSubscription()
   const [students, setStudents] = useState<Student[]>([])
   const [pengujis, setPengujis] = useState<Penguji[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,14 +55,14 @@ export function useFirebaseData() {
     }
   }
 
-  // Check subscription limits
+  // Get subscription status
   const getSubscriptionStatus = () => {
-    if (!userProfile) return null
+    if (!subscription) return null
 
     const ustadzCount = pengujis.filter((p) => p.gender === "L").length
     const ustadzahCount = pengujis.filter((p) => p.gender === "P").length
 
-    return checkSubscriptionLimits(userProfile.subscriptionType || "free", {
+    return checkLimits({
       students: students.length,
       ustadz: ustadzCount,
       ustadzah: ustadzahCount,
@@ -75,7 +76,7 @@ export function useFirebaseData() {
     const subscriptionStatus = getSubscriptionStatus()
     if (subscriptionStatus && !subscriptionStatus.canAddStudent) {
       throw new Error(
-        `Limit maksimal ${subscriptionStatus.limits.maxStudents} murid untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak murid.`,
+        `Limit maksimal ${subscriptionStatus.limits.maxStudents} murid untuk paket saat ini. Upgrade untuk menambah lebih banyak murid.`,
       )
     }
 
@@ -158,12 +159,12 @@ export function useFirebaseData() {
     if (subscriptionStatus) {
       if (pengujiData.gender === "L" && !subscriptionStatus.canAddUstadz) {
         throw new Error(
-          `Limit maksimal ${subscriptionStatus.limits.maxUstadz} ustadz untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak ustadz.`,
+          `Limit maksimal ${subscriptionStatus.limits.maxUstadz} ustadz untuk paket saat ini. Upgrade untuk menambah lebih banyak ustadz.`,
         )
       }
       if (pengujiData.gender === "P" && !subscriptionStatus.canAddUstadzah) {
         throw new Error(
-          `Limit maksimal ${subscriptionStatus.limits.maxUstadzah} ustadzah untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak ustadzah.`,
+          `Limit maksimal ${subscriptionStatus.limits.maxUstadzah} ustadzah untuk paket saat ini. Upgrade untuk menambah lebih banyak ustadzah.`,
         )
       }
     }
@@ -207,6 +208,7 @@ export function useFirebaseData() {
     pengujis,
     loading,
     error,
+    subscription,
     subscriptionStatus: getSubscriptionStatus(),
     // Student methods
     addStudent: handleAddStudent,
