@@ -4,7 +4,7 @@
 Admin tidak bisa mengakses data semua pengguna karena Firebase Security Rules belum dikonfigurasi.
 
 ## Solusi
-Update Firebase Security Rules untuk memberikan akses admin.
+Update Firebase Security Rules untuk memberikan akses admin dan subscription access.
 
 ## Langkah-langkah:
 
@@ -22,7 +22,7 @@ Update Firebase Security Rules untuk memberikan akses admin.
 ### 4. Update Rules
 Copy dan paste rules berikut, replace semua rules yang ada:
 
-\`\`\`javascript
+```javascript
 rules_version = '2';
 
 service cloud.firestore {
@@ -71,6 +71,21 @@ service cloud.firestore {
       }
     }
     
+    // Subscriptions collection - Users can read their own, admin can read/write all
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscription data
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Admin can read and write all subscriptions
+      allow read, write: if isAdmin();
+      
+      // Allow subscription creation for authenticated users
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Users can update their own subscription (for upgrade requests)
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
     // Admin-only collections (if needed in future)
     match /admin/{document=**} {
       allow read, write: if isAdmin();
@@ -82,7 +97,7 @@ service cloud.firestore {
     }
   }
 }
-\`\`\`
+```
 
 ### 5. Publish Rules
 - Klik tombol "Publish" untuk menerapkan rules baru
@@ -98,8 +113,14 @@ service cloud.firestore {
 ## Keamanan
 Rules ini memberikan:
 - **Admin**: Akses penuh untuk membaca semua data pengguna dan mengupdate subscription
-- **User biasa**: Hanya bisa akses data mereka sendiri
+- **User biasa**: Hanya bisa akses data mereka sendiri dan subscription mereka
 - **Guest**: Tidak ada akses
+
+## Subscription Rules
+Rules subscription memberikan:
+- **User**: Bisa membaca dan update subscription mereka sendiri
+- **Admin**: Akses penuh ke semua subscription
+- **Keamanan**: Hanya user dengan userId yang sesuai yang bisa akses subscription mereka
 
 ## Troubleshooting
 Jika masih error:
@@ -107,7 +128,6 @@ Jika masih error:
 2. Tunggu 1-2 menit setelah publish rules
 3. Refresh halaman admin
 4. Check console browser untuk error details
-\`\`\`
 
 ## 🔧 **Yang Perlu Dilakukan:**
 
@@ -127,7 +147,12 @@ Jika masih error:
 
 ### 🔒 **Keamanan Rules:**
 - **Admin** (`dabasrianto@gmail.com`): Akses penuh semua data
-- **User biasa**: Hanya data mereka sendiri
+- **User biasa**: Hanya data mereka sendiri dan subscription mereka
 - **Guest**: Tidak ada akses
 
-Setelah update rules, admin panel akan bisa membaca dan mengelola data semua pengguna! 🚀
+### 🔐 **Subscription Security:**
+- **User**: Akses read/update subscription sendiri berdasarkan userId
+- **Admin**: Akses penuh semua subscription
+- **Validation**: Subscription hanya bisa diakses jika userId cocok dengan auth.uid
+
+Setelah update rules, admin panel akan bisa membaca dan mengelola data semua pengguna, dan users bisa mengakses subscription mereka! 🚀

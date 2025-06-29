@@ -46,6 +46,21 @@ service cloud.firestore {
       }
     }
     
+    // Subscriptions collection - Users can read their own, admin can read/write all
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscription data
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Admin can read and write all subscriptions
+      allow read, write: if isAdmin();
+      
+      // Allow subscription creation for authenticated users
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Users can update their own subscription (for upgrade requests)
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
     // Admin-only collections (if needed in future)
     match /admin/{document=**} {
       allow read, write: if isAdmin();
