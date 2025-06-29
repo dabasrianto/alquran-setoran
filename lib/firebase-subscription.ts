@@ -74,28 +74,34 @@ export const getUserSubscription = async (userId: string): Promise<UserSubscript
   try {
     const database = ensureDb()
     const subscriptionsRef = collection(database, "subscriptions")
-    const q = query(subscriptionsRef, where("userId", "==", userId), orderBy("createdAt", "desc"))
+    // Use only where clause to avoid composite index requirement
+    const q = query(subscriptionsRef, where("userId", "==", userId))
     const snapshot = await getDocs(q)
 
     if (snapshot.empty) {
       return null
     }
 
-    const doc = snapshot.docs[0]
-    const data = doc.data()
+    // Sort the results in memory to get the most recent subscription
+    const subscriptions = snapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        userId: data.userId,
+        subscriptionType: data.subscriptionType,
+        status: data.status,
+        startDate: convertTimestamp(data.startDate),
+        endDate: data.endDate ? convertTimestamp(data.endDate) : undefined,
+        trialEndDate: data.trialEndDate ? convertTimestamp(data.trialEndDate) : undefined,
+        isTrialExpired: data.isTrialExpired || false,
+        createdAt: convertTimestamp(data.createdAt),
+        updatedAt: convertTimestamp(data.updatedAt),
+      }
+    })
 
-    return {
-      id: doc.id,
-      userId: data.userId,
-      subscriptionType: data.subscriptionType,
-      status: data.status,
-      startDate: convertTimestamp(data.startDate),
-      endDate: data.endDate ? convertTimestamp(data.endDate) : undefined,
-      trialEndDate: data.trialEndDate ? convertTimestamp(data.trialEndDate) : undefined,
-      isTrialExpired: data.isTrialExpired || false,
-      createdAt: convertTimestamp(data.createdAt),
-      updatedAt: convertTimestamp(data.updatedAt),
-    }
+    // Sort by createdAt in descending order and return the most recent
+    subscriptions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    return subscriptions[0]
   } catch (error) {
     console.error("❌ Error getting user subscription:", error)
     throw new Error(`Failed to get user subscription: ${(error as any).message}`)
