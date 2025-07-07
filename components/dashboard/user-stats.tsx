@@ -1,6 +1,15 @@
 "use client"
 
-import { GradientStatCard } from "@/components/ui/gradient-stat-card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { 
+  ResponsiveContainer, 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip 
+} from "recharts"
 
 // Generate sample data for the charts
 const generateChartData = (points: number, trend: "up" | "down" | "volatile") => {
@@ -37,34 +46,121 @@ const completedJuzData = generateChartData(30, "up")
 export function UserDashboardStats() {
   return (
     <>
-      <GradientStatCard
-        title="Total Murid"
-        value="18"
-        change={12}
-        data={studentsData}
-        color="purple"
-      />
-      <GradientStatCard
-        title="Total Ayat Dihafal"
-        value="1,240"
-        change={8}
-        data={setoranData}
-        color="blue"
-      />
-      <GradientStatCard
-        title="Surat Selesai"
-        value="7"
-        change={5}
-        data={completedSurahData}
-        color="green"
-      />
-      <GradientStatCard
-        title="Juz Selesai"
-        value="2"
-        change={3}
-        data={completedJuzData}
-        color="amber"
-      />
+      <Card>
+        <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+          <CardTitle className="text-xs md:text-sm font-medium">Total Murid</CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+          <div className="text-xl md:text-2xl font-bold">18</div>
+          <div className="h-[50px] mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={studentsData}>
+                <defs>
+                  <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#8884d8" 
+                  fillOpacity={1} 
+                  fill="url(#colorStudents)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+          <CardTitle className="text-xs md:text-sm font-medium">Total Ayat Dihafal</CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+          <div className="text-xl md:text-2xl font-bold">1,240</div>
+          <div className="h-[50px] mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={setoranData}>
+                <defs>
+                  <linearGradient id="colorSetoran" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#3b82f6" 
+                  fillOpacity={1} 
+                  fill="url(#colorSetoran)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+          <CardTitle className="text-xs md:text-sm font-medium">Surat Selesai</CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+          <div className="text-xl md:text-2xl font-bold">7</div>
+          <div className="h-[50px] mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={completedSurahData}>
+                <defs>
+                  <linearGradient id="colorSurah" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#4ade80" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#4ade80" 
+                  fillOpacity={1} 
+                  fill="url(#colorSurah)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+          <CardTitle className="text-xs md:text-sm font-medium">Juz Selesai</CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+          <div className="text-xl md:text-2xl font-bold">2</div>
+          <div className="h-[50px] mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={completedJuzData}>
+                <defs>
+                  <linearGradient id="colorJuz" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#facc15" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#facc15" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#facc15" 
+                  fillOpacity={1} 
+                  fill="url(#colorJuz)" 
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
     </>
   )
 }

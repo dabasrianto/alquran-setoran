@@ -44,9 +44,8 @@ export function LandingNavbar() {
   const navItems = [
     { name: "Beranda", href: "#home" },
     { name: "Fitur", href: "#features" },
-    { name: "Cara Kerja", href: "#how-it-works" },
     { name: "Harga", href: "#pricing" },
-    { name: "Testimoni", href: "#testimonials" },
+    { name: "Kontak", href: "#cta" },
   ]
 
   return (
