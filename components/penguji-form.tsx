@@ -74,13 +74,13 @@ export default function PengujiForm({
       if (!editingPenguji && subscriptionStatus) {
         if (gender === "L" && !subscriptionStatus.canAddUstadz) {
           setError(
-            `Limit maksimal ${subscriptionStatus.limits.maxUstadz} ustadz untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak ustadz.`,
+            `Limit maksimal ${subscriptionStatus.limits.maxUstadz} ustadz untuk paket saat ini. Upgrade untuk menambah lebih banyak ustadz.`,
           )
           return
         }
         if (gender === "P" && !subscriptionStatus.canAddUstadzah) {
           setError(
-            `Limit maksimal ${subscriptionStatus.limits.maxUstadzah} ustadzah untuk akun gratis. Upgrade ke premium untuk menambah lebih banyak ustadzah.`,
+            `Limit maksimal ${subscriptionStatus.limits.maxUstadzah} ustadzah untuk paket saat ini. Upgrade untuk menambah lebih banyak ustadzah.`,
           )
           return
         }

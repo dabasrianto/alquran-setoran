@@ -287,8 +287,38 @@ export const updateSubscription = async (
 }
 
 export const isAdmin = (email: string): boolean => {
-  const adminEmails = ["dabasrianto@gmail.com"]
-  return adminEmails.includes(email.toLowerCase())
+  // Check if email is in the hardcoded admin list
+  const adminEmails = ["dabasrianto@gmail.com"];
+  return adminEmails.includes(email.toLowerCase());
+}
+
+// Set or remove admin status for a user
+export const updateUserAdminStatus = async (userId: string, isAdmin: boolean): Promise<void> => {
+  try {
+    console.log(`🔄 Updating admin status for user ${userId} to ${isAdmin}`);
+    
+    // This function would need to call a Cloud Function that uses the Firebase Admin SDK
+    // to set custom claims. For now, we'll implement a placeholder that updates a field in Firestore.
+    const database = ensureDb();
+    const userRef = doc(database, "users", userId);
+    
+    await updateDoc(userRef, {
+      isAdmin: isAdmin,
+      updatedAt: serverTimestamp(),
+    });
+    
+    console.log(`✅ Successfully updated admin status for user ${userId}`);
+    
+    // Note: In a production environment, you would need to implement a Cloud Function
+    // that uses the Admin SDK to set custom claims like this:
+    // 
+    // admin.auth().setCustomUserClaims(userId, { admin: isAdmin });
+    //
+    // This requires Firebase Cloud Functions and cannot be done directly from client code.
+  } catch (error) {
+    console.error(`❌ Error updating admin status for user ${userId}:`, error);
+    throw new Error(`Failed to update admin status: ${(error as any).message}`);
+  }
 }
 
 // Admin Functions - Get all users with their stats
@@ -317,6 +347,7 @@ export const getAllUsersWithStats = async (): Promise<any[]> => {
           displayName: userData.displayName || userData.email || "Unknown User",
           photoURL: userData.photoURL || null,
           subscriptionType: userData.subscriptionType || "free",
+          isAdmin: userData.isAdmin || false,
           subscriptionExpiry: userData.subscriptionExpiry ? convertTimestamp(userData.subscriptionExpiry) : null,
           createdAt: convertTimestamp(userData.createdAt),
           updatedAt: convertTimestamp(userData.updatedAt),

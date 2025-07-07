@@ -6,28 +6,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, AlertTriangle, RefreshCw } from "lucide-react"
+import { Shield, AlertTriangle, RefreshCw, Crown } from "lucide-react"
 import Link from "next/link"
 import AdminUsersList from "@/components/admin/admin-users-list"
 import AdminStats from "@/components/admin/admin-stats"
 import AdminDebug from "@/components/admin/admin-debug"
 import SubscriptionManager from "@/components/admin/subscription-manager"
 import UserManagement from "@/components/admin/user-management"
+import PremiumDashboard from "@/components/admin/premium-dashboard"
 import LoginPage from "@/components/auth/login-page"
 import FirebaseRulesSetup from "@/components/admin/firebase-rules-setup"
 
 export default function AdminPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isAdmin: userIsAdmin } = useAuth()
   const { users, analytics, loading, error, isAdmin, refreshData } = useAdmin()
 
-  console.log("AdminPage render:", {
-    user: user?.email,
-    isAdmin,
-    usersCount: users?.length,
-    loading,
-    error,
-    analytics,
-  })
+  // Only log when there's meaningful state change
+  if (process.env.NODE_ENV === 'development') {
+    console.log("AdminPage render:", {
+      user: user?.email || 'undefined',
+      userIsAdmin,
+      hookIsAdmin: isAdmin,
+      usersCount: users?.length || 0,
+      authLoading,
+      dataLoading: loading,
+      error,
+      analytics: analytics ? 'loaded' : 'null',
+    })
+  }
 
   if (authLoading) {
     return (
@@ -41,7 +47,7 @@ export default function AdminPage() {
     return <LoginPage />
   }
 
-  if (!isAdmin) {
+  if (!userIsAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -50,6 +56,9 @@ export default function AdminPage() {
             <CardTitle className="text-2xl font-bold text-red-600">Akses Ditolak</CardTitle>
             <CardDescription>Anda tidak memiliki akses ke halaman admin</CardDescription>
             <p className="text-sm text-muted-foreground mt-2">Email Anda: {user.email}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Admin email yang diizinkan: dabasrianto@gmail.com
+            </p>
           </CardHeader>
           <CardContent className="text-center">
             <Button asChild>
@@ -71,7 +80,7 @@ export default function AdminPage() {
               <Shield className="h-8 w-8 text-red-600" />
               Admin Dashboard
             </h1>
-            <p className="text-muted-foreground mt-1">Kelola pengguna dan langganan aplikasi Tasmi'</p>
+            <p className="text-muted-foreground mt-1">Kelola pengguna, langganan, dan premium upgrades</p>
             <p className="text-sm text-green-600 mt-1">✅ Logged in as admin: {user.email}</p>
           </div>
           <div className="flex gap-2">
@@ -104,13 +113,21 @@ export default function AdminPage() {
           </Alert>
         )}
 
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="premium" className="w-full">
           <TabsList className="mb-6">
+            <TabsTrigger value="premium" className="flex items-center gap-2">
+              <Crown className="h-4 w-4" />
+              Premium Management
+            </TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Kelola User</TabsTrigger>
             <TabsTrigger value="subscriptions">Kelola Langganan</TabsTrigger>
             <TabsTrigger value="data">Data Pengguna</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="premium">
+            <PremiumDashboard />
+          </TabsContent>
 
           <TabsContent value="overview">
             <AdminStats users={users} loading={loading} />

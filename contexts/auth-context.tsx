@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "firebase/auth"
 import { onAuthStateChange, signInWithGoogle, signOut } from "@/lib/firebase-auth"
+import { signInWithEmail, signUpWithEmail, resetPassword } from "@/lib/firebase-email-auth"
 import { getUserProfile, isAdmin } from "@/lib/firebase-firestore"
 
 interface AuthContextType {
@@ -12,6 +13,9 @@ interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   signIn: () => Promise<void>
+  signInEmail: (email: string, password: string) => Promise<void>
+  signUpEmail: (email: string, password: string, displayName: string) => Promise<void>
+  resetPasswordEmail: (email: string) => Promise<void>
   signOut: () => Promise<void>
   error: string | null
 }
@@ -35,19 +39,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await new Promise((resolve) => setTimeout(resolve, 100))
 
         unsubscribe = onAuthStateChange(async (user) => {
+          console.log("🔄 Auth state changed:", { 
+            userEmail: user?.email, 
+            userUid: user?.uid,
+            timestamp: new Date().toISOString()
+          })
+          
           setUser(user)
           setError(null)
 
           if (user) {
             try {
+              // Get the ID token result to check custom claims
+              const tokenResult = await user.getIdTokenResult(true);
+              
+              // Check admin status from custom claims or fallback to email check
+              const adminStatus = tokenResult.claims.admin === true || isAdmin(user.email || "");
+              setIsUserAdmin(adminStatus);
+              console.log("👑 Admin status check:", {
+                email: user.email,
+                isAdmin: adminStatus,
+                fromCustomClaim: tokenResult.claims.admin === true
+              });
+
+              // Then load profile
               const profile = await getUserProfile(user.uid)
+              
+              // If the user has isAdmin field in their profile, also consider that
+              if (profile && profile.isAdmin) {
+                setIsUserAdmin(true);
+              }
+              
               setUserProfile(profile)
-              setIsUserAdmin(isAdmin(user.email || ""))
+              console.log("👤 User profile loaded successfully")
             } catch (error) {
-              console.error("Error fetching user profile:", error)
+              console.error("❌ Error fetching user profile:", error)
               setError("Failed to load user profile")
+              // Don't reset admin status on profile error
             }
           } else {
+            console.log("👤 No user, clearing auth state")
             setUserProfile(null)
             setIsUserAdmin(false)
           }
@@ -55,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         })
       } catch (error: any) {
-        console.error("Error setting up auth state listener:", error)
+        console.error("❌ Error setting up auth state listener:", error)
         setError("Failed to initialize authentication")
         setLoading(false)
       }
@@ -73,10 +104,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSignIn = async () => {
     try {
       setError(null)
+      console.log("🔄 Attempting Google sign in...")
       await signInWithGoogle()
     } catch (error: any) {
-      console.error("Error signing in:", error)
+      console.error("❌ Error signing in:", error)
       setError(error.message || "Failed to sign in")
+      throw error
+    }
+  }
+
+  const handleSignInEmail = async (email: string, password: string) => {
+    try {
+      setError(null)
+      console.log("🔄 Attempting email sign in for:", email)
+      await signInWithEmail(email, password)
+    } catch (error: any) {
+      console.error("❌ Error signing in with email:", error)
+      setError(error.message || "Failed to sign in with email")
+      throw error
+    }
+  }
+
+  const handleSignUpEmail = async (email: string, password: string, displayName: string) => {
+    try {
+      setError(null)
+      console.log("🔄 Attempting email sign up for:", email)
+      await signUpWithEmail(email, password, displayName)
+    } catch (error: any) {
+      console.error("❌ Error signing up with email:", error)
+      setError(error.message || "Failed to sign up with email")
+      throw error
+    }
+  }
+
+  const handleResetPasswordEmail = async (email: string) => {
+    try {
+      setError(null)
+      console.log("🔄 Attempting password reset for:", email)
+      await resetPassword(email)
+    } catch (error: any) {
+      console.error("❌ Error resetting password:", error)
+      setError(error.message || "Failed to reset password")
       throw error
     }
   }
@@ -84,9 +152,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSignOut = async () => {
     try {
       setError(null)
+      console.log("🔄 Attempting sign out...")
       await signOut()
     } catch (error: any) {
-      console.error("Error signing out:", error)
+      console.error("❌ Error signing out:", error)
       setError(error.message || "Failed to sign out")
       throw error
     }
@@ -98,6 +167,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     isAdmin: isUserAdmin,
     signIn: handleSignIn,
+    signInEmail: handleSignInEmail,
+    signUpEmail: handleSignUpEmail,
+    resetPasswordEmail: handleResetPasswordEmail,
     signOut: handleSignOut,
     error,
   }

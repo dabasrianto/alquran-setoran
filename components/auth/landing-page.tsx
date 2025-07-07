@@ -3,10 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   BookOpen, 
   Users, 
@@ -20,21 +18,16 @@ import {
   Cloud,
   Smartphone,
   Loader2,
-  AlertCircle,
-  Mail
+  AlertCircle
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import EmailAuthForm from "./email-auth-form"
 
 export default function LandingPage() {
   const { signIn, error: authError } = useAuth()
   const [activeTab, setActiveTab] = useState("login")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  // Email login states
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSignUp, setIsSignUp] = useState(false)
 
   const handleGoogleSignIn = async () => {
     try {
@@ -47,11 +40,6 @@ export default function LandingPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("Fitur login email sedang dalam pengembangan. Silakan gunakan login Google untuk saat ini.")
   }
 
   const displayError = error || authError
@@ -93,7 +81,7 @@ export default function LandingPage() {
     {
       number: "1",
       title: "Daftar & Login",
-      description: "Masuk dengan akun Google untuk mulai menggunakan aplikasi"
+      description: "Masuk dengan akun Google atau email untuk mulai menggunakan aplikasi"
     },
     {
       number: "2", 
@@ -206,119 +194,53 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="login">Login</TabsTrigger>
-                      <TabsTrigger value="register">Daftar</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="login" className="space-y-4">
-                      {displayError && (
-                        <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{displayError}</AlertDescription>
-                        </Alert>
-                      )}
+                  {displayError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{displayError}</AlertDescription>
+                    </Alert>
+                  )}
 
-                      <form onSubmit={handleEmailAuth} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="nama@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="password">Password</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <Button type="submit" className="w-full" disabled={loading}>
-                          {loading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Masuk...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="mr-2 h-4 w-4" />
-                              Masuk dengan Email
-                            </>
-                          )}
-                        </Button>
-                      </form>
+                  {/* Email Auth Form */}
+                  <EmailAuthForm onSuccess={() => {
+                    // Login berhasil, akan redirect otomatis
+                  }} />
 
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">Atau</span>
-                        </div>
-                      </div>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Atau</span>
+                    </div>
+                  </div>
 
-                      <Button 
-                        onClick={handleGoogleSignIn} 
-                        disabled={loading} 
-                        variant="outline" 
-                        className="w-full"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Signing in...
-                          </>
-                        ) : (
-                          "Masuk dengan Google"
-                        )}
-                      </Button>
-                    </TabsContent>
-
-                    <TabsContent value="register" className="space-y-4">
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Untuk saat ini, silakan gunakan login Google untuk mendaftar akun baru.
-                        </AlertDescription>
-                      </Alert>
-
-                      <Button 
-                        onClick={handleGoogleSignIn} 
-                        disabled={loading} 
-                        className="w-full"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Signing in...
-                          </>
-                        ) : (
-                          "Daftar dengan Google"
-                        )}
-                      </Button>
-                    </TabsContent>
-                  </Tabs>
+                  <Button 
+                    onClick={handleGoogleSignIn} 
+                    disabled={loading} 
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      "Masuk dengan Google"
+                    )}
+                  </Button>
 
                   <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <h4 className="font-semibold text-amber-800 mb-2">Paket Langganan:</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>🆓 Gratis:</span>
-                        <span>5 Murid, 1 Ustadz, 1 Ustadzah</span>
+                        <span>Trial 7 hari</span>
                       </div>
                       <div className="flex justify-between">
                         <span>⭐ Premium:</span>
-                        <span>Unlimited - Rp 50.000/bulan</span>
+                        <span>Unlimited - Rp 750.000/bulan</span>
                       </div>
                     </div>
                   </div>
@@ -443,7 +365,7 @@ export default function LandingPage() {
                 <CardTitle className="text-2xl">Paket Gratis</CardTitle>
                 <CardDescription>Cocok untuk pengajar pemula</CardDescription>
                 <div className="text-3xl font-bold mt-4">Rp 0</div>
-                <div className="text-gray-500">Selamanya</div>
+                <div className="text-gray-500">7 hari</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -483,30 +405,38 @@ export default function LandingPage() {
                 </div>
                 <CardTitle className="text-2xl">Paket Premium</CardTitle>
                 <CardDescription>Untuk institusi & madrasah</CardDescription>
-                <div className="text-3xl font-bold mt-4">Rp 50.000</div>
+                <div className="text-3xl font-bold mt-4">Rp 750.000</div>
                 <div className="text-gray-500">Per bulan</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="font-semibold">Unlimited Murid</span>
+                    <span className="font-semibold">Unlimited ustadz/ustadzah</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="font-semibold">Unlimited Ustadz/Ustadzah</span>
+                    <span className="font-semibold">Unlimited murid</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span>Dashboard & Laporan</span>
+                    <span>Perpanjangan otomatis</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span>Export PDF</span>
+                    <span>Semua fitur premium</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span>Priority Support</span>
+                    <span>Priority support</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Export data</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Untuk 1 nama lembaga</span>
                   </div>
                 </div>
                 <Button className="w-full bg-amber-600 hover:bg-amber-700" onClick={() => setActiveTab("login")}>
@@ -523,10 +453,10 @@ export default function LandingPage() {
       <section className="py-16 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-4">
-            Siap Mengelola Hafalan dengan Lebih Efektif?
+            Siap Meningkatkan Kualitas Pembelajaran?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Bergabunglah dengan ribuan ustadz dan ustadzah yang telah mempercayai Tasmi'
+            Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya. Trial gratis 7 hari!
           </p>
           <Button 
             size="lg" 

@@ -33,6 +33,7 @@ import {
 import { useAdmin } from "@/hooks/use-admin"
 import {
   Crown,
+  Shield,
   User,
   Users,
   GraduationCap,
@@ -55,7 +56,7 @@ interface UserManagementProps {
 }
 
 export default function UserManagement({ users, loading, onRefresh }: UserManagementProps) {
-  const { updateSubscription, deleteUser, updateUserProfile, toggleUserActiveStatus, resetUserData } = useAdmin()
+  const { updateSubscription, deleteUser, updateUserProfile, toggleUserActiveStatus, resetUserData, updateUserAdminStatus } = useAdmin()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
@@ -70,6 +71,7 @@ export default function UserManagement({ users, loading, onRefresh }: UserManage
   const [subscriptionType, setSubscriptionType] = useState<"free" | "premium">("free")
   const [customExpiry, setCustomExpiry] = useState("")
   const [isActive, setIsActive] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [notes, setNotes] = useState("")
 
   const filteredUsers = users.filter((user) => {
@@ -110,6 +112,7 @@ export default function UserManagement({ users, loading, onRefresh }: UserManage
     setDisplayName(user.displayName || "")
     setEmail(user.email || "")
     setSubscriptionType(user.subscriptionType || "free")
+    setIsAdmin(user.isAdmin || false)
     setIsActive(user.isActive !== false)
     setCustomExpiry("")
     setNotes("")
@@ -139,6 +142,11 @@ export default function UserManagement({ users, loading, onRefresh }: UserManage
       // Update active status if changed
       if (isActive !== (editingUser.isActive !== false)) {
         await toggleUserActiveStatus(editingUser.id, isActive)
+      }
+      
+      // Update admin status if changed
+      if (isAdmin !== (editingUser.isAdmin || false)) {
+        await updateUserAdminStatus(editingUser.id, isAdmin)
       }
 
       setEditingUser(null)
@@ -193,6 +201,13 @@ export default function UserManagement({ users, loading, onRefresh }: UserManage
   const getStatusBadge = (user: any) => {
     if (user.isActive === false) {
       return <Badge variant="destructive">Nonaktif</Badge>
+    }
+    
+    if (user.isAdmin) {
+      return <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+        <Shield className="h-3 w-3 mr-1" />
+        Admin
+      </Badge>
     }
 
     if (user.subscriptionType === "premium") {
@@ -468,6 +483,11 @@ export default function UserManagement({ users, loading, onRefresh }: UserManage
                           <div className="flex items-center space-x-2">
                             <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
                             <Label htmlFor="isActive">User Aktif</Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch id="isAdmin" checked={isAdmin} onCheckedChange={setIsAdmin} />
+                            <Label htmlFor="isAdmin">Admin</Label>
                           </div>
 
                           <div className="space-y-2">

@@ -137,7 +137,7 @@ export default function UpgradeContent() {
               </div>
             </div>
             <div className="pt-4">
-              <Badge className="bg-amber-600 text-white text-lg px-4 py-2">Rp 50.000/bulan</Badge>
+              <Badge className="bg-amber-600 text-white text-lg px-4 py-2">Rp 750.000/bulan</Badge>
             </div>
           </CardContent>
         </Card>
