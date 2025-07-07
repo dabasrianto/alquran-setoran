@@ -299,8 +299,8 @@ export default function HeroSection() {
             Siap Meningkatkan Kualitas Pembelajaran?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            <p className="text-xl mb-8 opacity-90">
-              Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya. Trial gratis 7 hari!
+            Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya. Trial gratis 7 hari!
+          </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
