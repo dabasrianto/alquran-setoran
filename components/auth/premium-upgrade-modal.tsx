@@ -251,7 +251,7 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                           <Badge className="mt-2 bg-amber-100 text-amber-800">Recommended</Badge>
                         )}
                       </CardContent>
-                    Rp 750.000/bulan
+                    </Card>
                   ))}
                 </div>
               </div>
