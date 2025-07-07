@@ -46,36 +46,6 @@ function initializeFirebase() {
 
 // Initialize with retry logic
 const app = initializeFirebase();
-const MAX_RETRIES = 3;
-
-function initializeFirebase() {
-  try {
-    // Validate required config
-    const requiredKeys = ["apiKey", "authDomain", "projectId", "appId"]
-    const missingKeys = requiredKeys.filter((key) => !firebaseConfig[key as keyof typeof firebaseConfig])
-
-    if (missingKeys.length > 0) {
-      console.error("Missing Firebase configuration keys:", missingKeys)
-      throw new Error(`Missing Firebase configuration: ${missingKeys.join(", ")}`)
-    }
-
-    // Initialize Firebase app
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-    console.log("Firebase initialized successfully")
-    return app;
-  } catch (error) {
-    console.error("Error initializing Firebase:", error);
-    if (retryCount < MAX_RETRIES) {
-      retryCount++;
-      console.log(`Retrying Firebase initialization (${retryCount}/${MAX_RETRIES})...`);
-      return initializeApp(firebaseConfig);
-    }
-    throw error;
-  }
-}
-
-// Initialize with retry logic
-const app = initializeFirebase();
 
 // Initialize Firebase Auth
 const auth = getAuth(app)
@@ -92,9 +62,6 @@ const db = getFirestore(app)
 // Export a function to check connection status
 export const checkFirebaseConnection = async () => {
   try {
-    if (!db) return false;
-    // Try a simple operation to verify connection
-    const timestamp = Date.now().toString();
     if (!db) return false;
     // Try a simple operation to verify connection
     const timestamp = Date.now().toString();
