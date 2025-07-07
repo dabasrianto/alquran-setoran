@@ -32,6 +32,7 @@ const generateChartData = (points: number, trend: "up" | "down" | "volatile") =>
 const studentsData = generateChartData(30, "up")
 const setoranData = generateChartData(30, "volatile")
 const completedSurahData = generateChartData(30, "up")
+const completedJuzData = generateChartData(30, "up")
 
 export function UserDashboardStats() {
   return (
@@ -44,11 +45,11 @@ export function UserDashboardStats() {
         color="purple"
       />
       <GradientStatCard
-        title="Setoran Minggu Ini"
-        value="45"
-        change={-2}
+        title="Total Ayat Dihafal"
+        value="1,240"
+        change={8}
         data={setoranData}
-        color="orange"
+        color="blue"
       />
       <GradientStatCard
         title="Surat Selesai"
@@ -56,6 +57,13 @@ export function UserDashboardStats() {
         change={5}
         data={completedSurahData}
         color="green"
+      />
+      <GradientStatCard
+        title="Juz Selesai"
+        value="2"
+        change={0}
+        data={completedJuzData}
+        color="amber"
       />
     </>
   )
