@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { BarChart, Users, BookOpen, Shield } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import LoginPage from "@/components/auth/login-page"
+import LandingPage from "@/app/landing/page"
 import SubscriptionBanner from "@/components/auth/subscription-banner"
 import SubscriptionGuard from "@/components/subscription/subscription-guard"
 import UserMenu from "@/components/auth/user-menu"
@@ -22,7 +22,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return <LoginPage />
+    return <LandingPage />
   }
 
   return (

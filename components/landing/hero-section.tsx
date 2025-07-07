@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { LandingNavbar } from "@/components/landing/navbar"
 import { 
   BookOpen, 
   Users, 
@@ -46,8 +47,10 @@ export default function HeroSection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      <LandingNavbar />
+      
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section id="home" className="relative overflow-hidden pt-24">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-green-600/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -108,7 +111,7 @@ export default function HeroSection() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
+      <section id="features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -169,7 +172,7 @@ export default function HeroSection() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-16 bg-gray-50">
+      <section id="pricing" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -293,7 +296,7 @@ export default function HeroSection() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-primary text-white">
+      <section id="cta" className="py-16 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-4">
             Siap Meningkatkan Kualitas Pembelajaran?
