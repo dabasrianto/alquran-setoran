@@ -25,6 +25,7 @@ import UpgradeRequestsTable from "./upgrade-requests-table"
 import PaymentManagement from "./payment-management"
 import AdminActionLogs from "./admin-action-logs"
 import { useAuth } from "@/contexts/auth-context"
+import FirebaseRulesDeploymentNotice from "./firebase-rules-deployment-notice"
 import {
   getAllUpgradeRequests,
   getAdminLogs,
@@ -153,6 +154,13 @@ export default function PremiumDashboard() {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {/* Show deployment notice if permission errors */}
+      {error && error.includes("permissions") && (
+        <div className="mb-6">
+          <FirebaseRulesDeploymentNotice />
+        </div>
       )}
 
       {/* Statistics Cards */}
