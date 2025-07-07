@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Crown,
@@ -149,6 +150,11 @@ export default function PremiumDashboard() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <AdminDashboardStats />
+      </div>
+
+      {/* Legacy Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6 hidden">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
