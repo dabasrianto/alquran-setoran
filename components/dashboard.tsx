@@ -23,6 +23,7 @@ import type { Student } from "@/lib/types"
 import { calculateStudentSummary } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { UserDashboardStats } from "@/components/dashboard/user-stats"
 
 interface DashboardProps {
   students: Student[]
@@ -135,6 +136,11 @@ export default function Dashboard({ students }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <UserDashboardStats />
+      </div>
+
+      {/* Legacy Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 hidden">
         <Card>
           <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
             <CardTitle className="text-xs md:text-sm font-medium">Total Murid</CardTitle>
