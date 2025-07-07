@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import dynamic from "next/dynamic"
+import dynamic from 'next/dynamic'
 import {
   Crown,
   TrendingUp,
@@ -36,7 +36,7 @@ import type { UpgradeRequest, AdminActionLog } from "@/lib/types"
 
 // Dynamically import Recharts components with SSR disabled
 const DynamicAdminDashboardStats = dynamic(
-  () => import("@/components/admin/admin-dashboard-stats").then(mod => mod.AdminDashboardStats),
+  () => import('@/components/admin/admin-dashboard-stats').then(mod => mod.AdminDashboardStats),
   { ssr: false }
 )
 
@@ -158,83 +158,6 @@ export default function PremiumDashboard() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <DynamicAdminDashboardStats />
-      </div>
-
-      {/* Legacy Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6 hidden">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Requests</p>
-                <p className="text-2xl font-bold">{stats.totalRequests}</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.pendingRequests}</p>
-              </div>
-              <Clock className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Approved</p>
-                <p className="text-2xl font-bold text-green-600">{stats.approvedRequests}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.completedRequests}</p>
-              </div>
-              <Crown className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Revenue</p>
-                <p className="text-2xl font-bold text-green-600">
-                  Rp {stats.totalRevenue.toLocaleString("id-ID")}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Payments</p>
-                <p className="text-2xl font-bold text-red-600">{stats.pendingPayments}</p>
-              </div>
-              <CreditCard className="h-8 w-8 text-red-600" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main Content Tabs */}

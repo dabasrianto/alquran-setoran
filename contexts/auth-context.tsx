@@ -4,8 +4,9 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "firebase/auth"
 import { onAuthStateChange, signInWithGoogle, signOut } from "@/lib/firebase-auth"
-import { signInWithEmail, signUpWithEmail, resetPassword } from "@/lib/firebase-email-auth"
+import { signInWithEmail, signUpWithEmail, resetPassword } from "@/lib/firebase-email-auth" 
 import { getUserProfile, isAdmin } from "@/lib/firebase-firestore"
+import { checkFirebaseConnection } from "@/lib/firebase"
 
 interface AuthContextType {
   user: User | null
@@ -28,12 +29,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
+  const [connectionRetries, setConnectionRetries] = useState(0)
+  const MAX_CONNECTION_RETRIES = 3
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined
 
     // Add a small delay to ensure Firebase is fully initialized
     const initializeAuth = async () => {
+      // Check Firebase connection first
+      let isConnected = false
+      try {
+        isConnected = await checkFirebaseConnection()
+        if (!isConnected && connectionRetries < MAX_CONNECTION_RETRIES) {
+          console.log(`Firebase connection failed, retrying (${connectionRetries + 1}/${MAX_CONNECTION_RETRIES})...`)
+          setConnectionRetries(prev => prev + 1)
+          setTimeout(initializeAuth, 1000) // Retry after 1 second
+          return
+        }
+      } catch (connError) {
+        console.error("Error checking Firebase connection:", connError)
+      }
+      
       try {
         // Wait a bit for Firebase to initialize
         await new Promise((resolve) => setTimeout(resolve, 100))
@@ -50,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (user) {
             try {
+              console.log("User authenticated, loading profile and checking admin status...")
               // Get the ID token result to check custom claims
               const tokenResult = await user.getIdTokenResult(true);
               
@@ -74,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.log("👤 User profile loaded successfully")
             } catch (error) {
               console.error("❌ Error fetching user profile:", error)
+              console.log("Attempting to continue despite profile error...")
               setError("Failed to load user profile")
               // Don't reset admin status on profile error
             }
@@ -87,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
       } catch (error: any) {
         console.error("❌ Error setting up auth state listener:", error)
+        console.log("Auth initialization failed, will retry on next render...")
         setError("Failed to initialize authentication")
         setLoading(false)
       }
@@ -99,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         unsubscribe()
       }
     }
-  }, [])
+  }, [connectionRetries])
 
   const handleSignIn = async () => {
     try {

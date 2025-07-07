@@ -24,7 +24,7 @@ import { calculateStudentSummary } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { UserDashboardStats } from "@/components/dashboard/user-stats"
-import dynamic from "next/dynamic"
+import dynamic from 'next/dynamic'
 
 interface DashboardProps {
   students: Student[]
@@ -32,7 +32,73 @@ interface DashboardProps {
 
 // Dynamically import Recharts components with SSR disabled
 const DynamicUserDashboardStats = dynamic(
-  () => import("@/components/dashboard/user-stats").then(mod => mod.UserDashboardStats),
+  () => import('@/components/dashboard/user-stats').then(mod => mod.UserDashboardStats),
+  { ssr: false }
+)
+
+// Dynamically import chart components with SSR disabled
+const DynamicBarChart = dynamic(
+  () => import('recharts').then(mod => mod.BarChart),
+  { ssr: false }
+)
+
+const DynamicBar = dynamic(
+  () => import('recharts').then(mod => mod.Bar),
+  { ssr: false }
+)
+
+const DynamicXAxis = dynamic(
+  () => import('recharts').then(mod => mod.XAxis),
+  { ssr: false }
+)
+
+const DynamicYAxis = dynamic(
+  () => import('recharts').then(mod => mod.YAxis),
+  { ssr: false }
+)
+
+const DynamicCartesianGrid = dynamic(
+  () => import('recharts').then(mod => mod.CartesianGrid),
+  { ssr: false }
+)
+
+const DynamicTooltip = dynamic(
+  () => import('recharts').then(mod => mod.Tooltip),
+  { ssr: false }
+)
+
+const DynamicLegend = dynamic(
+  () => import('recharts').then(mod => mod.Legend),
+  { ssr: false }
+)
+
+const DynamicResponsiveContainer = dynamic(
+  () => import('recharts').then(mod => mod.ResponsiveContainer),
+  { ssr: false }
+)
+
+const DynamicPieChart = dynamic(
+  () => import('recharts').then(mod => mod.PieChart),
+  { ssr: false }
+)
+
+const DynamicPie = dynamic(
+  () => import('recharts').then(mod => mod.Pie),
+  { ssr: false }
+)
+
+const DynamicCell = dynamic(
+  () => import('recharts').then(mod => mod.Cell),
+  { ssr: false }
+)
+
+const DynamicLineChart = dynamic(
+  () => import('recharts').then(mod => mod.LineChart),
+  { ssr: false }
+)
+
+const DynamicLine = dynamic(
+  () => import('recharts').then(mod => mod.Line),
   { ssr: false }
 )
 
@@ -146,48 +212,6 @@ export default function Dashboard({ students }: DashboardProps) {
         <DynamicUserDashboardStats />
       </div>
 
-      {/* Legacy Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 hidden">
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Total Murid</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">{studentsWithSummary.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Total Ayat Dihafal</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">
-              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.totalMemorizedVerses || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Surat Selesai</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">
-              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.completedSurahsCount || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Juz Selesai</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">
-              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.juzProgress?.completed || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs defaultValue="students">
         <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap justify-start md:justify-center">
           <TabsTrigger value="students">Progres Murid</TabsTrigger>
@@ -205,18 +229,18 @@ export default function Dashboard({ students }: DashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
+                <DynamicResponsiveContainer width="100%" height="100%">
+                  <DynamicBarChart
                     data={topStudentsData}
                     layout={isMobile ? "horizontal" : "vertical"}
                     margin={
                       isMobile ? { top: 5, right: 10, left: 0, bottom: 60 } : { top: 5, right: 30, left: 50, bottom: 5 }
                     }
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <DynamicCartesianGrid strokeDasharray="3 3" />
                     {isMobile ? (
                       <>
-                        <XAxis
+                        <DynamicXAxis
                           dataKey="name"
                           angle={-45}
                           textAnchor="end"
@@ -224,19 +248,26 @@ export default function Dashboard({ students }: DashboardProps) {
                           tick={{ fontSize: 10 }}
                           interval={0}
                         />
-                        <YAxis />
+                        <DynamicYAxis />
                       </>
                     ) : (
                       <>
-                        <XAxis type="number" />
-                        <YAxis type="category" dataKey="name" width={100} />
+                        <DynamicXAxis type="number" />
+                        <DynamicYAxis type="category" dataKey="name" width={100} />
                       </>
                     )}
-                    <Tooltip formatter={(value) => [`${value} ayat`, "Total Ayat"]} />
-                    <Legend />
-                    <Bar dataKey="ayat" fill="#3b82f6" name="Total Ayat Dihafal" />
-                  </BarChart>
-                </ResponsiveContainer>
+                    <DynamicTooltip formatter={(value) => [`${value} ayat`, "Total Ayat"]} />
+                    <DynamicLegend />
+                    <DynamicBar dataKey="ayat" fill="#3b82f6" name="Total Ayat Dihafal">
+                      <defs>
+                        <linearGradient id="colorAyat" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                        </linearGradient>
+                      </defs>
+                    </DynamicBar>
+                  </DynamicBarChart>
+                </DynamicResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -248,9 +279,9 @@ export default function Dashboard({ students }: DashboardProps) {
               <CardTitle className="text-base md:text-lg">Progres Surat</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
+              <div className="h-[300px] md:h-[400px]"> 
+                <DynamicResponsiveContainer width="100%" height="100%">
+                  <DynamicBarChart
                     data={surahCompletionData}
                     margin={
                       isMobile
@@ -259,24 +290,38 @@ export default function Dashboard({ students }: DashboardProps) {
                     }
                     layout={isMobile ? "vertical" : "horizontal"}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <DynamicCartesianGrid strokeDasharray="3 3" />
                     {isMobile ? (
                       <>
-                        <XAxis type="number" />
-                        <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} interval={0} />
+                        <DynamicXAxis type="number" />
+                        <DynamicYAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} interval={0} />
                       </>
                     ) : (
                       <>
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                        <YAxis />
+                        <DynamicXAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                        <DynamicYAxis />
                       </>
                     )}
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="completed" stackId="a" fill="#4ade80" name="Selesai" />
-                    <Bar dataKey="inProgress" stackId="a" fill="#facc15" name="Dalam Proses" />
-                  </BarChart>
-                </ResponsiveContainer>
+                    <DynamicTooltip />
+                    <DynamicLegend />
+                    <DynamicBar dataKey="completed" stackId="a" fill="#4ade80" name="Selesai">
+                      <defs>
+                        <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#4ade80" stopOpacity={0.2}/>
+                        </linearGradient>
+                      </defs>
+                    </DynamicBar>
+                    <DynamicBar dataKey="inProgress" stackId="a" fill="#facc15" name="Dalam Proses">
+                      <defs>
+                        <linearGradient id="colorInProgress" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#facc15" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#facc15" stopOpacity={0.2}/>
+                        </linearGradient>
+                      </defs>
+                    </DynamicBar>
+                  </DynamicBarChart>
+                </DynamicResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -289,29 +334,59 @@ export default function Dashboard({ students }: DashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <DynamicResponsiveContainer width="100%" height="100%">
                   {isMobile ? (
-                    <BarChart data={juzProgressData} margin={{ top: 5, right: 10, left: 0, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="started" fill="#facc15" name="Dimulai" />
-                      <Bar dataKey="completed" fill="#4ade80" name="Selesai" />
-                    </BarChart>
+                    <DynamicBarChart data={juzProgressData} margin={{ top: 5, right: 10, left: 0, bottom: 20 }}>
+                      <DynamicCartesianGrid strokeDasharray="3 3" />
+                      <DynamicXAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                      <DynamicYAxis />
+                      <DynamicTooltip />
+                      <DynamicLegend />
+                      <DynamicBar dataKey="started" fill="#facc15" name="Dimulai">
+                        <defs>
+                          <linearGradient id="colorStarted" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#facc15" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#facc15" stopOpacity={0.2}/>
+                          </linearGradient>
+                        </defs>
+                      </DynamicBar>
+                      <DynamicBar dataKey="completed" fill="#4ade80" name="Selesai">
+                        <defs>
+                          <linearGradient id="colorCompleted2" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#4ade80" stopOpacity={0.2}/>
+                          </linearGradient>
+                        </defs>
+                      </DynamicBar>
+                    </DynamicBarChart>
                   ) : (
-                    <LineChart data={juzProgressData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="started" stroke="#facc15" name="Dimulai" />
-                      <Line type="monotone" dataKey="completed" stroke="#4ade80" name="Selesai" />
-                    </LineChart>
+                    <DynamicLineChart data={juzProgressData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <DynamicCartesianGrid strokeDasharray="3 3" />
+                      <DynamicXAxis dataKey="name" />
+                      <DynamicYAxis />
+                      <DynamicTooltip />
+                      <DynamicLegend />
+                      <DynamicLine 
+                        type="monotone" 
+                        dataKey="started" 
+                        stroke="#facc15" 
+                        name="Dimulai"
+                        strokeWidth={2}
+                        dot={{ stroke: '#facc15', strokeWidth: 2, r: 4 }}
+                        activeDot={{ stroke: '#facc15', strokeWidth: 2, r: 6 }}
+                      />
+                      <DynamicLine 
+                        type="monotone" 
+                        dataKey="completed" 
+                        stroke="#4ade80" 
+                        name="Selesai"
+                        strokeWidth={2}
+                        dot={{ stroke: '#4ade80', strokeWidth: 2, r: 4 }}
+                        activeDot={{ stroke: '#4ade80', strokeWidth: 2, r: 6 }}
+                      />
+                    </DynamicLineChart>
                   )}
-                </ResponsiveContainer>
+                </DynamicResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -324,9 +399,9 @@ export default function Dashboard({ students }: DashboardProps) {
             </CardHeader>
             <CardContent className="flex justify-center">
               <div className="h-[300px] md:h-[400px] w-full max-w-[500px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
+                <DynamicResponsiveContainer width="100%" height="100%">
+                  <DynamicPieChart>
+                    <DynamicPie
                       data={assessmentData}
                       cx="50%"
                       cy="50%"
@@ -337,13 +412,13 @@ export default function Dashboard({ students }: DashboardProps) {
                       label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
                       {assessmentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <DynamicCell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${value} setoran`, "Jumlah"]} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                    </DynamicPie>
+                    <DynamicTooltip formatter={(value) => [`${value} setoran`, "Jumlah"]} />
+                    <DynamicLegend />
+                  </DynamicPieChart>
+                </DynamicResponsiveContainer>
               </div>
             </CardContent>
           </Card>
