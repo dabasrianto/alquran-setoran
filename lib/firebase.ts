@@ -2,12 +2,9 @@ import { initializeApp, getApps, getApp } from "firebase/app"
 import { getAuth, GoogleAuthProvider } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
-// Add retry logic for Firebase initialization
-let retryCount = 0;
-const MAX_RETRIES = 3;
-
 // Firebase configuration
 // Make sure all required fields are filled
+
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAxQboWL01Kp26ZObj4A7LVfR2cQ67cJWg',
@@ -17,6 +14,10 @@ const firebaseConfig = {
   messagingSenderId: '944178222011',
   appId: '1:944178222011:web:e3deadab61b4d5b7772a9e',
 };
+
+// Add retry logic for Firebase initialization
+let retryCount = 0;
+const MAX_RETRIES = 3;
 
 function initializeFirebase() {
   try {

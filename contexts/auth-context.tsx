@@ -112,13 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    initializeAuth()
+    initializeAuth();
 
     return () => {
       if (unsubscribe) {
         unsubscribe()
       }
-    }
+    };
   }, [connectionRetries])
 
   const handleSignIn = async () => {
