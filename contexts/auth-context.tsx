@@ -31,12 +31,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isUserAdmin, setIsUserAdmin] = useState(false)
   const [connectionRetries, setConnectionRetries] = useState(0)
   const MAX_CONNECTION_RETRIES = 3
+  const [connectionRetries, setConnectionRetries] = useState(0)
+  const MAX_CONNECTION_RETRIES = 3
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined
 
     // Add a small delay to ensure Firebase is fully initialized
     const initializeAuth = async () => {
+      // Check Firebase connection first
+      let isConnected = false
+      try {
+        isConnected = await checkFirebaseConnection()
+        if (!isConnected && connectionRetries < MAX_CONNECTION_RETRIES) {
+          console.log(`Firebase connection failed, retrying (${connectionRetries + 1}/${MAX_CONNECTION_RETRIES})...`)
+          setConnectionRetries(prev => prev + 1)
+          setTimeout(initializeAuth, 1000) // Retry after 1 second
+          return
+        }
+      } catch (connError) {
+        console.error("Error checking Firebase connection:", connError)
+      }
+      
       // Check Firebase connection first
       let isConnected = false
       try {
@@ -113,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     initializeAuth()
-
+  }, [connectionRetries])
     return () => {
       if (unsubscribe) {
         unsubscribe()
