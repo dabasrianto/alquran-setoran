@@ -55,7 +55,7 @@ export default function SubscriptionBanner() {
               </div>
             </div>
             <p className="text-xs text-blue-700">
-              Upgrade ke Premium untuk unlimited data - hanya Rp 50.000/bulan
+              Upgrade ke Premium untuk unlimited data - hanya Rp 750.000/bulan
             </p>
           </div>
           <Button 

@@ -129,7 +129,7 @@ export default function SubscriptionGuard({ children }: SubscriptionGuardProps) 
             <Clock className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <CardTitle className="text-2xl font-bold text-red-600">Trial Berakhir</CardTitle>
             <CardDescription className="text-lg">
-              Trial 14 hari Anda telah berakhir. Pilih paket premium untuk melanjutkan menggunakan aplikasi.
+              Trial 7 hari Anda telah berakhir. Pilih paket premium untuk melanjutkan menggunakan aplikasi.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -139,15 +139,16 @@ export default function SubscriptionGuard({ children }: SubscriptionGuardProps) 
                 <CardHeader className="text-center pb-2">
                   <Crown className="h-8 w-8 text-amber-600 mx-auto mb-2" />
                   <CardTitle className="text-xl">Premium</CardTitle>
-                  <div className="text-2xl font-bold text-amber-600">Rp 50.000</div>
+                  <div className="text-2xl font-bold text-amber-600">Rp 750.000</div>
                   <div className="text-sm text-muted-foreground">Per bulan</div>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-1 text-sm">
-                    <div>✓ Maksimal 2 ustadz</div>
-                    <div>✓ Maksimal 5 murid</div>
+                    <div>✓ Unlimited ustadz/ustadzah</div>
+                    <div>✓ Unlimited murid</div>
                     <div>✓ Semua fitur premium</div>
                     <div>✓ Export data</div>
+                    <div>✓ Untuk 1 nama lembaga</div>
                   </div>
                   <Button 
                     className="w-full bg-amber-600 hover:bg-amber-700" 

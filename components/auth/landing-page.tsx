@@ -236,11 +236,11 @@ export default function LandingPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>🆓 Gratis:</span>
-                        <span>5 Murid, 1 Ustadz, 1 Ustadzah</span>
+                        <span>Trial 7 hari</span>
                       </div>
                       <div className="flex justify-between">
                         <span>⭐ Premium:</span>
-                        <span>Unlimited - Rp 50.000/bulan</span>
+                        <span>Unlimited - Rp 750.000/bulan</span>
                       </div>
                     </div>
                   </div>
@@ -365,7 +365,7 @@ export default function LandingPage() {
                 <CardTitle className="text-2xl">Paket Gratis</CardTitle>
                 <CardDescription>Cocok untuk pengajar pemula</CardDescription>
                 <div className="text-3xl font-bold mt-4">Rp 0</div>
-                <div className="text-gray-500">Selamanya</div>
+                <div className="text-gray-500">7 hari</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -405,30 +405,38 @@ export default function LandingPage() {
                 </div>
                 <CardTitle className="text-2xl">Paket Premium</CardTitle>
                 <CardDescription>Untuk institusi & madrasah</CardDescription>
-                <div className="text-3xl font-bold mt-4">Rp 50.000</div>
+                <div className="text-3xl font-bold mt-4">Rp 750.000</div>
                 <div className="text-gray-500">Per bulan</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="font-semibold">Unlimited Murid</span>
+                    <span className="font-semibold">Unlimited ustadz/ustadzah</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="font-semibold">Unlimited Ustadz/Ustadzah</span>
+                    <span className="font-semibold">Unlimited murid</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span>Dashboard & Laporan</span>
+                    <span>Perpanjangan otomatis</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span>Export PDF</span>
+                    <span>Semua fitur premium</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span>Priority Support</span>
+                    <span>Priority support</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Export data</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                    <span>Untuk 1 nama lembaga</span>
                   </div>
                 </div>
                 <Button className="w-full bg-amber-600 hover:bg-amber-700" onClick={() => setActiveTab("login")}>
@@ -445,10 +453,10 @@ export default function LandingPage() {
       <section className="py-16 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-4">
-            Siap Mengelola Hafalan dengan Lebih Efektif?
+            Siap Meningkatkan Kualitas Pembelajaran?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Bergabunglah dengan ribuan ustadz dan ustadzah yang telah mempercayai Tasmi'
+            Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya. Trial gratis 7 hari!
           </p>
           <Button 
             size="lg" 

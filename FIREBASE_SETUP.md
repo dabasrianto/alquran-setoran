@@ -29,9 +29,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Function to check if user is admin
     function isAdmin() {
-      return request.auth != null && request.auth.token.email in [
-        'dabasrianto@gmail.com'
-      ];
+      return request.auth != null && (
+        request.auth.token.email in [
+          'dabasrianto@gmail.com'
+        ] || 
+        request.auth.token.admin == true
+      );
     }
     
     // Function to check if user is authenticated
@@ -84,6 +87,32 @@ service cloud.firestore {
       
       // Users can update their own subscription (for upgrade requests)
       allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Upgrade Requests collection - Users can create their own, admin can read/write all
+    match /upgradeRequests/{requestId} {
+      // Users can create upgrade requests for themselves
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Users can read their own upgrade requests
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Admin can read and write all upgrade requests
+      allow read, write: if isAdmin();
+    }
+    
+    // Payments collection - Admin only
+    match /payments/{paymentId} {
+      // Only admin can read and write payments
+      allow read, write: if isAdmin();
+      
+      // Users can read their own payment records
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Admin Logs collection - Admin only
+    match /adminLogs/{logId} {
+      allow read, write: if isAdmin();
     }
     
     // Admin-only collections (if needed in future)
@@ -146,7 +175,7 @@ Jika masih error:
 4. **Seharusnya berhasil** membaca data users
 
 ### 🔒 **Keamanan Rules:**
-- **Admin** (`dabasrianto@gmail.com`): Akses penuh semua data
+- **Admin** (`dabasrianto@gmail.com` atau user dengan custom claim `admin: true`): Akses penuh semua data
 - **User biasa**: Hanya data mereka sendiri dan subscription mereka
 - **Guest**: Tidak ada akses
 

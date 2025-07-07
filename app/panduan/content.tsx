@@ -194,7 +194,7 @@ export default function PanduanContent() {
                     </div>
                     <div className="flex justify-between">
                       <span>Harga:</span>
-                      <span className="font-semibold text-amber-600">Rp 50.000/bulan</span>
+                      <span className="font-semibold text-amber-600">Rp 750.000/bulan</span>
                     </div>
                   </div>
                 </CardContent>

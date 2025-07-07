@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import {
   getAllUsersWithStats,
   updateUserSubscription,
+  updateUserAdminStatus,
   getSubscriptionAnalytics,
   autoDowngradeExpiredUsers,
   bulkUpdateSubscriptions,
@@ -267,6 +268,7 @@ export function useAdmin() {
     searchUsers,
     refreshUsers: loadUsers,
     refreshAnalytics: loadAnalytics,
+    updateUserAdminStatus,
     refreshData,
   }
 }

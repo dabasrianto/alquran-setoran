@@ -24,9 +24,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Function to check if user is admin
     function isAdmin() {
-      return request.auth != null && request.auth.token.email in [
-        'dabasrianto@gmail.com'
-      ];
+      return request.auth != null && (
+        request.auth.token.email in [
+          'dabasrianto@gmail.com'
+        ] || 
+        request.auth.token.admin == true
+      );
     }
     
     // Function to check if user is authenticated
@@ -81,6 +84,32 @@ service cloud.firestore {
       allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
     
+    // Upgrade Requests collection - Users can create their own, admin can read/write all
+    match /upgradeRequests/{requestId} {
+      // Users can create upgrade requests for themselves
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Users can read their own upgrade requests
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Admin can read and write all upgrade requests
+      allow read, write: if isAdmin();
+    }
+    
+    // Payments collection - Admin only
+    match /payments/{paymentId} {
+      // Only admin can read and write payments
+      allow read, write: if isAdmin();
+      
+      // Users can read their own payment records
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Admin Logs collection - Admin only
+    match /adminLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
     // Admin-only collections (if needed in future)
     match /admin/{document=**} {
       allow read, write: if isAdmin();
@@ -115,7 +144,7 @@ service cloud.firestore {
 ### Security Features:
 - 🔒 **Authentication required** for all operations
 - 🔒 **Users can only access their own data**
-- 🔒 **Admin has full access** (dabasrianto@gmail.com)
+- 🔒 **Admin has full access** (dabasrianto@gmail.com or users with admin custom claim)
 - 🔒 **No anonymous access** allowed
 
 ## 🚨 **If Still Getting Errors:**

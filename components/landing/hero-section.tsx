@@ -188,9 +188,9 @@ export default function HeroSection() {
                   <Target className="w-8 h-8" />
                 </div>
                 <CardTitle className="text-2xl">Trial Gratis</CardTitle>
-                <CardDescription>Coba semua fitur selama 14 hari</CardDescription>
+                <CardDescription>Coba semua fitur selama 7 hari</CardDescription>
                 <div className="text-3xl font-bold mt-4">Gratis</div>
-                <div className="text-gray-500">14 hari</div>
+                <div className="text-gray-500">7 hari</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -227,14 +227,14 @@ export default function HeroSection() {
                 </div>
                 <CardTitle className="text-2xl">Premium</CardTitle>
                 <CardDescription>Untuk ustadz/ustadzah profesional</CardDescription>
-                <div className="text-3xl font-bold mt-4">Rp 50.000</div>
+                <div className="text-3xl font-bold mt-4">Rp 750.000</div>
                 <div className="text-gray-500">Per bulan</div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {[
-                    "Maksimal 2 ustadz",
-                    "Maksimal 5 murid",
+                    "Unlimited ustadz/ustadzah",
+                    "Unlimited murid",
                     "Perpanjangan otomatis",
                     "Semua fitur premium",
                     "Resource sharing",
@@ -273,8 +273,8 @@ export default function HeroSection() {
                     "Perpanjangan otomatis",
                     "Semua fitur premium",
                     "Priority support",
-                    "Custom reports",
-                    "Bulk import/export"
+                    "Export data",
+                    "Untuk 1 nama lembaga"
                   ].map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -299,8 +299,8 @@ export default function HeroSection() {
             Siap Meningkatkan Kualitas Pembelajaran?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya
-          </p>
+            <p className="text-xl mb-8 opacity-90">
+              Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya. Trial gratis 7 hari!
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
@@ -309,7 +309,7 @@ export default function HeroSection() {
               onClick={handleTrialClick}
             >
               <Play className="mr-2 h-5 w-5" />
-              Mulai Trial Gratis 14 Hari
+              Mulai Trial Gratis 7 Hari
             </Button>
             <Button 
               size="lg" 

@@ -50,16 +50,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (user) {
             try {
-              // Check admin status first
-              const adminStatus = isAdmin(user.email || "")
-              setIsUserAdmin(adminStatus)
-              console.log("👑 Admin status check:", { 
-                email: user.email, 
-                isAdmin: adminStatus 
-              })
+              // Get the ID token result to check custom claims
+              const tokenResult = await user.getIdTokenResult(true);
+              
+              // Check admin status from custom claims or fallback to email check
+              const adminStatus = tokenResult.claims.admin === true || isAdmin(user.email || "");
+              setIsUserAdmin(adminStatus);
+              console.log("👑 Admin status check:", {
+                email: user.email,
+                isAdmin: adminStatus,
+                fromCustomClaim: tokenResult.claims.admin === true
+              });
 
               // Then load profile
               const profile = await getUserProfile(user.uid)
+              
+              // If the user has isAdmin field in their profile, also consider that
+              if (profile && profile.isAdmin) {
+                setIsUserAdmin(true);
+              }
+              
               setUserProfile(profile)
               console.log("👤 User profile loaded successfully")
             } catch (error) {

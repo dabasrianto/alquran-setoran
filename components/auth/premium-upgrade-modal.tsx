@@ -251,7 +251,7 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                           <Badge className="mt-2 bg-amber-100 text-amber-800">Recommended</Badge>
                         )}
                       </CardContent>
-                    </Card>
+                    Rp 750.000/bulan
                   ))}
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                 <p>📱 WhatsApp: +62 812-3456-7890</p>
                 <p>📧 Email: support@tasmi.app</p>
                 <p className="text-muted-foreground mt-2">
-                  Tim support kami siap membantu Anda dengan proses upgrade.
+                  Upgrade ke Premium untuk unlimited data - hanya Rp 750.000/bulan
                 </p>
               </div>
             </div>

@@ -38,7 +38,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionType, {
       maxStudents: 3,
       maxUstadz: 1,
       maxUstadzah: 1,
-      trialDays: 14,
+      trialDays: 7,
     },
     features: [
       "1 ustadz",
@@ -48,28 +48,29 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionType, {
       "Manajemen kelas digital",
       "Tracking progress pembelajaran"
     ],
-    description: "Coba semua fitur selama 14 hari"
+    description: "Coba semua fitur selama 7 hari"
   },
   premium: {
-    name: "Premium",
-    price: 50000,
+    name: "Premium (Institusi)",
+    price: 750000,
     currency: "IDR",
     billingPeriod: "monthly",
     limits: {
-      maxStudents: 5,
-      maxUstadz: 2,
-      maxUstadzah: 2,
+      maxStudents: Number.POSITIVE_INFINITY,
+      maxUstadz: Number.POSITIVE_INFINITY,
+      maxUstadzah: Number.POSITIVE_INFINITY,
     },
     features: [
-      "Maksimal 2 ustadz",
-      "Maksimal 5 murid",
+      "Unlimited ustadz/ustadzah",
+      "Unlimited murid",
       "Perpanjangan otomatis",
       "Semua fitur premium",
       "Resource sharing",
       "Advanced analytics",
-      "Export data"
+      "Export data",
+      "Untuk 1 nama lembaga"
     ],
-    description: "Untuk ustadz/ustadzah profesional"
+    description: "Untuk institusi dan madrasah"
   },
   pro: {
     name: "Pro",
@@ -96,7 +97,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionType, {
 
 export const calculateTrialEndDate = (startDate: Date): Date => {
   const endDate = new Date(startDate)
-  endDate.setDate(endDate.getDate() + 14) // 14 days trial
+  endDate.setDate(endDate.getDate() + 7) // 7 days trial
   return endDate
 }
 
