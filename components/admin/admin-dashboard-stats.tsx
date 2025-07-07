@@ -35,7 +35,7 @@ const revenueData = generateChartData(30, "up")
 
 export function AdminDashboardStats() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <>
       <GradientStatCard
         title="New subscriptions"
         value="22"
@@ -57,6 +57,6 @@ export function AdminDashboardStats() {
         data={revenueData}
         color="green"
       />
-    </div>
+    </>
   )
 }

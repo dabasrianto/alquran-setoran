@@ -35,7 +35,7 @@ const completedSurahData = generateChartData(30, "up")
 
 export function UserDashboardStats() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <>
       <GradientStatCard
         title="Total Murid"
         value="18"
@@ -57,6 +57,6 @@ export function UserDashboardStats() {
         data={completedSurahData}
         color="green"
       />
-    </div>
+    </>
   )
 }

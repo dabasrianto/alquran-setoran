@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import dynamic from "next/dynamic"
 import {
   Crown,
   TrendingUp,
@@ -32,6 +33,12 @@ import {
   processSuccessfulPayment,
 } from "@/lib/firebase-premium"
 import type { UpgradeRequest, AdminActionLog } from "@/lib/types"
+
+// Dynamically import Recharts components with SSR disabled
+const DynamicAdminDashboardStats = dynamic(
+  () => import("@/components/admin/admin-dashboard-stats").then(mod => mod.AdminDashboardStats),
+  { ssr: false }
+)
 
 export default function PremiumDashboard() {
   const { user } = useAuth()
@@ -150,7 +157,7 @@ export default function PremiumDashboard() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <AdminDashboardStats />
+        <DynamicAdminDashboardStats />
       </div>
 
       {/* Legacy Statistics Cards */}

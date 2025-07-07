@@ -24,10 +24,17 @@ import { calculateStudentSummary } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { UserDashboardStats } from "@/components/dashboard/user-stats"
+import dynamic from "next/dynamic"
 
 interface DashboardProps {
   students: Student[]
 }
+
+// Dynamically import Recharts components with SSR disabled
+const DynamicUserDashboardStats = dynamic(
+  () => import("@/components/dashboard/user-stats").then(mod => mod.UserDashboardStats),
+  { ssr: false }
+)
 
 export default function Dashboard({ students }: DashboardProps) {
   const [filterKelas, setFilterKelas] = useState("all")
@@ -136,7 +143,7 @@ export default function Dashboard({ students }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <UserDashboardStats />
+        <DynamicUserDashboardStats />
       </div>
 
       {/* Legacy Stats Cards */}
