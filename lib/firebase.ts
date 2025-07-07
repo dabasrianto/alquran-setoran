@@ -17,7 +17,7 @@ const firebaseConfig = {
 
 // Add retry logic for Firebase initialization
 let retryCount = 0;
-const MAX_RETRIES = 3;
+const MAX_RETRY_COUNT = 3;
 
 function initializeFirebase() {
   try {
@@ -36,9 +36,9 @@ function initializeFirebase() {
     return app;
   } catch (error) {
     console.error("Error initializing Firebase:", error);
-    if (retryCount < MAX_RETRIES) {
+    if (retryCount < MAX_RETRY_COUNT) {
       retryCount++;
-      console.log(`Retrying Firebase initialization (${retryCount}/${MAX_RETRIES})...`);
+      console.log(`Retrying Firebase initialization (${retryCount}/${MAX_RETRY_COUNT})...`);
       return initializeApp(firebaseConfig);
     }
     throw error;

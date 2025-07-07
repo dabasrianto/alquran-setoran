@@ -40,15 +40,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check Firebase connection first
       let isConnected = false
       try {
-        isConnected = await checkFirebaseConnection()
+        isConnected = await checkFirebaseConnection();
         if (!isConnected && connectionRetries < MAX_CONNECTION_RETRIES) {
-          console.log(`Firebase connection failed, retrying (${connectionRetries + 1}/${MAX_CONNECTION_RETRIES})...`)
-          setConnectionRetries(prev => prev + 1)
-          setTimeout(initializeAuth, 1000) // Retry after 1 second
-          return
+          console.log(`Firebase connection failed, retrying (${connectionRetries + 1}/${MAX_CONNECTION_RETRIES})...`);
+          setConnectionRetries(prev => prev + 1);
+          setTimeout(initializeAuth, 1000); // Retry after 1 second
+          return;
         }
       } catch (connError) {
-        console.error("Error checking Firebase connection:", connError)
+        console.error("Error checking Firebase connection:", connError);
       }
       
       try {
@@ -105,12 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         })
       } catch (error: any) {
-        console.error("❌ Error setting up auth state listener:", error)
-        console.log("Auth initialization failed, will retry on next render...")
-        setError("Failed to initialize authentication")
-        setLoading(false)
-      }
-    }
+    
+    // Cleanup function
+    return () => { if (unsubscribe) unsubscribe(); }
 
     initializeAuth();
 
