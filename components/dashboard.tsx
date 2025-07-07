@@ -23,7 +23,8 @@ import type { Student } from "@/lib/types"
 import { calculateStudentSummary } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import dynamic from 'next/dynamic'
+import { UserDashboardStats } from "@/components/dashboard/user-stats"
+import dynamic from "next/dynamic"
 
 interface DashboardProps {
   students: Student[]
@@ -31,7 +32,7 @@ interface DashboardProps {
 
 // Dynamically import Recharts components with SSR disabled
 const DynamicUserDashboardStats = dynamic(
-  () => import('@/components/dashboard/user-stats').then(mod => mod.UserDashboardStats),
+  () => import("@/components/dashboard/user-stats").then(mod => mod.UserDashboardStats),
   { ssr: false }
 )
 
@@ -145,6 +146,48 @@ export default function Dashboard({ students }: DashboardProps) {
         <DynamicUserDashboardStats />
       </div>
 
+      {/* Legacy Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 hidden">
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Total Murid</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+            <div className="text-xl md:text-2xl font-bold">{studentsWithSummary.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Total Ayat Dihafal</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+            <div className="text-xl md:text-2xl font-bold">
+              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.totalMemorizedVerses || 0), 0)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Surat Selesai</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+            <div className="text-xl md:text-2xl font-bold">
+              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.completedSurahsCount || 0), 0)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium">Juz Selesai</CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
+            <div className="text-xl md:text-2xl font-bold">
+              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.juzProgress?.completed || 0), 0)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="students">
         <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap justify-start md:justify-center">
           <TabsTrigger value="students">Progres Murid</TabsTrigger>
@@ -191,14 +234,7 @@ export default function Dashboard({ students }: DashboardProps) {
                     )}
                     <Tooltip formatter={(value) => [`${value} ayat`, "Total Ayat"]} />
                     <Legend />
-                    <Bar dataKey="ayat" fill="#3b82f6" name="Total Ayat Dihafal">
-                      <defs>
-                        <linearGradient id="colorAyat" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                        </linearGradient>
-                      </defs>
-                    </Bar>
+                    <Bar dataKey="ayat" fill="#3b82f6" name="Total Ayat Dihafal" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -212,7 +248,7 @@ export default function Dashboard({ students }: DashboardProps) {
               <CardTitle className="text-base md:text-lg">Progres Surat</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] md:h-[400px]"> 
+              <div className="h-[300px] md:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={surahCompletionData}
@@ -237,22 +273,8 @@ export default function Dashboard({ students }: DashboardProps) {
                     )}
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="completed" stackId="a" fill="#4ade80" name="Selesai">
-                      <defs>
-                        <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#4ade80" stopOpacity={0.2}/>
-                        </linearGradient>
-                      </defs>
-                    </Bar>
-                    <Bar dataKey="inProgress" stackId="a" fill="#facc15" name="Dalam Proses">
-                      <defs>
-                        <linearGradient id="colorInProgress" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#facc15" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#facc15" stopOpacity={0.2}/>
-                        </linearGradient>
-                      </defs>
-                    </Bar>
+                    <Bar dataKey="completed" stackId="a" fill="#4ade80" name="Selesai" />
+                    <Bar dataKey="inProgress" stackId="a" fill="#facc15" name="Dalam Proses" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -275,22 +297,8 @@ export default function Dashboard({ students }: DashboardProps) {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="started" fill="#facc15" name="Dimulai">
-                        <defs>
-                          <linearGradient id="colorStarted" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#facc15" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#facc15" stopOpacity={0.2}/>
-                          </linearGradient>
-                        </defs>
-                      </Bar>
-                      <Bar dataKey="completed" fill="#4ade80" name="Selesai">
-                        <defs>
-                          <linearGradient id="colorCompleted2" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#4ade80" stopOpacity={0.2}/>
-                          </linearGradient>
-                        </defs>
-                      </Bar>
+                      <Bar dataKey="started" fill="#facc15" name="Dimulai" />
+                      <Bar dataKey="completed" fill="#4ade80" name="Selesai" />
                     </BarChart>
                   ) : (
                     <LineChart data={juzProgressData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -299,24 +307,8 @@ export default function Dashboard({ students }: DashboardProps) {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="started" 
-                        stroke="#facc15" 
-                        name="Dimulai"
-                        strokeWidth={2}
-                        dot={{ stroke: '#facc15', strokeWidth: 2, r: 4 }}
-                        activeDot={{ stroke: '#facc15', strokeWidth: 2, r: 6 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="completed" 
-                        stroke="#4ade80" 
-                        name="Selesai"
-                        strokeWidth={2}
-                        dot={{ stroke: '#4ade80', strokeWidth: 2, r: 4 }}
-                        activeDot={{ stroke: '#4ade80', strokeWidth: 2, r: 6 }}
-                      />
+                      <Line type="monotone" dataKey="started" stroke="#facc15" name="Dimulai" />
+                      <Line type="monotone" dataKey="completed" stroke="#4ade80" name="Selesai" />
                     </LineChart>
                   )}
                 </ResponsiveContainer>

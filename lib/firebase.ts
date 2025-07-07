@@ -2,51 +2,28 @@ import { initializeApp, getApps, getApp } from "firebase/app"
 import { getAuth, GoogleAuthProvider } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
-// Firebase configuration
-// Make sure all required fields are filled
-
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAxQboWL01Kp26ZObj4A7LVfR2cQ67cJWg',
   authDomain: 'tasmi-web.firebaseapp.com',
   projectId: 'tasmi-web',
-  storageBucket: 'tasmi-web.appspot.com',
+  storageBucket: 'tasmi-web.firebasestorage.app',
   messagingSenderId: '944178222011',
   appId: '1:944178222011:web:e3deadab61b4d5b7772a9e',
 };
 
-// Add retry logic for Firebase initialization
-let retryCount = 0;
-const MAX_RETRY_COUNT = 3;
 
-function initializeFirebase() {
-  try {
-    // Validate required config
-    const requiredKeys = ["apiKey", "authDomain", "projectId", "appId"]
-    const missingKeys = requiredKeys.filter((key) => !firebaseConfig[key as keyof typeof firebaseConfig])
+// Validate required config
+const requiredKeys = ["apiKey", "authDomain", "projectId", "appId"]
+const missingKeys = requiredKeys.filter((key) => !firebaseConfig[key as keyof typeof firebaseConfig])
 
-    if (missingKeys.length > 0) {
-      console.error("Missing Firebase configuration keys:", missingKeys)
-      throw new Error(`Missing Firebase configuration: ${missingKeys.join(", ")}`)
-    }
-
-    // Initialize Firebase app
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-    console.log("Firebase initialized successfully")
-    return app;
-  } catch (error) {
-    console.error("Error initializing Firebase:", error);
-    if (retryCount < MAX_RETRY_COUNT) {
-      retryCount++;
-      console.log(`Retrying Firebase initialization (${retryCount}/${MAX_RETRY_COUNT})...`);
-      return initializeApp(firebaseConfig);
-    }
-    throw error;
-  }
+if (missingKeys.length > 0) {
+  console.error("Missing Firebase configuration keys:", missingKeys)
+  throw new Error(`Missing Firebase configuration: ${missingKeys.join(", ")}`)
 }
 
-// Initialize with retry logic
-const app = initializeFirebase();
+// Initialize Firebase app
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 // Initialize Firebase Auth
 const auth = getAuth(app)
@@ -59,20 +36,6 @@ googleProvider.setCustomParameters({
 
 // Initialize Firestore
 const db = getFirestore(app)
-
-// Export a function to check connection status
-export const checkFirebaseConnection = async () => {
-  try {
-    if (!db) return false;
-    // Try a simple operation to verify connection
-    const timestamp = Date.now().toString();
-    console.log(`Checking Firebase connection: ${timestamp}`);
-    return true;
-  } catch (error) {
-    console.error("Firebase connection check failed:", error);
-    return false;
-  }
-}
 
 export { auth, googleProvider, db }
 export default app

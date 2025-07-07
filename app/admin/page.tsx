@@ -12,7 +12,6 @@ import AdminUsersList from "@/components/admin/admin-users-list"
 import AdminStats from "@/components/admin/admin-stats"
 import AdminDebug from "@/components/admin/admin-debug"
 import SubscriptionManager from "@/components/admin/subscription-manager"
-import FirebasePermissionDiagnostic from "@/components/admin/firebase-permission-diagnostic"
 import UserManagement from "@/components/admin/user-management"
 import PremiumDashboard from "@/components/admin/premium-dashboard"
 import LoginPage from "@/components/auth/login-page"
@@ -97,9 +96,6 @@ export default function AdminPage() {
 
         {/* Debug Component */}
         <AdminDebug />
-
-        {/* Permission Diagnostic - Show if there's permission error */}
-        {error && error.includes("permissions") && <FirebasePermissionDiagnostic />}
 
         {/* Firebase Rules Setup - Show if there's permission error */}
         {error && error.includes("permissions") && <FirebaseRulesSetup />}
