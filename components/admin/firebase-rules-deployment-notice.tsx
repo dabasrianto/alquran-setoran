@@ -7,7 +7,7 @@ import { AlertTriangle, ExternalLink, Shield, CheckCircle } from "lucide-react"
 
 export default function FirebaseRulesDeploymentNotice() {
   return (
-    <Card className="border-red-200 bg-red-50">
+    <Card className="border-red-200 bg-red-50 mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-red-700">
           <AlertTriangle className="h-5 w-5" />

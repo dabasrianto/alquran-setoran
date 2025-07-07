@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import dynamic from 'next/dynamic'
+import FirebaseRulesDeploymentNotice from "./firebase-rules-deployment-notice"
 import {
   Crown,
   TrendingUp,

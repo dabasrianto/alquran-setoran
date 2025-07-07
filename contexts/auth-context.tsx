@@ -105,6 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         })
       } catch (error: any) {
+      }
+    }
     
     // Cleanup function
     return () => { if (unsubscribe) unsubscribe(); }
