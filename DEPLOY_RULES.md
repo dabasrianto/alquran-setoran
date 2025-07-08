@@ -17,7 +17,7 @@ Your application is getting "Missing or insufficient permissions" errors because
 ### 3. **Replace All Rules**
 Copy this EXACT code and replace ALL existing rules:
 
-```javascript
+\`\`\`javascript
 rules_version = '2';
 
 service cloud.firestore {
@@ -121,7 +121,7 @@ service cloud.firestore {
     }
   }
 }
-```
+\`\`\`
 
 ### 4. **Publish the Rules**
 - Click the **"Publish"** button

@@ -22,7 +22,7 @@ Update Firebase Security Rules untuk memberikan akses admin dan subscription acc
 ### 4. Update Rules
 Copy dan paste rules berikut, replace semua rules yang ada:
 
-```javascript
+\`\`\`javascript
 rules_version = '2';
 
 service cloud.firestore {
@@ -126,7 +126,7 @@ service cloud.firestore {
     }
   }
 }
-```
+\`\`\`
 
 ### 5. Publish Rules
 - Klik tombol "Publish" untuk menerapkan rules baru
