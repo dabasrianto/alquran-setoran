@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
 import { Crown, LogOut, User, BookOpen, BarChart, Users, Shield } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
+import { UserMenu } from "@/components/auth/user-menu"
+import Image from "next/image"
 
 export function LandingNavbar() {
   const { user, userProfile, signOut, isAdmin } = useAuth()
@@ -50,7 +54,7 @@ export function LandingNavbar() {
   ]
 
   return (
-    <nav className={navbarClasses}>
+    <header className={navbarClasses}>
       <div className="container mx-auto px-4 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" className="flex items-center">
@@ -61,7 +65,7 @@ export function LandingNavbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
+        <nav className="hidden md:flex items-center space-x-8">
           <div className="flex space-x-6">
             {navItems.map((item) => (
               <a
@@ -72,6 +76,9 @@ export function LandingNavbar() {
                 {item.name}
               </a>
             ))}
+            <Link href="/panduan" className="text-sm font-medium hover:underline underline-offset-4">
+              Panduan
+            </Link>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -156,7 +163,7 @@ export function LandingNavbar() {
               </>
             )}
           </div>
-        </div>
+        </nav>
 
         {/* Mobile Menu Button */}
         <div className="md:hidden">
@@ -174,7 +181,12 @@ export function LandingNavbar() {
               stroke="currentColor"
             >
               {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12M6 12l12-12"
+                />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               )}
@@ -198,6 +210,9 @@ export function LandingNavbar() {
                   {item.name}
                 </a>
               ))}
+              <Link href="/panduan" className="text-sm font-medium hover:underline underline-offset-4">
+                Panduan
+              </Link>
               <div className="pt-2 border-t">
                 {user ? (
                   <div className="flex items-center justify-between">
@@ -230,7 +245,32 @@ export function LandingNavbar() {
           </div>
         </div>
       )}
-    </nav>
+
+      {/* Sheet for Mobile Menu */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="md:hidden bg-transparent">
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Toggle navigation menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right">
+          <div className="flex flex-col gap-4 p-4">
+            <Link href="/" className="flex items-center gap-2 font-semibold">
+              <Image src="/placeholder-logo.svg" alt="Logo" width={24} height={24} />
+              Tasmi App
+            </Link>
+            <Link href="/panduan" className="text-sm font-medium hover:underline underline-offset-4">
+              Panduan
+            </Link>
+            <Link href="/#pricing" className="text-sm font-medium hover:underline underline-offset-4">
+              Harga
+            </Link>
+            <UserMenu />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </header>
   )
 }
 

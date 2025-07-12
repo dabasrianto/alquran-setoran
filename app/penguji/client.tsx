@@ -1,88 +1,93 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import PengujiForm from "@/components/penguji-form"
-import PengujiList from "@/components/penguji-list"
-import { useFirebaseData } from "@/hooks/use-firebase-data"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import type { Penguji } from "@/lib/types"
+import { Separator } from "@/components/ui/separator"
 
-export default function PengujiManager() {
-  const { pengujis, loading, error, subscriptionStatus, addPenguji, updatePenguji, deletePenguji } = useFirebaseData()
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PengujiForm } from "@/components/penguji-form"
+import { PengujiList } from "@/components/penguji-list"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
-  const [editingPenguji, setEditingPenguji] = useState<Penguji | null>(null)
+export default function PengujiClient() {
+  const { currentUser, loading } = useAuth()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("list")
 
-  const handleAddPenguji = async (pengujiData: Omit<Penguji, "id">) => {
-    try {
-      await addPenguji(pengujiData)
-    } catch (error: any) {
-      console.error("Error adding penguji:", error)
-      alert(error.message || "Gagal menambah ustadz/ustadzah")
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push("/login")
     }
-  }
+  }, [currentUser, loading, router])
 
-  const handleUpdatePenguji = async (updatedPenguji: Penguji) => {
-    try {
-      await updatePenguji(updatedPenguji.id, updatedPenguji)
-      setEditingPenguji(null)
-    } catch (error: any) {
-      console.error("Error updating penguji:", error)
-      alert(error.message || "Gagal mengupdate ustadz/ustadzah")
-    }
-  }
-
-  const handleDeletePenguji = async (pengujiId: string) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus ustadz/ustadzah ini?")) {
-      try {
-        await deletePenguji(pengujiId)
-        if (editingPenguji?.id === pengujiId) {
-          setEditingPenguji(null)
-        }
-      } catch (error: any) {
-        console.error("Error deleting penguji:", error)
-        alert(error.message || "Gagal menghapus ustadz/ustadzah")
-      }
-    }
-  }
-
-  if (loading) {
+  if (loading || !currentUser) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-red-600 mb-4">Error: {error}</p>
-        <Button onClick={() => window.location.reload()}>Coba Lagi</Button>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
 
   return (
-    <>
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <PengujiForm
-            onAddPenguji={handleAddPenguji}
-            onUpdatePenguji={handleUpdatePenguji}
-            editingPenguji={editingPenguji}
-            setEditingPenguji={setEditingPenguji}
-            pengujis={pengujis}
-            subscriptionStatus={subscriptionStatus}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <PengujiList pengujis={pengujis} onDeletePenguji={handleDeletePenguji} onEditPenguji={setEditingPenguji} />
-        </CardContent>
-      </Card>
-    </>
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <div className="flex items-center">
+                <TabsList>
+                  <TabsTrigger value="list">Daftar Penguji</TabsTrigger>
+                  <TabsTrigger value="add">Tambah Penguji</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="list">
+                <PengujiList />
+              </TabsContent>
+              <TabsContent value="add">
+                <PengujiForm />
+              </TabsContent>
+            </Tabs>
+          </div>
+          <div>
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-start bg-muted/50">
+                <div className="grid gap-0.5">
+                  <CardTitle className="group flex items-center gap-2 text-lg">Manajemen Penguji</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 text-sm">
+                <div className="grid gap-3">
+                  <div className="font-semibold">Ringkasan</div>
+                  <ul className="grid gap-3">
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total Penguji</span>
+                      <span>{/* Dynamic data from list component */}</span>
+                    </li>
+                  </ul>
+                </div>
+                <Separator className="my-4" />
+                <div className="grid gap-3">
+                  <div className="font-semibold">Panduan</div>
+                  <ul className="grid gap-3">
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        Gunakan tab "Daftar Penguji" untuk melihat, mengedit, atau menghapus penguji.
+                      </span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        Tab "Tambah Penguji" untuk menambahkan penguji baru ke sistem.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </div>
   )
 }

@@ -1,8 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { useAuth } from "@/contexts/auth-context"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,83 +8,71 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, Crown, User, Sparkles } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
+import Link from "next/link"
 
-export default function UserMenu() {
-  const { user, userProfile, signOut } = useAuth()
-  const [loading, setLoading] = useState(false)
+export function UserMenu() {
+  const { currentUser, logout, loading, isAdmin } = useAuth()
+  const router = useRouter()
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
-      setLoading(true)
-      await signOut()
+      await logout()
+      router.push("/login")
     } catch (error) {
-      console.error("Sign out error:", error)
-    } finally {
-      setLoading(false)
+      console.error("Error logging out:", error)
     }
   }
 
-  const handleUpgradeClick = () => {
-    const phoneNumber = "+628977712345"
-    const message = "Bismillah, afwan Admin saya ingin upgrade ke premium"
-    const encodedMessage = encodeURIComponent(message)
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
-    
-    window.open(whatsappUrl, '_blank')
+  if (loading) {
+    return (
+      <Button variant="ghost" size="icon" className="rounded-full">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </Button>
+    )
   }
 
-  if (!user) return null
+  if (!currentUser) {
+    return (
+      <Button asChild>
+        <Link href="/login">Login</Link>
+      </Button>
+    )
+  }
 
-  const isPremium = userProfile?.subscriptionType === "premium"
+  const userInitial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : "U"
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
-            <AvatarFallback>{user.displayName?.charAt(0) || "U"}</AvatarFallback>
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <Avatar>
+            <AvatarImage src="/placeholder-user.jpg" alt="User Avatar" />
+            <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
+          <span className="sr-only">Toggle user menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.displayName}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-            <div className="flex items-center gap-1 mt-1">
-              {isPremium ? (
-                <>
-                  <Crown className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs text-yellow-600 font-medium">Premium</span>
-                </>
-              ) : (
-                <>
-                  <User className="h-3 w-3 text-gray-500" />
-                  <span className="text-xs text-gray-600">Free</span>
-                </>
-              )}
-            </div>
-          </div>
-        </DropdownMenuLabel>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{currentUser.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-
-        {!isPremium && (
-          <>
-            <DropdownMenuItem onClick={handleUpgradeClick}>
-              <Sparkles className="mr-2 h-4 w-4 text-amber-600" />
-              <span className="text-amber-600 font-medium">Upgrade Premium</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
-        )}
-
-        <DropdownMenuItem onClick={handleSignOut} disabled={loading}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard">Dashboard</Link>
         </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin">Admin Panel</Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem asChild>
+          <Link href="/upgrade">Upgrade Langganan</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

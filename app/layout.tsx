@@ -1,48 +1,37 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import Script from "next/script" // Tambahkan import Script
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { MobileNav } from "@/components/mobile-nav"
 import { AuthProvider } from "@/contexts/auth-context"
+import { Toaster } from "@/components/ui/toaster"
+import { MobileNav } from "@/components/mobile-nav"
+import { Sidebar } from "@/components/ui/sidebar"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Tasmi' - Aplikasi Analisa Setoran Hafalan Quran",
-  description: "Aplikasi untuk melacak dan menganalisis hafalan Quran murid",
-  generator: "v0.dev",
+  title: "Tasmi App",
+  description: "Aplikasi untuk manajemen tasmi Al-Quran",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="id" suppressHydrationWarning>
-      <head>
-        {/* Google Analytics - tambahkan di sini */}
-        <Script strategy="afterInteractive" src="https://www.googletagmanager.com/gtag/js?id=G-W92L2CKV57" />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-W92L2CKV57');
-            `,
-          }}
-        />
-      </head>
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            {children}
-            <MobileNav />
+            <div className="flex min-h-screen w-full flex-col bg-muted/40">
+              <Sidebar />
+              <MobileNav />
+              {children}
+            </div>
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
       </body>

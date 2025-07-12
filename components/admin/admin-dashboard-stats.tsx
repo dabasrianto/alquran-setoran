@@ -1,86 +1,127 @@
 "use client"
 
-import { GradientStatCard } from "@/components/ui/gradient-stat-card"
-
-// Generate sample data for the charts
-const generateChartData = (points: number, trend: "up" | "down" | "volatile") => {
-  const data = []
-  let value = trend === "up" ? 10 : 100
-  
-  for (let i = 0; i < points; i++) {
-    if (trend === "up") {
-      value += Math.random() * 10
-    } else if (trend === "down") {
-      value -= Math.random() * 5
-      value = Math.max(value, 5) // Ensure we don't go below 5
-    } else {
-      // Volatile - random ups and downs
-      value += (Math.random() - 0.5) * 20
-      value = Math.max(value, 5) // Ensure we don't go below 5
-    }
-    
-    data.push({
-      name: `Day ${i + 1}`,
-      value: Math.round(value)
-    })
-  }
-  
-  return data
-}
-
-// Sample data for the charts
-const usersData = generateChartData(30, "up")
-const premiumUsersData = generateChartData(30, "up")
-const freeUsersData = generateChartData(30, "volatile")
-const studentsData = generateChartData(30, "up")
-const pengujisData = generateChartData(30, "up")
-const revenueData = generateChartData(30, "up")
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DollarSign, Users, BarChart, CheckCircle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { useAuth } from "@/contexts/auth-context"
+import { Loader2 } from "lucide-react"
 
 export function AdminDashboardStats() {
+  const { currentUser } = useAuth()
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeSubscriptions: 0,
+    totalStudents: 0,
+    totalPenguji: 0,
+    upgradeRequests: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!currentUser) return
+
+      setLoading(true)
+      try {
+        // Total Users
+        const usersSnapshot = await getDocs(collection(db, "users"))
+        const totalUsers = usersSnapshot.size
+
+        // Active Subscriptions
+        const subscriptionsSnapshot = await getDocs(
+          query(collection(db, "subscriptions"), where("status", "==", "active")),
+        )
+        const activeSubscriptions = subscriptionsSnapshot.size
+
+        // Total Students
+        let totalStudents = 0
+        for (const userDoc of usersSnapshot.docs) {
+          const studentsSnapshot = await getDocs(collection(db, "users", userDoc.id, "students"))
+          totalStudents += studentsSnapshot.size
+        }
+
+        // Total Penguji
+        let totalPenguji = 0
+        for (const userDoc of usersSnapshot.docs) {
+          const pengujiSnapshot = await getDocs(collection(db, "users", userDoc.id, "pengujis"))
+          totalPenguji += pengujiSnapshot.size
+        }
+
+        // Upgrade Requests
+        const upgradeRequestsSnapshot = await getDocs(
+          query(collection(db, "upgradeRequests"), where("status", "==", "pending")),
+        )
+        const upgradeRequests = upgradeRequestsSnapshot.size
+
+        setStats({
+          totalUsers,
+          activeSubscriptions,
+          totalStudents,
+          totalPenguji,
+          upgradeRequests,
+        })
+      } catch (error) {
+        console.error("Error fetching admin dashboard stats:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [currentUser])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <>
-      <GradientStatCard
-        title="Total Pengguna"
-        value="22"
-        change={15}
-        data={usersData}
-        color="blue"
-      />
-      <GradientStatCard
-        title="Pengguna Premium"
-        value="8"
-        change={25}
-        data={premiumUsersData}
-        color="amber"
-      />
-      <GradientStatCard
-        title="Pengguna Gratis"
-        value="14"
-        change={10}
-        data={freeUsersData}
-        color="purple"
-      />
-      <GradientStatCard
-        title="Total Murid"
-        value="320"
-        change={18}
-        data={studentsData}
-        color="green"
-      />
-      <GradientStatCard
-        title="Total Penguji"
-        value="45"
-        change={5}
-        data={pengujisData}
-        color="orange"
-      />
-      <GradientStatCard
-        title="Pendapatan"
-        value="Rp 6.000.000"
-        change={12}
-        data={revenueData}
-        color="green"
-      />
-    </>
+    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Pengguna</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalUsers}</div>
+          <p className="text-xs text-muted-foreground">Pengguna terdaftar</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Langganan Aktif</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
+          <p className="text-xs text-muted-foreground">Langganan premium aktif</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Santri</CardTitle>
+          <BarChart className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalStudents}</div>
+          <p className="text-xs text-muted-foreground">Santri terdaftar di semua akun</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Permintaan Upgrade</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.upgradeRequests}</div>
+          <p className="text-xs text-muted-foreground">Permintaan upgrade tertunda</p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

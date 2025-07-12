@@ -1,30 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-} from "recharts"
 import type { Student } from "@/lib/types"
 import { calculateStudentSummary } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { UserDashboardStats } from "@/components/dashboard/user-stats"
 import dynamic from "next/dynamic"
+import { OverallStats } from "@/components/overall-stats"
+import { StudentList } from "@/components/student-list"
+import { PengujiList } from "@/components/penguji-list"
+import { SetoranHistory } from "@/components/setoran-history"
+import { StudentProgress } from "@/components/student-progress"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import UserStats from "@/components/dashboard/user-stats" // Import UserStats component
 
 interface DashboardProps {
   students: Student[]
@@ -32,13 +25,30 @@ interface DashboardProps {
 
 // Dynamically import Recharts components with SSR disabled
 const DynamicUserDashboardStats = dynamic(
-  () => import("@/components/dashboard/user-stats").then(mod => mod.UserDashboardStats),
-  { ssr: false }
+  () => import("@/components/dashboard/user-stats").then((mod) => mod.UserDashboardStats),
+  { ssr: false },
 )
 
 export default function Dashboard({ students }: DashboardProps) {
+  const { currentUser, loading } = useAuth()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("overview")
   const [filterKelas, setFilterKelas] = useState("all")
   const isMobile = useMediaQuery("(max-width: 768px)")
+
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push("/login")
+    }
+  }, [currentUser, loading, router])
+
+  if (loading || !currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
 
   // Prepare data for charts
   const studentsWithSummary = students
@@ -122,233 +132,60 @@ export default function Dashboard({ students }: DashboardProps) {
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"]
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold">Dashboard Analisis Hafalan</h2>
-        <div className="w-full sm:w-auto">
-          <Select value={filterKelas} onValueChange={setFilterKelas}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter Kelas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Kelas</SelectItem>
-              {uniqueKelas.map((kelas) => (
-                <SelectItem key={kelas} value={kelas}>
-                  {kelas}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <div className="flex items-center">
+                <TabsList>
+                  <TabsTrigger value="overview">Ringkasan</TabsTrigger>
+                  <TabsTrigger value="students">Santri</TabsTrigger>
+                  <TabsTrigger value="penguji">Penguji</TabsTrigger>
+                  <TabsTrigger value="setoran">Setoran</TabsTrigger>
+                  <TabsTrigger value="progress">Progres Santri</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="overview">
+                <OverallStats />
+              </TabsContent>
+              <TabsContent value="students">
+                <StudentList />
+              </TabsContent>
+              <TabsContent value="penguji">
+                <PengujiList />
+              </TabsContent>
+              <TabsContent value="setoran">
+                <SetoranHistory />
+              </TabsContent>
+              <TabsContent value="progress">
+                <StudentProgress />
+              </TabsContent>
+            </Tabs>
+          </div>
+          <div>
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-start bg-muted/50">
+                <div className="grid gap-0.5">
+                  <CardTitle className="group flex items-center gap-2 text-lg">Dashboard Pengguna</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 text-sm">
+                <div className="grid gap-3">
+                  <div className="font-semibold">Selamat datang, {currentUser.email}!</div>
+                  <ul className="grid gap-3">
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Gunakan tab di atas untuk mengelola data Anda.</span>
+                    </li>
+                  </ul>
+                </div>
+                <Separator className="my-4" />
+                <UserStats /> {/* Use the imported UserStats component */}
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <DynamicUserDashboardStats />
-      </div>
-
-      {/* Legacy Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 hidden">
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Total Murid</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">{studentsWithSummary.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Total Ayat Dihafal</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">
-              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.totalMemorizedVerses || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Surat Selesai</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">
-              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.completedSurahsCount || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-3 md:pb-2 md:pt-4 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">Juz Selesai</CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 md:px-6 md:pb-4">
-            <div className="text-xl md:text-2xl font-bold">
-              {studentsWithSummary.reduce((sum, student) => sum + (student.summary?.juzProgress?.completed || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="students">
-        <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap justify-start md:justify-center">
-          <TabsTrigger value="students">Progres Murid</TabsTrigger>
-          <TabsTrigger value="surah">Progres Surat</TabsTrigger>
-          <TabsTrigger value="juz">Progres Juz</TabsTrigger>
-          <TabsTrigger value="assessment">Penilaian</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="students">
-          <Card>
-            <CardHeader className="pb-2 md:pb-4">
-              <CardTitle className="text-base md:text-lg">
-                {isMobile ? "5" : "10"} Murid dengan Hafalan Terbanyak
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={topStudentsData}
-                    layout={isMobile ? "horizontal" : "vertical"}
-                    margin={
-                      isMobile ? { top: 5, right: 10, left: 0, bottom: 60 } : { top: 5, right: 30, left: 50, bottom: 5 }
-                    }
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    {isMobile ? (
-                      <>
-                        <XAxis
-                          dataKey="name"
-                          angle={-45}
-                          textAnchor="end"
-                          height={70}
-                          tick={{ fontSize: 10 }}
-                          interval={0}
-                        />
-                        <YAxis />
-                      </>
-                    ) : (
-                      <>
-                        <XAxis type="number" />
-                        <YAxis type="category" dataKey="name" width={100} />
-                      </>
-                    )}
-                    <Tooltip formatter={(value) => [`${value} ayat`, "Total Ayat"]} />
-                    <Legend />
-                    <Bar dataKey="ayat" fill="#3b82f6" name="Total Ayat Dihafal" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="surah">
-          <Card>
-            <CardHeader className="pb-2 md:pb-4">
-              <CardTitle className="text-base md:text-lg">Progres Surat</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={surahCompletionData}
-                    margin={
-                      isMobile
-                        ? { top: 5, right: 10, left: 0, bottom: 60 }
-                        : { top: 5, right: 30, left: 20, bottom: 80 }
-                    }
-                    layout={isMobile ? "vertical" : "horizontal"}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    {isMobile ? (
-                      <>
-                        <XAxis type="number" />
-                        <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} interval={0} />
-                      </>
-                    ) : (
-                      <>
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                        <YAxis />
-                      </>
-                    )}
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="completed" stackId="a" fill="#4ade80" name="Selesai" />
-                    <Bar dataKey="inProgress" stackId="a" fill="#facc15" name="Dalam Proses" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="juz">
-          <Card>
-            <CardHeader className="pb-2 md:pb-4">
-              <CardTitle className="text-base md:text-lg">Progres Juz</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] md:h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  {isMobile ? (
-                    <BarChart data={juzProgressData} margin={{ top: 5, right: 10, left: 0, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="started" fill="#facc15" name="Dimulai" />
-                      <Bar dataKey="completed" fill="#4ade80" name="Selesai" />
-                    </BarChart>
-                  ) : (
-                    <LineChart data={juzProgressData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="started" stroke="#facc15" name="Dimulai" />
-                      <Line type="monotone" dataKey="completed" stroke="#4ade80" name="Selesai" />
-                    </LineChart>
-                  )}
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="assessment">
-          <Card>
-            <CardHeader className="pb-2 md:pb-4">
-              <CardTitle className="text-base md:text-lg">Distribusi Penilaian</CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <div className="h-[300px] md:h-[400px] w-full max-w-[500px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={assessmentData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={!isMobile}
-                      outerRadius={isMobile ? 100 : 150}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {assessmentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${value} setoran`, "Jumlah"]} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

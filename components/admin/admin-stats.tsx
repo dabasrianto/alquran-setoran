@@ -1,148 +1,127 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Crown, UserCheck, BarChart } from "lucide-react"
+import { DollarSign, Users, BarChart, CheckCircle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { useAuth } from "@/contexts/auth-context"
+import { Loader2 } from "lucide-react"
 
-interface AdminStatsProps {
-  users: any[]
-  loading: boolean
-}
+export function AdminStats() {
+  const { currentUser } = useAuth()
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeSubscriptions: 0,
+    totalStudents: 0,
+    totalPenguji: 0,
+    upgradeRequests: 0,
+  })
+  const [loading, setLoading] = useState(true)
 
-export default function AdminStats({ users, loading }: AdminStatsProps) {
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!currentUser) return
+
+      setLoading(true)
+      try {
+        // Total Users
+        const usersSnapshot = await getDocs(collection(db, "users"))
+        const totalUsers = usersSnapshot.size
+
+        // Active Subscriptions
+        const subscriptionsSnapshot = await getDocs(
+          query(collection(db, "subscriptions"), where("status", "==", "active")),
+        )
+        const activeSubscriptions = subscriptionsSnapshot.size
+
+        // Total Students
+        let totalStudents = 0
+        for (const userDoc of usersSnapshot.docs) {
+          const studentsSnapshot = await getDocs(collection(db, "users", userDoc.id, "students"))
+          totalStudents += studentsSnapshot.size
+        }
+
+        // Total Penguji
+        let totalPenguji = 0
+        for (const userDoc of usersSnapshot.docs) {
+          const pengujiSnapshot = await getDocs(collection(db, "users", userDoc.id, "pengujis"))
+          totalPenguji += pengujiSnapshot.size
+        }
+
+        // Upgrade Requests
+        const upgradeRequestsSnapshot = await getDocs(
+          query(collection(db, "upgradeRequests"), where("status", "==", "pending")),
+        )
+        const upgradeRequests = upgradeRequestsSnapshot.size
+
+        setStats({
+          totalUsers,
+          activeSubscriptions,
+          totalStudents,
+          totalPenguji,
+          upgradeRequests,
+        })
+      } catch (error) {
+        console.error("Error fetching admin dashboard stats:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [currentUser])
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
 
-  const totalUsers = users.length
-  const premiumUsers = users.filter((user) => user.subscriptionType === "premium").length
-  const freeUsers = users.filter((user) => user.subscriptionType === "free").length
-  const totalStudents = users.reduce((sum, user) => sum + (user.stats?.studentsCount || 0), 0)
-  const totalUstadz = users.reduce((sum, user) => sum + (user.stats?.ustadzCount || 0), 0)
-  const totalUstadzah = users.reduce((sum, user) => sum + (user.stats?.ustadzahCount || 0), 0)
-
-  const stats = [
-    {
-      title: "Total Pengguna",
-      value: totalUsers,
-      icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-    },
-    {
-      title: "Pengguna Premium",
-      value: premiumUsers,
-      icon: Crown,
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
-    },
-    {
-      title: "Pengguna Gratis",
-      value: freeUsers,
-      icon: UserCheck,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-    },
-    {
-      title: "Total Murid",
-      value: totalStudents,
-      icon: BarChart,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
-    },
-  ]
-
   return (
-    <div className="space-y-6">
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <div className={`p-2 rounded-full ${stat.bgColor}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Additional Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Statistik Penguji</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span>Total Ustadz:</span>
-              <span className="font-semibold">{totalUstadz}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total Ustadzah:</span>
-              <span className="font-semibold">{totalUstadzah}</span>
-            </div>
-            <div className="flex justify-between border-t pt-2">
-              <span>Total Penguji:</span>
-              <span className="font-bold">{totalUstadz + totalUstadzah}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Konversi Premium</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span>Rate Konversi:</span>
-              <span className="font-semibold">
-                {totalUsers > 0 ? ((premiumUsers / totalUsers) * 100).toFixed(1) : 0}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-amber-600 h-2 rounded-full"
-                style={{ width: `${totalUsers > 0 ? (premiumUsers / totalUsers) * 100 : 0}%` }}
-              ></div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Rata-rata per User</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span>Murid per User:</span>
-              <span className="font-semibold">{totalUsers > 0 ? (totalStudents / totalUsers).toFixed(1) : 0}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Penguji per User:</span>
-              <span className="font-semibold">
-                {totalUsers > 0 ? ((totalUstadz + totalUstadzah) / totalUsers).toFixed(1) : 0}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Pengguna</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalUsers}</div>
+          <p className="text-xs text-muted-foreground">Pengguna terdaftar</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Langganan Aktif</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
+          <p className="text-xs text-muted-foreground">Langganan premium aktif</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Santri</CardTitle>
+          <BarChart className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalStudents}</div>
+          <p className="text-xs text-muted-foreground">Santri terdaftar di semua akun</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Permintaan Upgrade</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.upgradeRequests}</div>
+          <p className="text-xs text-muted-foreground">Permintaan upgrade tertunda</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

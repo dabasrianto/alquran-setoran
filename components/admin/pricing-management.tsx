@@ -1,14 +1,26 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2, PlusCircle, Edit, Trash2, CheckCircle2 } from "lucide-react"
+import {
+  createPricingPlan,
+  updatePricingPlan,
+  deletePricingPlan,
+  type PricingPlan,
+  formatPrice,
+  subscribeToPricingChanges,
+  calculateYearlyPrice,
+} from "@/lib/firebase-pricing"
+import { useToast } from "@/components/ui/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -17,472 +29,408 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  DialogTrigger as AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { toast } from "sonner"
-import { Plus, Edit, Trash2, Crown, Star, Users, GraduationCap, Check, X } from "lucide-react"
-import {
-  type PricingPlan,
-  createPricingPlan,
-  updatePricingPlan,
-  deletePricingPlan,
-  formatPrice,
-  calculateYearlyPrice,
-  subscribeToPricingChanges,
-} from "@/lib/firebase-pricing"
-
-interface PricingFormData {
-  name: string
-  price: number
-  currency: string
-  description: string
-  features: string[]
-  maxStudents: number | null
-  maxTeachers: number | null
-  isPopular: boolean
-  isRecommended: boolean
-  order: number
-  active: boolean
-}
-
-const defaultFormData: PricingFormData = {
-  name: "",
-  price: 0,
-  currency: "IDR",
-  description: "",
-  features: [],
-  maxStudents: null,
-  maxTeachers: null,
-  isPopular: false,
-  isRecommended: false,
-  order: 1,
-  active: true,
-}
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 
 export function PricingManagement() {
   const [plans, setPlans] = useState<PricingPlan[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingPlan, setEditingPlan] = useState<PricingPlan | null>(null)
-  const [formData, setFormData] = useState<PricingFormData>(defaultFormData)
-  const [newFeature, setNewFeature] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentPlan, setCurrentPlan] = useState<PricingPlan | null>(null)
+  const [formState, setFormState] = useState<Partial<PricingPlan>>({})
   const [activeTab, setActiveTab] = useState("basic")
+  const { toast } = useToast()
 
   useEffect(() => {
-    const unsubscribe = subscribeToPricingChanges((updatedPlans) => {
-      setPlans(updatedPlans)
+    setLoading(true)
+    const unsubscribe = subscribeToPricingChanges((fetchedPlans) => {
+      setPlans(fetchedPlans)
       setLoading(false)
     })
 
-    return unsubscribe
+    return () => unsubscribe()
   }, [])
 
-  const handleEdit = (plan: PricingPlan) => {
-    setEditingPlan(plan)
-    setFormData({
-      name: plan.name,
-      price: plan.price,
-      currency: plan.currency,
-      description: plan.description,
-      features: [...plan.features],
-      maxStudents: plan.maxStudents,
-      maxTeachers: plan.maxTeachers,
-      isPopular: plan.isPopular || false,
-      isRecommended: plan.isRecommended || false,
-      order: plan.order,
-      active: plan.active,
-    })
-    setDialogOpen(true)
-  }
-
-  const handleCreate = () => {
-    setEditingPlan(null)
-    setFormData({
-      ...defaultFormData,
+  const handleAddPlan = () => {
+    setCurrentPlan(null)
+    setFormState({
+      name: "",
+      description: "",
+      price: 0,
+      currency: "IDR",
+      interval: "month",
+      features: [],
+      maxStudents: null,
+      maxTeachers: null,
+      isPopular: false,
+      isRecommended: false,
       order: plans.length + 1,
+      active: true,
     })
-    setDialogOpen(true)
+    setActiveTab("basic")
+    setIsModalOpen(true)
   }
 
-  const handleSave = async () => {
-    try {
-      if (!formData.name.trim()) {
-        toast.error("Nama paket harus diisi")
-        return
-      }
+  const handleEditPlan = (plan: PricingPlan) => {
+    setCurrentPlan(plan)
+    setFormState({
+      ...plan,
+      features: plan.features || [], // Ensure features is an array
+    })
+    setActiveTab("basic")
+    setIsModalOpen(true)
+  }
 
-      if (editingPlan) {
-        await updatePricingPlan(editingPlan.id, formData)
-        toast.success("Paket berhasil diperbarui")
-      } else {
-        await createPricingPlan(formData)
-        toast.success("Paket berhasil dibuat")
-      }
-
-      setDialogOpen(false)
-      setFormData(defaultFormData)
-      setEditingPlan(null)
-    } catch (error) {
-      console.error("Error saving plan:", error)
-      toast.error("Gagal menyimpan paket")
+  const handleDeletePlan = async (planId: string) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus paket harga ini?")) {
+      return
     }
-  }
-
-  const handleDelete = async (planId: string) => {
     try {
       await deletePricingPlan(planId)
-      toast.success("Paket berhasil dihapus")
+      toast({
+        title: "Sukses",
+        description: "Paket harga berhasil dihapus.",
+      })
     } catch (error) {
-      console.error("Error deleting plan:", error)
-      toast.error("Gagal menghapus paket")
+      console.error("Error deleting pricing plan:", error)
+      toast({
+        title: "Error",
+        description: "Gagal menghapus paket harga.",
+        variant: "destructive",
+      })
     }
+  }
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement
+    setFormState((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }))
+  }
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormState((prev) => ({
+      ...prev,
+      [name]: value === "" ? null : Number(value),
+    }))
+  }
+
+  const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...(formState.features || [])]
+    newFeatures[index] = value
+    setFormState((prev) => ({ ...prev, features: newFeatures }))
   }
 
   const addFeature = () => {
-    if (newFeature.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        features: [...prev.features, newFeature.trim()],
-      }))
-      setNewFeature("")
-    }
+    setFormState((prev) => ({
+      ...prev,
+      features: [...(prev.features || []), ""],
+    }))
   }
 
   const removeFeature = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index),
-    }))
+    const newFeatures = (formState.features || []).filter((_, i) => i !== index)
+    setFormState((prev) => ({ ...prev, features: newFeatures }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formState.name || !formState.description || formState.price === undefined) {
+      toast({
+        title: "Validasi Gagal",
+        description: "Nama, deskripsi, dan harga harus diisi.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const finalPrice = Number(formState.price)
+      const yearlyPrice = calculateYearlyPrice(finalPrice)
+
+      const dataToSave: Omit<PricingPlan, "id" | "createdAt" | "updatedAt"> = {
+        name: formState.name,
+        description: formState.description,
+        price: finalPrice,
+        yearlyPrice: yearlyPrice,
+        currency: formState.currency || "IDR",
+        interval: formState.interval || "month",
+        features: formState.features || [],
+        maxStudents: formState.maxStudents === null ? null : Number(formState.maxStudents),
+        maxTeachers: formState.maxTeachers === null ? null : Number(formState.maxTeachers),
+        isPopular: formState.isPopular || false,
+        isRecommended: formState.isRecommended || false,
+        order: formState.order || plans.length + 1,
+        active: formState.active !== undefined ? formState.active : true,
+      }
+
+      if (currentPlan) {
+        await updatePricingPlan(currentPlan.id, dataToSave)
+        toast({
+          title: "Sukses",
+          description: "Paket harga berhasil diperbarui.",
+        })
+      } else {
+        await createPricingPlan(dataToSave)
+        toast({
+          title: "Sukses",
+          description: "Paket harga baru berhasil ditambahkan.",
+        })
+      }
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error("Error saving pricing plan:", error)
+      toast({
+        title: "Error",
+        description: "Gagal menyimpan paket harga.",
+        variant: "destructive",
+      })
+    }
   }
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-gray-200 rounded animate-pulse" />
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Manajemen Harga Langganan</CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-40">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Kelola Harga Langganan</h2>
-          <p className="text-muted-foreground">Atur paket langganan dan harga untuk aplikasi</p>
-        </div>
-        <Button onClick={handleCreate}>
-          <Plus className="w-4 h-4 mr-2" />
-          Tambah Paket
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Manajemen Harga Langganan</CardTitle>
+        <Button onClick={handleAddPlan}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Tambah Paket Baru
         </Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <Card key={plan.id} className={`relative ${!plan.active ? "opacity-60" : ""}`}>
-            <CardHeader className="pb-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {plan.name}
-                    {plan.isPopular && (
-                      <Badge variant="secondary">
-                        <Star className="w-3 h-3" />
-                      </Badge>
-                    )}
-                    {plan.isRecommended && (
-                      <Badge>
-                        <Crown className="w-3 h-3" />
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(plan)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Paket</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Apakah Anda yakin ingin menghapus paket "{plan.name}"? Tindakan ini tidak dapat dibatalkan.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(plan.id)}>Hapus</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <Card
+              key={plan.id}
+              className={cn(
+                "flex flex-col justify-between p-6 border-2",
+                plan.isPopular && "border-blue-500 dark:border-blue-400",
+                plan.isRecommended && "border-green-500 dark:border-green-400",
+                !plan.active && "opacity-50 border-dashed",
+              )}
+            >
               <div>
-                <div className="text-3xl font-bold">{formatPrice(plan.price)}</div>
-                <div className="text-sm text-muted-foreground">per bulan</div>
-                {plan.price > 0 && (
-                  <div className="text-sm text-green-600">
-                    {formatPrice(calculateYearlyPrice(plan.price))}/tahun (hemat 20%)
+                <CardHeader className="p-0 pb-4">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
+                    <div className="flex gap-1">
+                      {plan.isPopular && <Badge className="bg-blue-500 text-white">Populer</Badge>}
+                      {plan.isRecommended && <Badge className="bg-green-500 text-white">Rekomendasi</Badge>}
+                      {!plan.active && <Badge variant="outline">Tidak Aktif</Badge>}
+                    </div>
                   </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="w-4 h-4" />
-                  <span>
-                    {plan.maxStudents === null ? "Santri tidak terbatas" : `Maksimal ${plan.maxStudents} santri`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <GraduationCap className="w-4 h-4" />
-                  <span>
-                    {plan.maxTeachers === null ? "Penguji tidak terbatas" : `Maksimal ${plan.maxTeachers} penguji`}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                {plan.features.slice(0, 3).map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
-                    <Check className="w-3 h-3 text-green-500" />
-                    <span>{feature}</span>
+                  <p className="text-muted-foreground text-sm">{plan.description}</p>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="text-4xl font-bold mb-4">
+                    {formatPrice(plan.price, plan.currency)}
+                    <span className="text-base text-muted-foreground font-normal">/{plan.interval}</span>
                   </div>
-                ))}
-                {plan.features.length > 3 && (
-                  <div className="text-xs text-muted-foreground">+{plan.features.length - 3} fitur lainnya</div>
-                )}
+                  {plan.yearlyPrice !== undefined && plan.yearlyPrice > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {formatPrice(plan.yearlyPrice, plan.currency)}/tahun (Hemat 20%)
+                    </p>
+                  )}
+                  <Separator className="my-4" />
+                  <ul className="space-y-2 text-sm">
+                    {(plan.features || []).map((feature, index) => (
+                      <li key={index} className="flex items-center">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                        {feature}
+                      </li>
+                    ))}
+                    {plan.maxStudents !== undefined && (
+                      <li className="flex items-center">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                        Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri
+                      </li>
+                    )}
+                    {plan.maxTeachers !== undefined && (
+                      <li className="flex items-center">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                        Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji
+                      </li>
+                    )}
+                  </ul>
+                </CardContent>
               </div>
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Order: {plan.order}</span>
-                <span className={plan.active ? "text-green-600" : "text-red-600"}>
-                  {plan.active ? "Aktif" : "Nonaktif"}
-                </span>
+              <div className="flex gap-2 mt-6">
+                <Button variant="outline" size="sm" onClick={() => handleEditPlan(plan)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDeletePlan(plan.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingPlan ? "Edit Paket" : "Tambah Paket Baru"}</DialogTitle>
-            <DialogDescription>
-              {editingPlan ? "Perbarui informasi paket langganan" : "Buat paket langganan baru"}
-            </DialogDescription>
-          </DialogHeader>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="basic">Info Dasar</TabsTrigger>
-              <TabsTrigger value="limits">Batasan</TabsTrigger>
-              <TabsTrigger value="features">Fitur</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basic" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Nama Paket</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="Contoh: Premium"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="price">Harga (per bulan)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, price: Number(e.target.value) }))}
-                    placeholder="50000"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Deskripsi</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Deskripsi singkat tentang paket ini"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="order">Urutan Tampil</Label>
-                  <Input
-                    id="order"
-                    type="number"
-                    value={formData.order}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, order: Number(e.target.value) }))}
-                    min="1"
-                  />
-                </div>
-                <div className="space-y-3 pt-6">
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{currentPlan ? "Edit Paket Harga" : "Tambah Paket Harga Baru"}</DialogTitle>
+              <DialogDescription>
+                {currentPlan
+                  ? "Ubah detail paket harga yang sudah ada."
+                  : "Buat paket harga baru untuk langganan Anda."}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Info Dasar</TabsTrigger>
+                  <TabsTrigger value="limits">Batas</TabsTrigger>
+                  <TabsTrigger value="features">Fitur</TabsTrigger>
+                </TabsList>
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Nama Paket</Label>
+                    <Input id="name" name="name" value={formState.name || ""} onChange={handleFormChange} required />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Deskripsi</Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      value={formState.description || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="price">Harga (per bulan)</Label>
+                      <Input
+                        id="price"
+                        name="price"
+                        type="number"
+                        value={formState.price !== undefined ? formState.price : ""}
+                        onChange={handleNumberChange}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="currency">Mata Uang</Label>
+                      <Input
+                        id="currency"
+                        name="currency"
+                        value={formState.currency || "IDR"}
+                        onChange={handleFormChange}
+                        disabled // For now, keep it IDR
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isPopular"
+                      name="isPopular"
+                      checked={formState.isPopular || false}
+                      onCheckedChange={(checked) => setFormState((prev) => ({ ...prev, isPopular: checked }))}
+                    />
+                    <Label htmlFor="isPopular">Populer</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isRecommended"
+                      name="isRecommended"
+                      checked={formState.isRecommended || false}
+                      onCheckedChange={(checked) => setFormState((prev) => ({ ...prev, isRecommended: checked }))}
+                    />
+                    <Label htmlFor="isRecommended">Rekomendasi</Label>
+                  </div>
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="active"
-                      checked={formData.active}
-                      onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, active: checked }))}
+                      name="active"
+                      checked={formState.active !== undefined ? formState.active : true}
+                      onCheckedChange={(checked) => setFormState((prev) => ({ ...prev, active: checked }))}
                     />
                     <Label htmlFor="active">Aktif</Label>
                   </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="popular"
-                    checked={formData.isPopular}
-                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, isPopular: checked }))}
-                  />
-                  <Label htmlFor="popular">Populer</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="recommended"
-                    checked={formData.isRecommended}
-                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, isRecommended: checked }))}
-                  />
-                  <Label htmlFor="recommended">Direkomendasikan</Label>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="limits" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="maxStudents">Maksimal Santri</Label>
-                  <Input
-                    id="maxStudents"
-                    type="number"
-                    value={formData.maxStudents || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        maxStudents: e.target.value ? Number(e.target.value) : null,
-                      }))
-                    }
-                    placeholder="Kosongkan untuk tidak terbatas"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Kosongkan untuk tidak terbatas</p>
-                </div>
-                <div>
-                  <Label htmlFor="maxTeachers">Maksimal Penguji</Label>
-                  <Input
-                    id="maxTeachers"
-                    type="number"
-                    value={formData.maxTeachers || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        maxTeachers: e.target.value ? Number(e.target.value) : null,
-                      }))
-                    }
-                    placeholder="Kosongkan untuk tidak terbatas"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Kosongkan untuk tidak terbatas</p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Preview Batasan</h4>
-                <div className="space-y-1 text-sm text-blue-800">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span>
-                      {formData.maxStudents === null
-                        ? "Santri tidak terbatas"
-                        : `Maksimal ${formData.maxStudents} santri`}
-                    </span>
+                  <div className="grid gap-2">
+                    <Label htmlFor="order">Urutan Tampilan</Label>
+                    <Input
+                      id="order"
+                      name="order"
+                      type="number"
+                      value={formState.order !== undefined ? formState.order : ""}
+                      onChange={handleNumberChange}
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4" />
-                    <span>
-                      {formData.maxTeachers === null
-                        ? "Penguji tidak terbatas"
-                        : `Maksimal ${formData.maxTeachers} penguji`}
-                    </span>
+                </TabsContent>
+                <TabsContent value="limits" className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Atur batas untuk santri dan penguji. Kosongkan untuk tidak terbatas.
+                  </p>
+                  <div className="grid gap-2">
+                    <Label htmlFor="maxStudents">Maksimal Santri</Label>
+                    <Input
+                      id="maxStudents"
+                      name="maxStudents"
+                      type="number"
+                      placeholder="Kosongkan untuk tidak terbatas"
+                      value={formState.maxStudents === null ? "" : formState.maxStudents || ""}
+                      onChange={handleNumberChange}
+                    />
                   </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="features" className="space-y-4">
-              <div>
-                <Label>Tambah Fitur</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={newFeature}
-                    onChange={(e) => setNewFeature(e.target.value)}
-                    placeholder="Masukkan fitur baru"
-                    onKeyPress={(e) => e.key === "Enter" && addFeature()}
-                  />
-                  <Button onClick={addFeature} type="button">
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label>Daftar Fitur</Label>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {formData.features.map((feature, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-green-500" />
-                        <span className="text-sm">{feature}</span>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeFeature(index)}>
-                        <X className="w-4 h-4" />
+                  <div className="grid gap-2">
+                    <Label htmlFor="maxTeachers">Maksimal Penguji</Label>
+                    <Input
+                      id="maxTeachers"
+                      name="maxTeachers"
+                      type="number"
+                      placeholder="Kosongkan untuk tidak terbatas"
+                      value={formState.maxTeachers === null ? "" : formState.maxTeachers || ""}
+                      onChange={handleNumberChange}
+                    />
+                  </div>
+                </TabsContent>
+                <TabsContent value="features" className="space-y-4">
+                  <p className="text-muted-foreground">Tambahkan fitur-fitur yang termasuk dalam paket ini.</p>
+                  {(formState.features || []).map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={feature}
+                        onChange={(e) => handleFeatureChange(index, e.target.value)}
+                        placeholder={`Fitur ${index + 1}`}
+                      />
+                      <Button variant="outline" size="icon" onClick={() => removeFeature(index)}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
-                  {formData.features.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">Belum ada fitur ditambahkan</p>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleSave}>{editingPlan ? "Perbarui" : "Buat"} Paket</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+                  <Button type="button" variant="outline" onClick={addFeature}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Tambah Fitur
+                  </Button>
+                </TabsContent>
+              </Tabs>
+              <DialogFooter>
+                <Button type="submit" disabled={loading}>
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {currentPlan ? "Simpan Perubahan" : "Tambah Paket"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   )
 }

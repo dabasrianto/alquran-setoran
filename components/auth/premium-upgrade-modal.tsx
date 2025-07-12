@@ -1,51 +1,55 @@
 "use client"
 
+import { DialogTrigger } from "@/components/ui/dialog"
+
+import type React from "react"
+
 import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Crown, 
-  Check, 
-  CreditCard, 
-  Smartphone, 
-  Building, 
-  QrCode,
-  Info,
-  Loader2,
-  CheckCircle
-} from "lucide-react"
-import { SUBSCRIPTION_TIERS, formatPrice, getTierFeaturesList } from "@/lib/subscription-tiers"
+import { Crown, Check, CreditCard, Smartphone, Building, QrCode, Info, Loader2, CheckCircle } from "lucide-react"
+import { SUBSCRIPTION_TIERS, formatPrice, getTierFeaturesList, calculateYearlyPrice } from "@/lib/subscription-tiers"
 import { createUpgradeRequest } from "@/lib/firebase-premium"
-import type { SubscriptionTier } from "@/lib/types"
+import type { SubscriptionTier, PricingPlan } from "@/lib/types"
 
 interface PremiumUpgradeModalProps {
   children: React.ReactNode
-  targetTier?: SubscriptionTier
+  isOpen: boolean
+  onClose: () => void
+  plan: PricingPlan
+  billingPeriod: "monthly" | "yearly"
 }
 
-export default function PremiumUpgradeModal({ children, targetTier = "premium" }: PremiumUpgradeModalProps) {
+export default function PremiumUpgradeModal({
+  children,
+  isOpen,
+  onClose,
+  plan,
+  billingPeriod,
+}: PremiumUpgradeModalProps) {
   const { user, userProfile } = useAuth()
-  const [selectedTier, setSelectedTier] = useState<SubscriptionTier>(targetTier)
+  const [selectedTier, setSelectedTier] = useState<SubscriptionTier>("premium")
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
+  const { toast } = useToast()
 
   const currentTier = (userProfile?.subscriptionType as SubscriptionTier) || "basic"
-  const availableTiers = Object.values(SUBSCRIPTION_TIERS).filter(tier => 
-    tier.id !== currentTier && tier.price > SUBSCRIPTION_TIERS[currentTier].price
+  const availableTiers = Object.values(SUBSCRIPTION_TIERS).filter(
+    (tier) => tier.id !== currentTier && tier.price > SUBSCRIPTION_TIERS[currentTier].price,
   )
 
   const selectedTierInfo = SUBSCRIPTION_TIERS[selectedTier]
@@ -96,26 +100,37 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
     setError(null)
 
     try {
+      const priceToPay = billingPeriod === "monthly" ? plan.price : plan.yearlyPrice || calculateYearlyPrice(plan.price)
+
       await createUpgradeRequest(
         user.uid,
         user.email!,
         userProfile.displayName || user.email!,
         currentTier,
         selectedTier,
-        selectedTierInfo.price
+        priceToPay,
       )
 
+      toast({
+        title: "Permintaan Upgrade Terkirim",
+        description: `Permintaan upgrade Anda ke paket ${plan.name} (${billingPeriod}) telah diterima. Kami akan segera memprosesnya.`,
+      })
       setSuccess(true)
     } catch (error: any) {
       console.error("Upgrade request error:", error)
       setError(error.message || "Gagal membuat request upgrade")
+      toast({
+        title: "Error",
+        description: "Gagal mengirim permintaan upgrade. Silakan coba lagi.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
   const resetModal = () => {
-    setSelectedTier(targetTier)
+    setSelectedTier("premium")
     setSelectedMethod(null)
     setLoading(false)
     setSuccess(false)
@@ -123,10 +138,10 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
   }
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen)
     if (!newOpen) {
       resetModal()
     }
+    onClose()
   }
 
   if (userProfile?.subscriptionType === "institution") {
@@ -134,7 +149,7 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -152,8 +167,8 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
             <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Request Upgrade Berhasil!</h3>
             <p className="text-muted-foreground mb-6">
-              Request upgrade Anda telah dikirim dan sedang diproses oleh admin. 
-              Anda akan menerima notifikasi melalui email setelah request disetujui.
+              Request upgrade Anda telah dikirim dan sedang diproses oleh admin. Anda akan menerima notifikasi melalui
+              email setelah request disetujui.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <h4 className="font-medium text-blue-800 mb-2">Langkah Selanjutnya:</h4>
@@ -164,9 +179,7 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                 <li>4. Akun akan otomatis upgrade setelah pembayaran dikonfirmasi</li>
               </ol>
             </div>
-            <Button onClick={() => setOpen(false)}>
-              Tutup
-            </Button>
+            <Button onClick={onClose}>Tutup</Button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -178,16 +191,16 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                   <CardDescription>{SUBSCRIPTION_TIERS[currentTier].description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="text-2xl font-bold">
-                    {formatPrice(SUBSCRIPTION_TIERS[currentTier].price)}
-                  </div>
+                  <div className="text-2xl font-bold">{formatPrice(SUBSCRIPTION_TIERS[currentTier].price)}</div>
                   <div className="space-y-1">
-                    {getTierFeaturesList(SUBSCRIPTION_TIERS[currentTier]).slice(0, 3).map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-600" />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
+                    {getTierFeaturesList(SUBSCRIPTION_TIERS[currentTier])
+                      .slice(0, 3)
+                      .map((feature, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-green-600" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -196,23 +209,31 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Crown className="h-5 w-5 text-amber-600" />
-                    {selectedTierInfo.name}
+                    {plan.name}
                   </CardTitle>
-                  <CardDescription>{selectedTierInfo.description}</CardDescription>
+                  <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="text-2xl font-bold text-amber-600">
-                    {formatPrice(selectedTierInfo.price)}
-                  </div>
+                  <div className="text-2xl font-bold text-amber-600">{formatPrice(plan.price, plan.currency)}</div>
                   <div className="space-y-1">
-                    {getTierFeaturesList(selectedTierInfo).slice(0, 5).map((feature, index) => (
+                    {(plan.features || []).map((feature, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-green-600" />
-                        <span className={feature.includes("Unlimited") ? "font-semibold" : ""}>
-                          {feature}
-                        </span>
+                        <span className={feature.includes("Unlimited") ? "font-semibold" : ""}>{feature}</span>
                       </div>
                     ))}
+                    {plan.maxStudents !== undefined && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span>Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri</span>
+                      </div>
+                    )}
+                    {plan.maxTeachers !== undefined && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span>Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -224,12 +245,10 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                 <h3 className="text-lg font-semibold mb-4">Pilih Paket Upgrade</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {availableTiers.map((tier) => (
-                    <Card 
-                      key={tier.id} 
+                    <Card
+                      key={tier.id}
                       className={`cursor-pointer transition-all ${
-                        selectedTier === tier.id
-                          ? "border-amber-500 bg-amber-50"
-                          : "hover:border-amber-300"
+                        selectedTier === tier.id ? "border-amber-500 bg-amber-50" : "hover:border-amber-300"
                       }`}
                       onClick={() => setSelectedTier(tier.id)}
                     >
@@ -238,18 +257,12 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                           <Crown className="h-6 w-6 text-amber-600" />
                         </div>
                         <h4 className="font-medium">{tier.name}</h4>
-                        <div className="text-xl font-bold text-amber-600 mt-2">
-                          {formatPrice(tier.price)}
-                        </div>
+                        <div className="text-xl font-bold text-amber-600 mt-2">{formatPrice(tier.price)}</div>
                         <p className="text-xs text-muted-foreground mt-1">
                           per {tier.billingPeriod === "monthly" ? "bulan" : "tahun"}
                         </p>
-                        {tier.popular && (
-                          <Badge className="mt-2 bg-blue-100 text-blue-800">Popular</Badge>
-                        )}
-                        {tier.recommended && (
-                          <Badge className="mt-2 bg-amber-100 text-amber-800">Recommended</Badge>
-                        )}
+                        {tier.popular && <Badge className="mt-2 bg-blue-100 text-blue-800">Popular</Badge>}
+                        {tier.recommended && <Badge className="mt-2 bg-amber-100 text-amber-800">Recommended</Badge>}
                       </CardContent>
                     </Card>
                   ))}
@@ -298,19 +311,14 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                <strong>Proses Upgrade:</strong> Setelah Anda submit request, admin akan review dan mengirimkan 
-                link pembayaran dalam 1-2 hari kerja. Akun akan otomatis upgrade setelah pembayaran dikonfirmasi.
+                <strong>Proses Upgrade:</strong> Setelah Anda submit request, admin akan review dan mengirimkan link
+                pembayaran dalam 1-2 hari kerja. Akun akan otomatis upgrade setelah pembayaran dikonfirmasi.
               </AlertDescription>
             </Alert>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                onClick={handleUpgrade} 
-                disabled={!selectedMethod || loading} 
-                className="flex-1" 
-                size="lg"
-              >
+            <DialogFooter>
+              <Button onClick={handleUpgrade} disabled={!selectedMethod || loading} className="flex-1" size="lg">
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -319,11 +327,14 @@ export default function PremiumUpgradeModal({ children, targetTier = "premium" }
                 ) : (
                   <>
                     <Crown className="mr-2 h-4 w-4" />
-                    Request Upgrade ke {selectedTierInfo.name}
+                    Request Upgrade ke {plan.name}
                   </>
                 )}
               </Button>
-            </div>
+              <Button variant="outline" onClick={onClose} disabled={loading}>
+                Batal
+              </Button>
+            </DialogFooter>
 
             {/* Contact Info */}
             <div className="bg-muted p-4 rounded-lg">

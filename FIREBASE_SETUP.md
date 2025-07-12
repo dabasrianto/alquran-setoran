@@ -1,187 +1,94 @@
-# Firebase Security Rules Setup untuk Admin
+# Firebase Setup Guide
 
-## Masalah
-Admin tidak bisa mengakses data semua pengguna karena Firebase Security Rules belum dikonfigurasi.
+This guide will walk you through setting up Firebase for your project, including creating a project, configuring environment variables, and initializing Firebase in your application.
 
-## Solusi
-Update Firebase Security Rules untuk memberikan akses admin dan subscription access.
+## 1. Create a Firebase Project
 
-## Langkah-langkah:
+1.  Go to the [Firebase Console](https://console.firebase.google.com/).
+2.  Click "Add project" or "Create a project".
+3.  Follow the steps to create a new project. You can enable Google Analytics if you wish.
+4.  Once the project is created, click on the "Web" icon (`</>`) to add a web app to your Firebase project.
+5.  Register your app and copy the Firebase configuration object. It will look something like this:
 
-### 1. Buka Firebase Console
-- Pergi ke [Firebase Console](https://console.firebase.google.com)
-- Login dengan akun Google yang sama dengan project
+    \`\`\`javascript
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    \`\`\`
 
-### 2. Pilih Project
-- Pilih project "tasmi-web"
+## 2. Configure Environment Variables
 
-### 3. Buka Firestore Database
-- Klik "Firestore Database" di menu sebelah kiri
-- Klik tab "Rules"
+To keep your Firebase configuration secure and separate from your code, you should use environment variables.
 
-### 4. Update Rules
-Copy dan paste rules berikut, replace semua rules yang ada:
+1.  Create a `.env.local` file in the root of your project (if it doesn't exist).
+2.  Add the Firebase configuration values to this file, prefixed with `NEXT_PUBLIC_` for Next.js to expose them to the browser:
 
-\`\`\`javascript
-rules_version = '2';
+    \`\`\`
+    NEXT_PUBLIC_FIREBASE_API_KEY="YOUR_API_KEY"
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="YOUR_AUTH_DOMAIN"
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID="YOUR_PROJECT_ID"
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="YOUR_STORAGE_BUCKET"
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="YOUR_MESSAGING_SENDER_ID"
+    NEXT_PUBLIC_FIREBASE_APP_ID="YOUR_APP_ID"
+    \`\`\`
+    Replace the placeholder values with the actual values from your Firebase project.
 
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Function to check if user is admin
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email in [
-          'dabasrianto@gmail.com'
-        ] || 
-        request.auth.token.admin == true
-      );
-    }
-    
-    // Function to check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Function to check if user owns the document
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Users collection - Admin can read all, users can read/write their own
-    match /users/{userId} {
-      // Admin can read all user documents
-      allow read: if isAdmin();
-      
-      // Users can read and write their own profile
-      allow read, write: if isOwner(userId);
-      
-      // Admin can update any user (for subscription management)
-      allow write: if isAdmin();
-      
-      // Allow user creation during signup
-      allow create: if isAuthenticated() && isOwner(userId);
-      
-      // Students subcollection
-      match /students/{studentId} {
-        allow read, write: if isOwner(userId);
-        allow read: if isAdmin(); // Admin can read all students
-      }
-      
-      // Pengujis subcollection  
-      match /pengujis/{pengujiId} {
-        allow read, write: if isOwner(userId);
-        allow read: if isAdmin(); // Admin can read all pengujis
-      }
-    }
-    
-    // Subscriptions collection - Users can read their own, admin can read/write all
-    match /subscriptions/{subscriptionId} {
-      // Users can read their own subscription data
-      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      
-      // Admin can read and write all subscriptions
-      allow read, write: if isAdmin();
-      
-      // Allow subscription creation for authenticated users
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      
-      // Users can update their own subscription (for upgrade requests)
-      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
-    }
-    
-    // Upgrade Requests collection - Users can create their own, admin can read/write all
-    match /upgradeRequests/{requestId} {
-      // Users can create upgrade requests for themselves
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      
-      // Users can read their own upgrade requests
-      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      
-      // Admin can read and write all upgrade requests
-      allow read, write: if isAdmin();
-    }
-    
-    // Payments collection - Admin only
-    match /payments/{paymentId} {
-      // Only admin can read and write payments
-      allow read, write: if isAdmin();
-      
-      // Users can read their own payment records
-      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-    }
-    
-    // Admin Logs collection - Admin only
-    match /adminLogs/{logId} {
-      allow read, write: if isAdmin();
-    }
-    
-    // Admin-only collections (if needed in future)
-    match /admin/{document=**} {
-      allow read, write: if isAdmin();
-    }
-    
-    // System logs (admin only)
-    match /logs/{logId} {
-      allow read, write: if isAdmin();
-    }
-  }
-}
+3.  **For Vercel Deployment**:
+    When deploying to Vercel, you'll need to add these environment variables to your Vercel project settings:
+    *   Go to your Vercel project dashboard.
+    *   Navigate to `Settings` -> `Environment Variables`.
+    *   Add each variable with its corresponding value. Make sure to select "Preview" and "Production" (and "Development" if you use Vercel for local development) for the environments.
+
+## 3. Initialize Firebase in Your Application
+
+The `lib/firebase.ts` file is responsible for initializing Firebase. It reads the environment variables and initializes the Firebase app.
+
+\`\`\`typescript
+// lib/firebase.ts
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { app, auth, db };
 \`\`\`
 
-### 5. Publish Rules
-- Klik tombol "Publish" untuk menerapkan rules baru
-- Tunggu beberapa detik hingga rules ter-deploy
+**Ensure this file is correctly configured and imports the `process.env` variables.**
 
-### 6. Test
-- Kembali ke aplikasi Tasmi'
-- Login sebagai admin (dabasrianto@gmail.com)
-- Buka halaman admin (/admin)
-- Klik "Test Firebase Connection"
-- Seharusnya sekarang bisa membaca data semua pengguna
+## 4. Set up Firestore Database
 
-## Keamanan
-Rules ini memberikan:
-- **Admin**: Akses penuh untuk membaca semua data pengguna dan mengupdate subscription
-- **User biasa**: Hanya bisa akses data mereka sendiri dan subscription mereka
-- **Guest**: Tidak ada akses
+1.  In the Firebase Console, navigate to `Firestore Database`.
+2.  Click "Create database".
+3.  Choose "Start in production mode" (you will set up rules later) and select a location.
+4.  Click "Enable".
 
-## Subscription Rules
-Rules subscription memberikan:
-- **User**: Bisa membaca dan update subscription mereka sendiri
-- **Admin**: Akses penuh ke semua subscription
-- **Keamanan**: Hanya user dengan userId yang sesuai yang bisa akses subscription mereka
+## 5. Deploy Firestore Security Rules
 
-## Troubleshooting
-Jika masih error:
-1. Pastikan email admin benar: `dabasrianto@gmail.com`
-2. Tunggu 1-2 menit setelah publish rules
-3. Refresh halaman admin
-4. Check console browser untuk error details
+After setting up your database, you need to deploy the security rules to control access to your data. The `firestore.rules` file contains these rules.
 
-## 🔧 **Yang Perlu Dilakukan:**
+1.  Make sure your `firestore.rules` file is correctly configured for your application's needs.
+2.  Deploy the rules using the Firebase CLI:
+    \`\`\`bash
+    firebase deploy --only firestore:rules
+    \`\`\`
+    Refer to `DEPLOY_RULES.md` for more detailed instructions on deploying rules.
 
-### ✅ **Update Firebase Security Rules**
-1. **Buka Firebase Console** → https://console.firebase.google.com
-2. **Pilih project "tasmi-web"**
-3. **Firestore Database** → **Rules tab**
-4. **Copy rules** dari komponen FirebaseRulesSetup
-5. **Replace semua rules** yang ada
-6. **Klik Publish**
-
-### ✅ **Test Setelah Update**
-1. **Tunggu 1-2 menit** setelah publish
-2. **Refresh halaman admin**
-3. **Klik "Test Firebase Connection"**
-4. **Seharusnya berhasil** membaca data users
-
-### 🔒 **Keamanan Rules:**
-- **Admin** (`dabasrianto@gmail.com` atau user dengan custom claim `admin: true`): Akses penuh semua data
-- **User biasa**: Hanya data mereka sendiri dan subscription mereka
-- **Guest**: Tidak ada akses
-
-### 🔐 **Subscription Security:**
-- **User**: Akses read/update subscription sendiri berdasarkan userId
-- **Admin**: Akses penuh semua subscription
-- **Validation**: Subscription hanya bisa diakses jika userId cocok dengan auth.uid
-
-Setelah update rules, admin panel akan bisa membaca dan mengelola data semua pengguna, dan users bisa mengakses subscription mereka! 🚀
+By following these steps, your Firebase project will be correctly set up and integrated with your Next.js application.

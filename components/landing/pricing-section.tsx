@@ -1,165 +1,140 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Check, Crown, Star, Users, GraduationCap } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { CheckCircle2, Loader2 } from "lucide-react"
 import { type PricingPlan, formatPrice, calculateYearlyPrice, subscribeToPricingChanges } from "@/lib/firebase-pricing"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
 
 export function PricingSection() {
-  const [plans, setPlans] = useState<PricingPlan[]>([])
+  const { currentUser } = useAuth()
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([])
   const [loading, setLoading] = useState(true)
-  const [isYearly, setIsYearly] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
 
   useEffect(() => {
-    const unsubscribe = subscribeToPricingChanges((updatedPlans) => {
-      // Only show active plans on landing page
-      setPlans(updatedPlans.filter((plan) => plan.active))
+    setLoading(true)
+    const unsubscribe = subscribeToPricingChanges((fetchedPlans) => {
+      setPricingPlans(fetchedPlans.filter((p) => p.active)) // Only show active plans
       setLoading(false)
     })
 
-    return unsubscribe
+    return () => unsubscribe()
   }, [])
-
-  const handleUpgrade = (planName: string) => {
-    const phoneNumber = "+628977712345"
-    const message = `Bismillah, afwan Admin saya ingin upgrade ke paket ${planName}`
-    const encodedMessage = encodeURIComponent(message)
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
-
-    window.open(whatsappUrl, "_blank")
-  }
 
   if (loading) {
     return (
-      <section id="pricing" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="h-8 bg-gray-200 rounded animate-pulse mx-auto mb-4" style={{ width: "200px" }} />
-            <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto" style={{ width: "300px" }} />
-          </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-96 bg-gray-200 rounded animate-pulse" />
-            ))}
-          </div>
+      <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+        <div className="container px-4 md:px-6 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          <p className="mt-4 text-muted-foreground">Memuat paket harga...</p>
         </div>
       </section>
     )
   }
 
   return (
-    <section id="pricing" className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Pilih Paket yang Tepat</h2>
-          <p className="text-xl text-gray-600 mb-8">Mulai gratis, upgrade kapan saja sesuai kebutuhan</p>
-
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <Label htmlFor="billing-toggle" className={!isYearly ? "font-medium" : ""}>
-              Bulanan
-            </Label>
-            <Switch id="billing-toggle" checked={isYearly} onCheckedChange={setIsYearly} />
-            <Label htmlFor="billing-toggle" className={isYearly ? "font-medium" : ""}>
-              Tahunan
-            </Label>
-            <Badge variant="secondary" className="ml-2">
-              Hemat 20%
-            </Badge>
+    <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+      <div className="container px-4 md:px-6">
+        <div className="flex flex-col items-center space-y-4 text-center mb-8">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+              Pilih Paket yang Tepat untuk Anda
+            </h2>
+            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+              Fleksibel, terjangkau, dan dirancang untuk kebutuhan Anda.
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <ToggleGroup
+              type="single"
+              value={billingPeriod}
+              onValueChange={(value: "monthly" | "yearly") => {
+                if (value) setBillingPeriod(value)
+              }}
+              className="border rounded-md"
+            >
+              <ToggleGroupItem value="monthly" aria-label="Toggle monthly">
+                Bulanan
+              </ToggleGroupItem>
+              <ToggleGroupItem value="yearly" aria-label="Toggle yearly">
+                Tahunan (Hemat 20%)
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
-
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-          {plans.map((plan) => {
-            const displayPrice = isYearly && plan.price > 0 ? calculateYearlyPrice(plan.price) / 12 : plan.price
-            const totalPrice = isYearly && plan.price > 0 ? calculateYearlyPrice(plan.price) : plan.price
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {pricingPlans.map((plan) => {
+            const displayPrice =
+              billingPeriod === "monthly" ? plan.price : plan.yearlyPrice || calculateYearlyPrice(plan.price)
+            const displayInterval = billingPeriod === "monthly" ? "/bulan" : "/tahun"
 
             return (
               <Card
                 key={plan.id}
-                className={`relative ${plan.isRecommended ? "ring-2 ring-primary shadow-lg scale-105" : ""}`}
-              >
-                {plan.isRecommended && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground">
-                      <Crown className="w-3 h-3 mr-1" />
-                      Direkomendasikan
-                    </Badge>
-                  </div>
+                className={cn(
+                  "flex flex-col justify-between p-6 border-2",
+                  plan.isPopular && "border-blue-500 dark:border-blue-400",
+                  plan.isRecommended && "border-green-500 dark:border-green-400",
                 )}
-
-                <CardHeader className="text-center pb-4">
-                  <CardTitle className="flex items-center justify-center gap-2">
-                    {plan.name}
-                    {plan.isPopular && (
-                      <Badge variant="secondary">
-                        <Star className="w-3 h-3 mr-1" />
-                        Populer
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-
-                  <div className="py-4">
-                    <div className="text-4xl font-bold">{formatPrice(displayPrice)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      per {isYearly ? "bulan (ditagih tahunan)" : "bulan"}
-                    </div>
-                    {isYearly && plan.price > 0 && (
-                      <div className="text-sm text-green-600 mt-1">Total: {formatPrice(totalPrice)}/tahun</div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span>
-                        {plan.maxStudents === null ? "Santri tidak terbatas" : `Maksimal ${plan.maxStudents} santri`}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <GraduationCap className="w-4 h-4 text-primary" />
-                      <span>
-                        {plan.maxTeachers === null ? "Penguji tidak terbatas" : `Maksimal ${plan.maxTeachers} penguji`}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>{feature}</span>
+              >
+                <div>
+                  <CardHeader className="p-0 pb-4">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
+                      <div className="flex gap-1">
+                        {plan.isPopular && <Badge className="bg-blue-500 text-white">Populer</Badge>}
+                        {plan.isRecommended && <Badge className="bg-green-500 text-white">Rekomendasi</Badge>}
                       </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    className="w-full mt-6"
-                    variant={plan.isRecommended ? "default" : "outline"}
-                    onClick={() => handleUpgrade(plan.name)}
-                  >
-                    {plan.price === 0 ? "Mulai Gratis" : "Pilih Paket"}
-                  </Button>
-                </CardContent>
+                    </div>
+                    <p className="text-muted-foreground text-sm">{plan.description}</p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="text-4xl font-bold mb-4">
+                      {formatPrice(displayPrice, plan.currency)}
+                      <span className="text-base text-muted-foreground font-normal">{displayInterval}</span>
+                    </div>
+                    <Separator className="my-4" />
+                    <ul className="space-y-2 text-sm">
+                      {(plan.features || []).map((feature, index) => (
+                        <li key={index} className="flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                          {feature}
+                        </li>
+                      ))}
+                      {plan.maxStudents !== undefined && (
+                        <li className="flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                          Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri
+                        </li>
+                      )}
+                      {plan.maxTeachers !== undefined && (
+                        <li className="flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                          Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji
+                        </li>
+                      )}
+                    </ul>
+                  </CardContent>
+                </div>
+                <Button className="mt-6 w-full" asChild>
+                  {currentUser ? (
+                    <Link href="/upgrade">Pilih Paket</Link>
+                  ) : (
+                    <Link href="/register">Daftar Sekarang</Link>
+                  )}
+                </Button>
               </Card>
             )
           })}
         </div>
-
-        {plans.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Belum ada paket tersedia</p>
-          </div>
-        )}
       </div>
     </section>
   )
 }
-
-export default PricingSection

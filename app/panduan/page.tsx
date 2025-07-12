@@ -8,7 +8,7 @@ export default function PanduanPage() {
     <main className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-4 md:mb-6">
-          <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
+          <Button variant="outline" size="sm" asChild className="hidden md:inline-flex bg-transparent">
             <Link href="/">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Kembali ke Aplikasi Utama

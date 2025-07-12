@@ -1,126 +1,84 @@
 "use client"
 
-import { usePathname } from "next/navigation"
-import Link from "next/link"
-import { Home, BarChart, Users, BookOpen, Menu, Crown, Shield } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { Home, LineChart, Package, PanelLeft, Settings, ShoppingCart, Users2 } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { UserMenu } from "./auth/user-menu"
+import Image from "next/image"
 
 export function MobileNav() {
   const pathname = usePathname()
-  const { userProfile, isAdmin } = useAuth()
-
-  const isPremium = userProfile?.subscriptionType === "premium"
-
-  const handleUpgradeClick = () => {
-    const phoneNumber = "+628977712345"
-    const message = "Bismillah, afwan Admin saya ingin upgrade ke premium"
-    const encodedMessage = encodeURIComponent(message)
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
-    
-    window.open(whatsappUrl, '_blank')
-  }
+  const { isAdmin } = useAuth()
 
   return (
-    <>
-      {/* Bottom Navigation for Mobile */}
-      <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t md:hidden">
-        <div className="grid h-full grid-cols-4">
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button size="icon" variant="outline" className="sm:hidden fixed top-4 left-4 z-40 bg-transparent">
+          <PanelLeft className="h-5 w-5" />
+          <span className="sr-only">Toggle Navigation Menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="sm:max-w-xs flex flex-col">
+        <nav className="grid gap-6 text-lg font-medium pt-8">
           <Link
             href="/"
-            className={cn(
-              "inline-flex flex-col items-center justify-center px-5 hover:bg-muted",
-              pathname === "/" && "text-primary",
-            )}
+            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
           >
-            <Home className="w-6 h-6" />
-            <span className="text-xs mt-1">Beranda</span>
+            <Image src="/placeholder-logo.svg" alt="Logo" width={24} height={24} />
+            <span className="sr-only">Tasmi App</span>
           </Link>
           <Link
             href="/dashboard"
-            className={cn(
-              "inline-flex flex-col items-center justify-center px-5 hover:bg-muted",
-              pathname === "/dashboard" && "text-primary",
-            )}
+            className={`flex items-center gap-4 px-2.5 ${pathname === "/dashboard" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <BarChart className="w-6 h-6" />
-            <span className="text-xs mt-1">Dashboard</span>
+            <Home className="h-5 w-5" />
+            Dashboard
           </Link>
           <Link
             href="/penguji"
-            className={cn(
-              "inline-flex flex-col items-center justify-center px-5 hover:bg-muted",
-              pathname === "/penguji" && "text-primary",
-            )}
+            className={`flex items-center gap-4 px-2.5 ${pathname === "/penguji" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <Users className="w-6 h-6" />
-            <span className="text-xs mt-1">Penguji</span>
+            <Users2 className="h-5 w-5" />
+            Penguji
           </Link>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="inline-flex flex-col items-center justify-center px-5 hover:bg-muted">
-                <Menu className="w-6 h-6" />
-                <span className="text-xs mt-1">Menu</span>
-              </button>
-            </DialogTrigger>
-            <DialogContent side="right" className="p-0 w-72 sm:w-80">
-              <div className="py-4 space-y-4">
-                <h3 className="text-lg font-medium px-4">Menu Aplikasi</h3>
-                <div className="space-y-2 px-4">
-                  <Button asChild variant="ghost" className="w-full justify-start" size="lg">
-                    <Link href="/">
-                      <Home className="mr-2 h-5 w-5" />
-                      Beranda
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start" size="lg">
-                    <Link href="/dashboard">
-                      <BarChart className="mr-2 h-5 w-5" />
-                      Dashboard
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start" size="lg">
-                    <Link href="/penguji">
-                      <Users className="mr-2 h-5 w-5" />
-                      Ustadz/Ustadzah
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full justify-start" size="lg">
-                    <Link href="/panduan">
-                      <BookOpen className="mr-2 h-5 w-5" />
-                      Panduan
-                    </Link>
-                  </Button>
-                  {isAdmin && (
-                    <Button asChild variant="ghost" className="w-full justify-start text-red-600" size="lg">
-                      <Link href="/admin">
-                        <Shield className="mr-2 h-5 w-5" />
-                        Admin Panel
-                      </Link>
-                    </Button>
-                  )}
-                  {!isPremium && (
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start text-amber-600" 
-                      size="lg"
-                      onClick={handleUpgradeClick}
-                    >
-                      <Crown className="mr-2 h-5 w-5" />
-                      Upgrade Premium
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Link
+            href="/panduan"
+            className={`flex items-center gap-4 px-2.5 ${pathname === "/panduan" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Package className="h-5 w-5" />
+            Panduan
+          </Link>
+          <Link
+            href="/upgrade"
+            className={`flex items-center gap-4 px-2.5 ${pathname === "/upgrade" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            Upgrade
+          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-4 px-2.5 ${pathname === "/admin" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <LineChart className="h-5 w-5" />
+              Admin
+            </Link>
+          )}
+          <Link
+            href="/settings"
+            className={`flex items-center gap-4 px-2.5 ${pathname === "/settings" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            <Settings className="h-5 w-5" />
+            Settings
+          </Link>
+        </nav>
+        <div className="mt-auto">
+          <UserMenu />
         </div>
-      </div>
-
-      {/* Padding bottom for mobile to account for bottom navigation */}
-      <div className="pb-16 md:pb-0"></div>
-    </>
+      </SheetContent>
+    </Sheet>
   )
 }

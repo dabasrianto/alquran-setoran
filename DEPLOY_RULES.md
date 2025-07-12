@@ -164,3 +164,45 @@ service cloud.firestore {
 ---
 
 **⚠️ CRITICAL:** You MUST deploy these rules to Firebase Console for the application to work. The rules in your code files are just templates - they need to be published in Firebase Console to take effect.
+
+## Prerequisites
+
+1. **Firebase CLI**: Ensure you have the Firebase CLI installed. If not, install it globally:
+    \`\`\`bash
+    npm install -g firebase-tools
+    \`\`\`
+2. **Firebase Project**: You must have a Firebase project set up and linked to your local environment.
+
+## Steps to Deploy
+
+1. **Authenticate with Firebase**:
+    Open your terminal in the project root and log in to Firebase:
+    \`\`\`bash
+    firebase login
+    \`\`\`
+    This will open a browser window for you to authenticate.
+
+2. **Select Your Firebase Project**:
+    If you have multiple Firebase projects, you need to select the correct one for your current directory.
+    \`\`\`bash
+    firebase use --add
+    \`\`\`
+    Follow the prompts to select your project.
+
+3. **Deploy Firestore Rules**:
+    Once authenticated and the project is selected, deploy your Firestore security rules. The rules file is typically named `firestore.rules` and located at the root of your project.
+    \`\`\`bash
+    firebase deploy --only firestore:rules
+    \`\`\`
+    This command will deploy only the Firestore security rules, leaving other Firebase services untouched.
+
+4. **Verify Deployment**:
+    After the deployment is complete, you can verify the new rules by navigating to your Firebase Console:
+    * Go to `Firestore Database` -> `Rules` tab.
+    * You should see the newly deployed rules.
+
+## Important Notes
+
+* **Test Locally**: Before deploying to production, it's highly recommended to test your rules using the Firebase Emulator Suite.
+* **Version Control**: Always keep your `firestore.rules` file under version control (e.g., Git) to track changes and revert if necessary.
+* **Impact**: Be aware that changes to security rules immediately affect how your database can be accessed. Ensure your rules are secure and correctly configured to prevent unauthorized access.

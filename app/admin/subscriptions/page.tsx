@@ -1,82 +1,115 @@
 "use client"
 
+import { Separator } from "@/components/ui/separator"
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SubscriptionManager } from "@/components/admin/subscription-manager"
+import { UpgradeRequestsTable } from "@/components/admin/upgrade-requests-table"
+import { PaymentManagement } from "@/components/admin/payment-management"
 import { useAuth } from "@/contexts/auth-context"
-import { useAdmin } from "@/hooks/use-admin"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Shield, ArrowLeft, AlertTriangle } from "lucide-react"
-import Link from "next/link"
-import AdminUsersList from "@/components/admin/admin-users-list"
-import LoginPage from "@/components/auth/login-page"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
 export default function AdminSubscriptionsPage() {
-  const { user, loading: authLoading } = useAuth()
-  const { users, loading, error, isAdmin, refreshUsers } = useAdmin()
+  const { currentUser, loading, isAdmin } = useAuth()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("subscriptions")
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!loading) {
+      if (!currentUser) {
+        router.push("/login")
+      } else if (!isAdmin) {
+        router.push("/dashboard") // Redirect non-admins
+      }
+    }
+  }, [currentUser, loading, isAdmin, router])
+
+  if (loading || !currentUser || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <LoginPage />
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <CardTitle className="text-2xl font-bold text-red-600">Akses Ditolak</CardTitle>
-            <CardDescription>Anda tidak memiliki akses ke halaman admin</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button asChild>
-              <Link href="/">Kembali ke Beranda</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
 
   return (
-    <main className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <div className="flex items-center">
+                <TabsList>
+                  <TabsTrigger value="subscriptions">Kelola Langganan</TabsTrigger>
+                  <TabsTrigger value="requests">Permintaan Upgrade</TabsTrigger>
+                  <TabsTrigger value="payments">Manajemen Pembayaran</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="subscriptions">
+                <SubscriptionManager />
+              </TabsContent>
+              <TabsContent value="requests">
+                <UpgradeRequestsTable />
+              </TabsContent>
+              <TabsContent value="payments">
+                <PaymentManagement />
+              </TabsContent>
+            </Tabs>
+          </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
-              <Shield className="h-8 w-8 text-red-600" />
-              Kelola Langganan
-            </h1>
-            <p className="text-muted-foreground mt-1">Upgrade/downgrade paket langganan pengguna</p>
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-start bg-muted/50">
+                <div className="grid gap-0.5">
+                  <CardTitle className="group flex items-center gap-2 text-lg">Manajemen Langganan</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 text-sm">
+                <div className="grid gap-3">
+                  <div className="font-semibold">Ringkasan</div>
+                  <ul className="grid gap-3">
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total Langganan Aktif</span>
+                      <span>{/* Dynamic data from stats component */}</span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total Permintaan Upgrade</span>
+                      <span>{/* Dynamic data from stats component */}</span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total Pembayaran</span>
+                      <span>{/* Dynamic data from stats component */}</span>
+                    </li>
+                  </ul>
+                </div>
+                <Separator className="my-4" />
+                <div className="grid gap-3">
+                  <div className="font-semibold">Panduan</div>
+                  <ul className="grid gap-3">
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        Gunakan tab "Kelola Langganan" untuk melihat dan mengubah status langganan pengguna.
+                      </span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        Tab "Permintaan Upgrade" menampilkan permintaan upgrade yang perlu ditinjau.
+                      </span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        "Manajemen Pembayaran" untuk melacak semua transaksi.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link href="/admin">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Kembali ke Admin
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Subscription Management */}
-        <AdminUsersList users={users} loading={loading} onRefresh={refreshUsers} showSubscriptionActions={true} />
+        </main>
       </div>
-    </main>
+    </div>
   )
 }

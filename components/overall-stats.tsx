@@ -1,62 +1,108 @@
 "use client"
 
-import type { StudentWithSummary } from "@/lib/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, BookOpen, CheckCircle, Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { useAuth } from "@/contexts/auth-context"
 
-interface OverallStatsProps {
-  students: StudentWithSummary[]
-  filterName: string
-  filterKelas: string
-}
-
-export default function OverallStats({ students, filterName, filterKelas }: OverallStatsProps) {
-  const totalStudents = students.length
-  let totalAyatSum = 0
-  let maxAyat = 0
-  let topStudents: string[] = []
-
-  students.forEach((student) => {
-    const ayatCount = student.summary?.totalMemorizedVerses || 0
-    totalAyatSum += ayatCount
-    if (ayatCount > maxAyat) {
-      maxAyat = ayatCount
-      topStudents = [student.name]
-    } else if (ayatCount === maxAyat && maxAyat > 0) {
-      topStudents.push(student.name)
-    }
+export function OverallStats() {
+  const { currentUser } = useAuth()
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    totalPenguji: 0,
+    totalSetoran: 0,
+    completedSetoran: 0,
   })
+  const [loading, setLoading] = useState(true)
 
-  const averageAyat = totalStudents > 0 ? (totalAyatSum / totalStudents).toFixed(1) : "0"
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!currentUser) return
 
-  let title = "Statistik "
-  if (filterKelas !== "all") {
-    title += `Kelas ${filterKelas}`
-    if (filterName) title += ` (Nama: "${filterName}")`
-  } else if (filterName) {
-    title += `(Filter Nama: "${filterName}")`
-  } else {
-    title += "Keseluruhan"
+      setLoading(true)
+      try {
+        const studentsSnapshot = await getDocs(collection(db, "users", currentUser.uid, "students"))
+        const totalStudents = studentsSnapshot.size
+
+        const pengujiSnapshot = await getDocs(collection(db, "users", currentUser.uid, "pengujis"))
+        const totalPenguji = pengujiSnapshot.size
+
+        const setoranSnapshot = await getDocs(collection(db, "users", currentUser.uid, "setoran"))
+        const totalSetoran = setoranSnapshot.size
+
+        const completedSetoranSnapshot = await getDocs(
+          query(collection(db, "users", currentUser.uid, "setoran"), where("status", "==", "completed")),
+        )
+        const completedSetoran = completedSetoranSnapshot.size
+
+        setStats({
+          totalStudents,
+          totalPenguji,
+          totalSetoran,
+          completedSetoran,
+        })
+      } catch (error) {
+        console.error("Error fetching overall stats:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [currentUser])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">{title}</h2>
-      <div className="overall-stats-grid grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="stat-item bg-muted p-4 rounded-lg text-center border">
-          <div className="stat-value text-2xl font-bold">{totalStudents}</div>
-          <div className="stat-label text-sm text-muted-foreground mt-1">Total Murid</div>
-        </div>
-        <div className="stat-item bg-muted p-4 rounded-lg text-center border">
-          <div className="stat-value text-2xl font-bold">{averageAyat}</div>
-          <div className="stat-label text-sm text-muted-foreground mt-1">Rata-rata Ayat Hafal</div>
-        </div>
-        <div className="stat-item bg-muted p-4 rounded-lg text-center border">
-          <div className="stat-value text-2xl font-bold">{topStudents.length > 0 ? topStudents.join(", ") : "-"}</div>
-          <div className="stat-label text-sm text-muted-foreground mt-1">Hafalan Terbanyak</div>
-          {topStudents.length > 0 && (
-            <div className="top-student-list text-sm text-muted-foreground">({maxAyat} ayat)</div>
-          )}
-        </div>
-      </div>
+    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Santri</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalStudents}</div>
+          <p className="text-xs text-muted-foreground">Santri terdaftar</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Penguji</CardTitle>
+          <BookOpen className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalPenguji}</div>
+          <p className="text-xs text-muted-foreground">Penguji terdaftar</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Setoran</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalSetoran}</div>
+          <p className="text-xs text-muted-foreground">Setoran tercatat</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Setoran Selesai</CardTitle>
+          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.completedSetoran}</div>
+          <p className="text-xs text-muted-foreground">Setoran telah diselesaikan</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
