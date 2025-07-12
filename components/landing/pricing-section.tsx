@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { Check, Star, Award, Loader2 } from "lucide-react"
 import { getPricingPlans, formatPrice, calculateDiscount, type PricingPlan } from "@/lib/firebase-pricing"
 
-export default function PricingSection() {
+interface PricingSectionProps {
+  onSelectPlan?: (planId: string) => void
+}
+
+export function PricingSection({ onSelectPlan }: PricingSectionProps) {
   const [plans, setPlans] = useState<PricingPlan[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -24,6 +28,15 @@ export default function PricingSection() {
       console.error("Error loading pricing plans:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSelectPlan = (planId: string) => {
+    if (onSelectPlan) {
+      onSelectPlan(planId)
+    } else {
+      // Default behavior - redirect to auth
+      window.location.href = `/auth?plan=${planId}`
     }
   }
 
@@ -123,6 +136,7 @@ export default function PricingSection() {
                         : ""
                   }`}
                   variant={plan.price === 0 ? "outline" : "default"}
+                  onClick={() => handleSelectPlan(plan.id)}
                 >
                   {plan.price === 0 ? "Mulai Gratis" : "Pilih Paket"}
                 </Button>
@@ -139,3 +153,6 @@ export default function PricingSection() {
     </section>
   )
 }
+
+// Default export for backward compatibility
+export default PricingSection

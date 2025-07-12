@@ -4,302 +4,229 @@ import {
   getDocs,
   getDoc,
   setDoc,
-  updateDoc,
   deleteDoc,
-  onSnapshot,
-  serverTimestamp,
   query,
   orderBy,
+  serverTimestamp,
 } from "firebase/firestore"
 import { db } from "./firebase"
 
 export interface PricingPlan {
   id: string
   name: string
+  description: string
   price: number
   originalPrice?: number
-  description: string
   features: string[]
   maxStudents: number | "unlimited"
   maxTeachers: number | "unlimited"
-  isPopular?: boolean
-  isRecommended?: boolean
   isActive: boolean
+  isPopular: boolean
+  isRecommended: boolean
   order: number
   createdAt?: any
   updatedAt?: any
 }
 
-export const defaultPricingPlans: PricingPlan[] = [
+const PRICING_COLLECTION = "pricing"
+const SETTINGS_DOC = "settings"
+
+// Default pricing plans
+const DEFAULT_PRICING_PLANS: Omit<PricingPlan, "id" | "createdAt" | "updatedAt">[] = [
   {
-    id: "free",
     name: "Gratis",
+    description: "Cocok untuk TPQ kecil atau trial",
     price: 0,
-    description: "Cocok untuk ustadz pemula atau TPQ kecil",
-    features: ["Maksimal 10 murid", "1 penguji/ustadz", "Laporan dasar", "Backup manual", "Support email"],
+    features: ["Maksimal 10 murid", "Maksimal 2 ustadz", "Laporan dasar", "Data tersimpan 30 hari", "Dukungan email"],
     maxStudents: 10,
-    maxTeachers: 1,
+    maxTeachers: 2,
     isActive: true,
+    isPopular: false,
+    isRecommended: false,
     order: 1,
   },
   {
-    id: "basic",
-    name: "Basic",
-    price: 49000,
-    originalPrice: 69000,
-    description: "Untuk TPQ atau madrasah kecil hingga menengah",
+    name: "Standar",
+    description: "Untuk madrasah menengah",
+    price: 99000,
+    originalPrice: 149000,
     features: [
       "Maksimal 50 murid",
-      "3 penguji/ustadz",
+      "Maksimal 5 ustadz",
       "Laporan lengkap",
+      "Data tersimpan selamanya",
+      "Dukungan prioritas",
+      "Export data",
       "Backup otomatis",
-      "Export PDF",
-      "Support prioritas",
     ],
     maxStudents: 50,
-    maxTeachers: 3,
-    isPopular: true,
+    maxTeachers: 5,
     isActive: true,
+    isPopular: true,
+    isRecommended: true,
     order: 2,
   },
   {
-    id: "premium",
     name: "Premium",
-    price: 99000,
-    originalPrice: 149000,
-    description: "Untuk madrasah besar atau yayasan",
+    description: "Untuk madrasah besar",
+    price: 199000,
+    originalPrice: 299000,
     features: [
       "Murid unlimited",
       "Ustadz unlimited",
+      "Laporan advanced",
       "Analytics mendalam",
-      "Multi-cabang",
       "API access",
       "Custom branding",
-      "Support 24/7",
+      "Dukungan 24/7",
+      "Training gratis",
     ],
     maxStudents: "unlimited",
     maxTeachers: "unlimited",
-    isRecommended: true,
     isActive: true,
+    isPopular: false,
+    isRecommended: false,
     order: 3,
   },
 ]
 
-// Helper function to ensure db is available
-const ensureDb = () => {
-  if (!db) {
-    throw new Error("Firestore not initialized. Please check your Firebase configuration.")
-  }
-  return db
-}
-
-// Get all pricing plans from Firestore
-export const getPricingPlans = async (): Promise<PricingPlan[]> => {
+// Get all pricing plans
+export async function getPricingPlans(): Promise<PricingPlan[]> {
   try {
-    console.log("🔄 Fetching pricing plans...")
-    const database = ensureDb()
-
     // Try to get from pricing collection first
-    const pricingRef = collection(database, "pricing")
-    const q = query(pricingRef, orderBy("order", "asc"))
-    const snapshot = await getDocs(q)
+    const pricingQuery = query(collection(db, PRICING_COLLECTION), orderBy("order"))
+    const pricingSnapshot = await getDocs(pricingQuery)
 
-    if (!snapshot.empty) {
-      console.log("✅ Found pricing plans in collection")
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as PricingPlan[]
-    }
-
-    // Fallback: try to get from settings document
-    console.log("🔄 Trying settings document...")
-    const settingsRef = doc(database, "settings", "pricing")
-    const settingsDoc = await getDoc(settingsRef)
-
-    if (settingsDoc.exists()) {
-      const data = settingsDoc.data()
-      console.log("✅ Found pricing plans in settings")
-      return data.plans || defaultPricingPlans
-    }
-
-    // If nothing exists, initialize with defaults
-    console.log("🔄 No pricing data found, initializing defaults...")
-    await initializePricingPlans()
-    return defaultPricingPlans
-  } catch (error) {
-    console.error("❌ Error fetching pricing plans:", error)
-    // Return defaults as fallback
-    return defaultPricingPlans
-  }
-}
-
-// Initialize pricing plans with defaults
-export const initializePricingPlans = async (): Promise<void> => {
-  try {
-    console.log("🔄 Initializing pricing plans...")
-    const database = ensureDb()
-
-    // Create individual documents in pricing collection
-    for (const plan of defaultPricingPlans) {
-      const planRef = doc(database, "pricing", plan.id)
-      await setDoc(planRef, {
-        ...plan,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
-    }
-
-    // Also save to settings for backup
-    const settingsRef = doc(database, "settings", "pricing")
-    await setDoc(settingsRef, {
-      plans: defaultPricingPlans,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    })
-
-    console.log("✅ Pricing plans initialized successfully")
-  } catch (error) {
-    console.error("❌ Error initializing pricing plans:", error)
-    throw new Error(`Failed to initialize pricing: ${(error as any).message}`)
-  }
-}
-
-// Update a single pricing plan
-export const updatePricingPlan = async (planId: string, updates: Partial<PricingPlan>): Promise<void> => {
-  try {
-    console.log(`🔄 Updating pricing plan ${planId}`)
-    const database = ensureDb()
-
-    // Update in pricing collection
-    const planRef = doc(database, "pricing", planId)
-    await updateDoc(planRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    })
-
-    // Also update in settings for backup
-    const plans = await getPricingPlans()
-    const updatedPlans = plans.map((plan) => (plan.id === planId ? { ...plan, ...updates } : plan))
-
-    const settingsRef = doc(database, "settings", "pricing")
-    await updateDoc(settingsRef, {
-      plans: updatedPlans,
-      updatedAt: serverTimestamp(),
-    })
-
-    console.log(`✅ Successfully updated pricing plan ${planId}`)
-  } catch (error) {
-    console.error(`❌ Error updating pricing plan ${planId}:`, error)
-    throw new Error(`Failed to update pricing plan: ${(error as any).message}`)
-  }
-}
-
-// Update all pricing plans (admin bulk update)
-export const updatePricingPlans = async (plans: PricingPlan[]): Promise<void> => {
-  try {
-    console.log("🔄 Updating all pricing plans...")
-    const database = ensureDb()
-
-    // Update each plan in pricing collection
-    for (const plan of plans) {
-      const planRef = doc(database, "pricing", plan.id)
-      await setDoc(
-        planRef,
-        {
-          ...plan,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true },
+    if (!pricingSnapshot.empty) {
+      return pricingSnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          }) as PricingPlan,
       )
     }
 
-    // Update settings document
-    const settingsRef = doc(database, "settings", "pricing")
-    await setDoc(
-      settingsRef,
-      {
-        plans: plans,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    )
+    // Fallback to settings document
+    const settingsDoc = await getDoc(doc(db, "settings", SETTINGS_DOC))
+    if (settingsDoc.exists() && settingsDoc.data().pricing) {
+      return settingsDoc.data().pricing as PricingPlan[]
+    }
 
-    console.log("✅ All pricing plans updated successfully")
+    // If no data exists, initialize with defaults
+    await initializePricingPlans()
+    return DEFAULT_PRICING_PLANS.map((plan, index) => ({
+      ...plan,
+      id: `plan_${index + 1}`,
+    }))
   } catch (error) {
-    console.error("❌ Error updating pricing plans:", error)
-    throw new Error(`Failed to update pricing plans: ${(error as any).message}`)
-  }
-}
-
-// Subscribe to pricing changes (real-time)
-export const subscribeToPricingPlans = (callback: (plans: PricingPlan[]) => void) => {
-  try {
-    const database = ensureDb()
-    const pricingRef = collection(database, "pricing")
-    const q = query(pricingRef, orderBy("order", "asc"))
-
-    return onSnapshot(
-      q,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const plans = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as PricingPlan[]
-          callback(plans)
-        } else {
-          // Fallback to settings document
-          const settingsRef = doc(database, "settings", "pricing")
-          return onSnapshot(settingsRef, (doc) => {
-            if (doc.exists()) {
-              const data = doc.data()
-              callback(data.plans || defaultPricingPlans)
-            } else {
-              callback(defaultPricingPlans)
-            }
-          })
-        }
-      },
-      (error) => {
-        console.error("Error listening to pricing changes:", error)
-        callback(defaultPricingPlans)
-      },
-    )
-  } catch (error) {
-    console.error("Error setting up pricing subscription:", error)
-    callback(defaultPricingPlans)
-    return () => {} // Return empty unsubscribe function
+    console.error("Error fetching pricing plans:", error)
+    // Return default plans as fallback
+    return DEFAULT_PRICING_PLANS.map((plan, index) => ({
+      ...plan,
+      id: `plan_${index + 1}`,
+    }))
   }
 }
 
 // Get single pricing plan
-export const getPricingPlan = async (planId: string): Promise<PricingPlan | null> => {
+export async function getPricingPlan(planId: string): Promise<PricingPlan | null> {
   try {
-    const database = ensureDb()
-    const planRef = doc(database, "pricing", planId)
-    const planDoc = await getDoc(planRef)
-
+    const planDoc = await getDoc(doc(db, PRICING_COLLECTION, planId))
     if (planDoc.exists()) {
       return {
         id: planDoc.id,
         ...planDoc.data(),
       } as PricingPlan
     }
-
-    // Fallback: search in all plans
-    const plans = await getPricingPlans()
-    return plans.find((plan) => plan.id === planId) || null
+    return null
   } catch (error) {
     console.error("Error fetching pricing plan:", error)
     return null
   }
 }
 
-// Format price to Indonesian Rupiah
-export const formatPrice = (price: number): string => {
-  if (price === 0) return "Gratis"
+// Create or update pricing plan
+export async function savePricingPlan(plan: Omit<PricingPlan, "createdAt" | "updatedAt">): Promise<void> {
+  try {
+    const planData = {
+      ...plan,
+      updatedAt: serverTimestamp(),
+      ...(plan.id ? {} : { createdAt: serverTimestamp() }),
+    }
 
+    if (plan.id) {
+      await setDoc(doc(db, PRICING_COLLECTION, plan.id), planData)
+    } else {
+      const newPlanRef = doc(collection(db, PRICING_COLLECTION))
+      await setDoc(newPlanRef, { ...planData, id: newPlanRef.id })
+    }
+
+    // Also update settings document for fallback
+    await updateSettingsPricing()
+  } catch (error) {
+    console.error("Error saving pricing plan:", error)
+    throw error
+  }
+}
+
+// Delete pricing plan
+export async function deletePricingPlan(planId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, PRICING_COLLECTION, planId))
+    await updateSettingsPricing()
+  } catch (error) {
+    console.error("Error deleting pricing plan:", error)
+    throw error
+  }
+}
+
+// Initialize default pricing plans
+export async function initializePricingPlans(): Promise<void> {
+  try {
+    const batch = []
+
+    for (let i = 0; i < DEFAULT_PRICING_PLANS.length; i++) {
+      const plan = DEFAULT_PRICING_PLANS[i]
+      const planId = `plan_${i + 1}`
+      const planData = {
+        ...plan,
+        id: planId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }
+
+      batch.push(setDoc(doc(db, PRICING_COLLECTION, planId), planData))
+    }
+
+    await Promise.all(batch)
+    await updateSettingsPricing()
+  } catch (error) {
+    console.error("Error initializing pricing plans:", error)
+    throw error
+  }
+}
+
+// Update settings document with current pricing
+async function updateSettingsPricing(): Promise<void> {
+  try {
+    const plans = await getPricingPlans()
+    await setDoc(
+      doc(db, "settings", SETTINGS_DOC),
+      {
+        pricing: plans,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    )
+  } catch (error) {
+    console.error("Error updating settings pricing:", error)
+  }
+}
+
+// Utility functions
+export function formatPrice(price: number): string {
+  if (price === 0) return "Gratis"
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -308,66 +235,28 @@ export const formatPrice = (price: number): string => {
   }).format(price)
 }
 
-// Calculate discount percentage
-export const calculateDiscount = (originalPrice: number, currentPrice: number): number => {
-  if (!originalPrice || originalPrice <= currentPrice) return 0
+export function calculateDiscount(originalPrice: number, currentPrice: number): number {
+  if (originalPrice <= currentPrice) return 0
   return Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
 }
 
-// Delete a pricing plan (admin only)
-export const deletePricingPlan = async (planId: string): Promise<void> => {
+// Get pricing plan by features (for subscription matching)
+export async function getPricingPlanByLimits(maxStudents: number, maxTeachers: number): Promise<PricingPlan | null> {
   try {
-    console.log(`🔄 Deleting pricing plan ${planId}`)
-    const database = ensureDb()
-
-    // Delete from pricing collection
-    const planRef = doc(database, "pricing", planId)
-    await deleteDoc(planRef)
-
-    // Update settings document
     const plans = await getPricingPlans()
-    const updatedPlans = plans.filter((plan) => plan.id !== planId)
 
-    const settingsRef = doc(database, "settings", "pricing")
-    await updateDoc(settingsRef, {
-      plans: updatedPlans,
-      updatedAt: serverTimestamp(),
+    // Find the most suitable plan
+    const suitablePlans = plans.filter((plan) => {
+      const studentLimit = plan.maxStudents === "unlimited" ? Number.POSITIVE_INFINITY : plan.maxStudents
+      const teacherLimit = plan.maxTeachers === "unlimited" ? Number.POSITIVE_INFINITY : plan.maxTeachers
+
+      return studentLimit >= maxStudents && teacherLimit >= maxTeachers && plan.isActive
     })
 
-    console.log(`✅ Successfully deleted pricing plan ${planId}`)
+    // Return the cheapest suitable plan
+    return suitablePlans.sort((a, b) => a.price - b.price)[0] || null
   } catch (error) {
-    console.error(`❌ Error deleting pricing plan ${planId}:`, error)
-    throw new Error(`Failed to delete pricing plan: ${(error as any).message}`)
-  }
-}
-
-// Add a new pricing plan (admin only)
-export const addPricingPlan = async (plan: Omit<PricingPlan, "createdAt" | "updatedAt">): Promise<void> => {
-  try {
-    console.log(`🔄 Adding new pricing plan ${plan.id}`)
-    const database = ensureDb()
-
-    // Add to pricing collection
-    const planRef = doc(database, "pricing", plan.id)
-    await setDoc(planRef, {
-      ...plan,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    })
-
-    // Update settings document
-    const plans = await getPricingPlans()
-    const updatedPlans = [...plans, plan].sort((a, b) => a.order - b.order)
-
-    const settingsRef = doc(database, "settings", "pricing")
-    await updateDoc(settingsRef, {
-      plans: updatedPlans,
-      updatedAt: serverTimestamp(),
-    })
-
-    console.log(`✅ Successfully added pricing plan ${plan.id}`)
-  } catch (error) {
-    console.error(`❌ Error adding pricing plan ${plan.id}:`, error)
-    throw new Error(`Failed to add pricing plan: ${(error as any).message}`)
+    console.error("Error finding suitable pricing plan:", error)
+    return null
   }
 }
