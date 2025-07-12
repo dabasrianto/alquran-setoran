@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, BookOpen, AlertCircle, ArrowLeft } from "lucide-react"
 import LandingPage from "./landing-page"
+import { useRouter } from "next/navigation"
 import EmailAuthForm from "./email-auth-form"
 
 export default function LoginPage() {
   const { signIn, error: authError } = useAuth()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showSimpleLogin, setShowSimpleLogin] = useState(false)
@@ -33,7 +35,8 @@ export default function LoginPage() {
 
   // Show landing page by default
   if (!showSimpleLogin && !showEmailAuth) {
-    return <LandingPage />
+    router.push("/")
+    return null
   }
 
   // Show email auth form

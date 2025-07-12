@@ -2,86 +2,102 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read access to settings and pricing for all users (needed for landing page)
-    match /settings/{document} {
-      allow read: if true;
-      allow write: if isAdmin();
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email in [
+          'dabasrianto@gmail.com'
+        ] || 
+        request.auth.token.admin == true
+      );
     }
     
-    match /pricing/{document} {
-      allow read: if true;
-      allow write: if isAdmin();
+    // Function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
-
-    // Users collection - users can read/write their own data
+    
+    // Function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Users collection - Admin can read all, users can read/write their own
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admin can read all user documents
       allow read: if isAdmin();
-    }
-
-    // Students collection - users can manage their own students
-    match /students/{studentId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || request.auth.uid == get(/databases/$(database)/documents/students/$(studentId)).data.userId);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow read: if isAdmin();
-    }
-
-    // Teachers/Penguji collection - users can manage their own teachers
-    match /teachers/{teacherId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || request.auth.uid == get(/databases/$(database)/documents/teachers/$(teacherId)).data.userId);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow read: if isAdmin();
-    }
-
-    // Progress collection - users can manage progress for their students
-    match /progress/{progressId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.userId);
-      allow create: if request.auth != null;
-      allow read: if isAdmin();
-    }
-
-    // Setoran collection - users can manage setoran for their students  
-    match /setoran/{setoranId} {
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.userId ||
-         request.auth.uid == get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.userId);
-      allow create: if request.auth != null;
-      allow read: if isAdmin();
-    }
-
-    // Subscriptions collection - users can read their own subscriptions
-    match /subscriptions/{subscriptionId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Users can read and write their own profile
+      allow read, write: if isOwner(userId);
+      
+      // Admin can update any user (for subscription management)
       allow write: if isAdmin();
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      
+      // Allow user creation during signup
+      allow create: if isAuthenticated() && isOwner(userId);
+      
+      // Students subcollection
+      match /students/{studentId} {
+        allow read, write: if isOwner(userId);
+        allow read: if isAdmin(); // Admin can read all students
+      }
+      
+      // Pengujis subcollection  
+      match /pengujis/{pengujiId} {
+        allow read, write: if isOwner(userId);
+        allow read: if isAdmin(); // Admin can read all pengujis
+      }
     }
-
-    // Upgrade requests - users can create, admins can manage
+    
+    // Subscriptions collection - Users can read their own, admin can read/write all
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscription data
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Admin can read and write all subscriptions
+      allow read, write: if isAdmin();
+      
+      // Allow subscription creation for authenticated users
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Users can update their own subscription (for upgrade requests)
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Upgrade Requests collection - Users can create their own, admin can read/write all
     match /upgradeRequests/{requestId} {
-      allow read: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || isAdmin());
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if isAdmin();
-    }
-
-    // Admin collections - admin only
-    match /admin/{document} {
+      // Users can create upgrade requests for themselves
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      
+      // Users can read their own upgrade requests
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      
+      // Admin can read and write all upgrade requests
       allow read, write: if isAdmin();
     }
-
-    match /logs/{document} {
+    
+    // Payments collection - Admin only
+    match /payments/{paymentId} {
+      // Only admin can read and write payments
+      allow read, write: if isAdmin();
+      
+      // Users can read their own payment records
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Admin Logs collection - Admin only
+    match /adminLogs/{logId} {
       allow read, write: if isAdmin();
     }
-
-    // Helper function to check if user is admin
-    function isAdmin() {
-      return request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    
+    // Admin-only collections (if needed in future)
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System logs (admin only)
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
     }
   }
 }
