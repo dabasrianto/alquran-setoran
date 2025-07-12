@@ -8,7 +8,8 @@ service cloud.firestore {
         request.auth.token.email in [
           'dabasrianto@gmail.com'
         ] || 
-        request.auth.token.admin == true
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
     
@@ -25,7 +26,7 @@ service cloud.firestore {
     // Settings collection - Public read for pricing, admin write
     match /settings/{settingId} {
       // Anyone can read pricing settings (for landing page)
-      allow read: if true;
+      allow read: if settingId == 'pricing' || isAuthenticated();
       
       // Only admin can write settings
       allow write: if isAdmin();
@@ -59,18 +60,18 @@ service cloud.firestore {
       
       // Allow user creation during signup
       allow create: if isAuthenticated() && isOwner(userId);
-      
-      // Students subcollection
-      match /students/{studentId} {
-        allow read, write: if isOwner(userId);
-        allow read: if isAdmin(); // Admin can read all students
-      }
-      
-      // Pengujis subcollection  
-      match /pengujis/{pengujiId} {
-        allow read, write: if isOwner(userId);
-        allow read: if isAdmin(); // Admin can read all pengujis
-      }
+    }
+    
+    // Students subcollection
+    match /students/{studentId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Pengujis subcollection  
+    match /penguji/{pengujiId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
     
     // Subscriptions collection - Users can read their own, admin can read/write all
@@ -116,12 +117,32 @@ service cloud.firestore {
     
     // Admin-only collections (if needed in future)
     match /admin/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
     
     // System logs (admin only)
     match /logs/{logId} {
       allow read, write: if isAdmin();
+    }
+    
+    // Subscription tiers - public read, admin write
+    match /subscriptionTiers/{tierId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Action logs - admin only
+    match /actionLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Payment records - users can read their own, admins can read all
+    match /paymentRecords/{paymentRecordId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == resource.data.userId ||
+         isAdmin());
+      allow write: if isAdmin();
     }
   }
 }

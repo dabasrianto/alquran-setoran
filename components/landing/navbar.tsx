@@ -33,8 +33,8 @@ export function LandingNavbar() {
     const message = "Bismillah, afwan Admin saya ingin upgrade ke premium"
     const encodedMessage = encodeURIComponent(message)
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
-    
-    window.open(whatsappUrl, '_blank')
+
+    window.open(whatsappUrl, "_blank")
   }
 
   const navbarClasses = `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -217,7 +217,7 @@ export function LandingNavbar() {
                   </div>
                 ) : (
                   <div className="flex space-x-3">
-                    <Button variant="outline" asChild className="flex-1">
+                    <Button variant="outline" asChild className="flex-1 bg-transparent">
                       <Link href="/login">Masuk</Link>
                     </Button>
                     <Button asChild className="flex-1">
@@ -233,3 +233,5 @@ export function LandingNavbar() {
     </nav>
   )
 }
+
+export default LandingNavbar

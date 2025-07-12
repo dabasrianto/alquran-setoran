@@ -1,189 +1,215 @@
-import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, onSnapshot, query, orderBy } from "firebase/firestore"
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  getDoc,
+  writeBatch,
+} from "firebase/firestore"
 import { db } from "./firebase"
-import type { SubscriptionTierInfo } from "./types"
+
+export interface PricingPlan {
+  id: string
+  name: string
+  price: number
+  yearlyPrice?: number
+  currency: string
+  interval: "month" | "year"
+  description: string
+  features: string[]
+  maxStudents: number | null // null means unlimited
+  maxTeachers: number | null // null means unlimited
+  isPopular?: boolean
+  isRecommended?: boolean
+  order: number
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface PricingSettings {
+  plans: PricingPlan[]
+  lastUpdated: Date
+  version: number
+}
+
+const PRICING_COLLECTION = "pricing"
+const SETTINGS_DOC = "settings/pricing"
 
 // Default pricing plans
-const DEFAULT_PRICING_PLANS: SubscriptionTierInfo[] = [
+const DEFAULT_PLANS: Omit<PricingPlan, "id" | "createdAt" | "updatedAt">[] = [
   {
-    id: "basic",
-    name: "Basic",
-    description: "Cocok untuk guru individual atau madrasah kecil",
+    name: "Free",
     price: 0,
+    yearlyPrice: 0,
     currency: "IDR",
-    billingPeriod: "monthly",
-    features: {
-      maxStudents: 10,
-      maxUstadz: 1,
-      maxUstadzah: 1,
-      exportPDF: false,
-      prioritySupport: false,
-      customReports: false,
-      multipleInstitutions: false,
-      apiAccess: false,
-      advancedAnalytics: false,
-      bulkImport: false,
-    },
+    interval: "month",
+    description: "Cocok untuk pengguna individual",
+    features: ["Maksimal 5 santri", "Maksimal 1 penguji", "Fitur dasar tasmi", "Laporan sederhana"],
+    maxStudents: 5,
+    maxTeachers: 1,
+    isPopular: false,
+    isRecommended: false,
+    order: 1,
+    active: true,
   },
   {
-    id: "premium",
     name: "Premium",
-    description: "Untuk madrasah menengah dengan lebih banyak santri",
-    price: 99000,
+    price: 50000,
+    yearlyPrice: 480000, // 20% discount
     currency: "IDR",
-    billingPeriod: "monthly",
-    features: {
-      maxStudents: 50,
-      maxUstadz: 3,
-      maxUstadzah: 3,
-      exportPDF: true,
-      prioritySupport: true,
-      customReports: true,
-      multipleInstitutions: false,
-      apiAccess: false,
-      advancedAnalytics: true,
-      bulkImport: true,
-    },
-    popular: true,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    description: "Untuk madrasah besar dengan banyak ustadz dan santri",
-    price: 199000,
-    currency: "IDR",
-    billingPeriod: "monthly",
-    features: {
-      maxStudents: 200,
-      maxUstadz: 10,
-      maxUstadzah: 10,
-      exportPDF: true,
-      prioritySupport: true,
-      customReports: true,
-      multipleInstitutions: true,
-      apiAccess: true,
-      advancedAnalytics: true,
-      bulkImport: true,
-    },
-    recommended: true,
-  },
-  {
-    id: "institution",
-    name: "Institution",
-    description: "Untuk yayasan dengan multiple madrasah",
-    price: 399000,
-    currency: "IDR",
-    billingPeriod: "monthly",
-    features: {
-      maxStudents: -1, // unlimited
-      maxUstadz: -1, // unlimited
-      maxUstadzah: -1, // unlimited
-      exportPDF: true,
-      prioritySupport: true,
-      customReports: true,
-      multipleInstitutions: true,
-      apiAccess: true,
-      advancedAnalytics: true,
-      bulkImport: true,
-    },
+    interval: "month",
+    description: "Untuk lembaga kecil hingga menengah",
+    features: [
+      "Santri tidak terbatas",
+      "Penguji tidak terbatas",
+      "Semua fitur tasmi",
+      "Laporan lengkap",
+      "Export data",
+      "Backup otomatis",
+      "Support prioritas",
+    ],
+    maxStudents: null, // unlimited
+    maxTeachers: null, // unlimited
+    isPopular: true,
+    isRecommended: true,
+    order: 2,
+    active: true,
   },
 ]
 
 // Get all pricing plans
-export async function getPricingPlans(): Promise<SubscriptionTierInfo[]> {
+export async function getPricingPlans(): Promise<PricingPlan[]> {
   try {
     // Try to get from pricing collection first
-    const pricingRef = collection(db, "pricing")
-    const pricingQuery = query(pricingRef, orderBy("price"))
-    const pricingSnapshot = await getDocs(pricingQuery)
+    const pricingSnapshot = await getDocs(collection(db, PRICING_COLLECTION))
 
     if (!pricingSnapshot.empty) {
       const plans = pricingSnapshot.docs.map((doc) => ({
-        ...doc.data(),
         id: doc.id,
-      })) as SubscriptionTierInfo[]
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as PricingPlan[]
 
-      console.log("Loaded pricing plans from pricing collection:", plans.length)
-      return plans
+      return plans.sort((a, b) => a.order - b.order)
     }
 
     // Fallback to settings document
-    const settingsRef = doc(db, "settings", "pricing")
-    const settingsDoc = await getDoc(settingsRef)
-
+    const settingsDoc = await getDoc(doc(db, "settings", "pricing"))
     if (settingsDoc.exists()) {
-      const data = settingsDoc.data()
-      if (data.plans && Array.isArray(data.plans)) {
-        console.log("Loaded pricing plans from settings:", data.plans.length)
-        return data.plans
-      }
+      const data = settingsDoc.data() as PricingSettings
+      return data.plans.sort((a, b) => a.order - b.order)
     }
 
     // If no data exists, initialize with defaults
-    console.log("No pricing data found, initializing defaults")
-    await initializePricingPlans()
-    return DEFAULT_PRICING_PLANS
+    await initializeDefaultPricing()
+    return DEFAULT_PLANS.map((plan, index) => ({
+      ...plan,
+      id: `plan_${index + 1}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }))
   } catch (error) {
-    console.error("Error fetching pricing plans:", error)
-    // Return defaults on error
-    return DEFAULT_PRICING_PLANS
+    console.error("Error getting pricing plans:", error)
+    // Return default plans as fallback
+    return DEFAULT_PLANS.map((plan, index) => ({
+      ...plan,
+      id: `plan_${index + 1}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }))
   }
 }
 
-// Initialize pricing plans with defaults
-export async function initializePricingPlans(): Promise<void> {
+// Initialize default pricing
+export async function initializeDefaultPricing(): Promise<void> {
   try {
-    // Save to both pricing collection and settings document
-    const batch = []
+    const batch = writeBatch(db)
 
-    // Save to pricing collection
-    for (const plan of DEFAULT_PRICING_PLANS) {
-      const planRef = doc(db, "pricing", plan.id)
-      batch.push(setDoc(planRef, plan))
-    }
+    // Add to pricing collection
+    DEFAULT_PLANS.forEach((plan, index) => {
+      const planId = `plan_${index + 1}`
+      const planRef = doc(db, PRICING_COLLECTION, planId)
+      batch.set(planRef, {
+        ...plan,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+    })
 
-    // Save to settings document as backup
+    // Add to settings document
     const settingsRef = doc(db, "settings", "pricing")
-    batch.push(
-      setDoc(settingsRef, {
-        plans: DEFAULT_PRICING_PLANS,
-        lastUpdated: new Date().toISOString(),
-        version: 1,
-      }),
-    )
+    const plansWithIds = DEFAULT_PLANS.map((plan, index) => ({
+      ...plan,
+      id: `plan_${index + 1}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }))
 
-    await Promise.all(batch)
-    console.log("Pricing plans initialized successfully")
+    batch.set(settingsRef, {
+      plans: plansWithIds,
+      lastUpdated: new Date(),
+      version: 1,
+    })
+
+    await batch.commit()
+    console.log("Default pricing initialized successfully")
   } catch (error) {
-    console.error("Error initializing pricing plans:", error)
+    console.error("Error initializing default pricing:", error)
     throw error
   }
 }
 
-// Create or update a pricing plan
-export async function savePricingPlan(plan: SubscriptionTierInfo): Promise<void> {
+// Create a new pricing plan
+export async function createPricingPlan(
+  planData: Omit<PricingPlan, "id" | "createdAt" | "updatedAt">,
+): Promise<string> {
   try {
-    // Save to pricing collection
-    const planRef = doc(db, "pricing", plan.id)
-    await setDoc(planRef, {
-      ...plan,
-      lastUpdated: new Date().toISOString(),
-    })
+    const planId = `plan_${Date.now()}`
+    const now = new Date()
 
-    // Update settings document as well
-    const allPlans = await getPricingPlans()
-    const updatedPlans = allPlans.filter((p) => p.id !== plan.id)
-    updatedPlans.push(plan)
+    const newPlan: PricingPlan = {
+      ...planData,
+      id: planId,
+      createdAt: now,
+      updatedAt: now,
+    }
 
-    const settingsRef = doc(db, "settings", "pricing")
-    await setDoc(settingsRef, {
-      plans: updatedPlans,
-      lastUpdated: new Date().toISOString(),
-      version: 1,
-    })
+    // Add to pricing collection
+    await setDoc(doc(db, PRICING_COLLECTION, planId), newPlan)
 
-    console.log("Pricing plan saved:", plan.id)
+    // Update settings document
+    await updatePricingSettings()
+
+    return planId
   } catch (error) {
-    console.error("Error saving pricing plan:", error)
+    console.error("Error creating pricing plan:", error)
+    throw error
+  }
+}
+
+// Update a pricing plan
+export async function updatePricingPlan(
+  planId: string,
+  updates: Partial<Omit<PricingPlan, "id" | "createdAt">>,
+): Promise<void> {
+  try {
+    const updateData = {
+      ...updates,
+      updatedAt: new Date(),
+    }
+
+    // Update in pricing collection
+    await updateDoc(doc(db, PRICING_COLLECTION, planId), updateData)
+
+    // Update settings document
+    await updatePricingSettings()
+  } catch (error) {
+    console.error("Error updating pricing plan:", error)
     throw error
   }
 }
@@ -192,65 +218,54 @@ export async function savePricingPlan(plan: SubscriptionTierInfo): Promise<void>
 export async function deletePricingPlan(planId: string): Promise<void> {
   try {
     // Delete from pricing collection
-    const planRef = doc(db, "pricing", planId)
-    await deleteDoc(planRef)
+    await deleteDoc(doc(db, PRICING_COLLECTION, planId))
 
     // Update settings document
-    const allPlans = await getPricingPlans()
-    const updatedPlans = allPlans.filter((p) => p.id !== planId)
-
-    const settingsRef = doc(db, "settings", "pricing")
-    await setDoc(settingsRef, {
-      plans: updatedPlans,
-      lastUpdated: new Date().toISOString(),
-      version: 1,
-    })
-
-    console.log("Pricing plan deleted:", planId)
+    await updatePricingSettings()
   } catch (error) {
     console.error("Error deleting pricing plan:", error)
     throw error
   }
 }
 
-// Get a single pricing plan
-export async function getPricingPlan(planId: string): Promise<SubscriptionTierInfo | null> {
+// Update pricing settings document with current plans
+async function updatePricingSettings(): Promise<void> {
   try {
-    const planRef = doc(db, "pricing", planId)
-    const planDoc = await getDoc(planRef)
+    const plans = await getPricingPlans()
+    const settingsRef = doc(db, "settings", "pricing")
 
-    if (planDoc.exists()) {
-      return { ...planDoc.data(), id: planDoc.id } as SubscriptionTierInfo
-    }
-
-    return null
+    await setDoc(settingsRef, {
+      plans,
+      lastUpdated: new Date(),
+      version: Date.now(),
+    })
   } catch (error) {
-    console.error("Error fetching pricing plan:", error)
-    return null
+    console.error("Error updating pricing settings:", error)
   }
 }
 
-// Subscribe to pricing changes (real-time)
-export function subscribeToPricingChanges(callback: (plans: SubscriptionTierInfo[]) => void) {
-  const pricingRef = collection(db, "pricing")
-  const pricingQuery = query(pricingRef, orderBy("price"))
-
-  return onSnapshot(
-    pricingQuery,
+// Subscribe to pricing changes
+export function subscribeToPricingChanges(callback: (plans: PricingPlan[]) => void): () => void {
+  const unsubscribePricing = onSnapshot(
+    collection(db, PRICING_COLLECTION),
     (snapshot) => {
       const plans = snapshot.docs.map((doc) => ({
-        ...doc.data(),
         id: doc.id,
-      })) as SubscriptionTierInfo[]
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      })) as PricingPlan[]
 
-      callback(plans)
+      callback(plans.sort((a, b) => a.order - b.order))
     },
     (error) => {
-      console.error("Error in pricing subscription:", error)
-      // Fallback to default plans on error
-      callback(DEFAULT_PRICING_PLANS)
+      console.error("Error subscribing to pricing changes:", error)
+      // Fallback to getting plans once
+      getPricingPlans().then(callback)
     },
   )
+
+  return unsubscribePricing
 }
 
 // Format price for display
@@ -265,7 +280,7 @@ export function formatPrice(price: number, currency = "IDR"): string {
   }).format(price)
 }
 
-// Calculate yearly discount
+// Calculate yearly price with discount
 export function calculateYearlyPrice(monthlyPrice: number, discountPercent = 20): number {
   const yearlyPrice = monthlyPrice * 12
   const discount = yearlyPrice * (discountPercent / 100)

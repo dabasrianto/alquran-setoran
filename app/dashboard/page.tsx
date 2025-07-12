@@ -1,27 +1,32 @@
-import DashboardClient from "./client"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Overview } from "@/components/dashboard/overview"
+import { RecentSales } from "@/components/dashboard/recent-sales"
+import { Search } from "@/components/dashboard/search"
+import { PricingDisplay } from "@/components/dashboard/pricing-display"
 
 export default function DashboardPage() {
   return (
-    <main className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-4 md:mb-6">
-          <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
-            <Link href="/">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Kembali ke Aplikasi Utama
-            </Link>
-          </Button>
-        </div>
-
-        <h1 className="text-xl md:text-3xl font-bold text-center text-gray-800 mb-6 md:mb-8">
-          Dashboard Analisa Hafalan Quran
-        </h1>
-
-        <DashboardClient />
+    <div className="w-full">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <Search />
       </div>
-    </main>
+      <Tabs defaultValue="overview" className="w-full mt-4">
+        <TabsList>
+          <TabsTrigger value="overview">Ringkasan</TabsTrigger>
+          <TabsTrigger value="recent-sales">Penjualan Terakhir</TabsTrigger>
+          <TabsTrigger value="pricing">Paket & Harga</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="space-y-4">
+          <Overview />
+        </TabsContent>
+        <TabsContent value="recent-sales" className="space-y-4">
+          <RecentSales />
+        </TabsContent>
+        <TabsContent value="pricing">
+          <PricingDisplay />
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }

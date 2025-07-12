@@ -5,259 +5,209 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Crown, Users, TrendingUp, CheckCircle, AlertCircle, RefreshCw, Zap } from "lucide-react"
-import { getPricingPlans, formatPrice } from "@/lib/firebase-pricing"
+import { Crown, Users, GraduationCap, TrendingUp, Check } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/hooks/use-subscription"
-import type { SubscriptionTierInfo } from "@/lib/types"
-import Link from "next/link"
+import { type PricingPlan, formatPrice, subscribeToPricingChanges } from "@/lib/firebase-pricing"
 
-export default function PricingDisplay() {
-  const { user } = useAuth()
-  const { subscription, usage, loading: subscriptionLoading } = useSubscription()
-  const [plans, setPlans] = useState<SubscriptionTierInfo[]>([])
+interface UserUsage {
+  studentsCount: number
+  teachersCount: number
+}
+
+export function PricingDisplay() {
+  const { userProfile } = useAuth()
+  const [plans, setPlans] = useState<PricingPlan[]>([])
+  const [currentPlan, setCurrentPlan] = useState<PricingPlan | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentPlan, setCurrentPlan] = useState<SubscriptionTierInfo | null>(null)
+  const [usage, setUsage] = useState<UserUsage>({ studentsCount: 0, teachersCount: 0 })
 
   useEffect(() => {
-    const loadPlans = async () => {
-      try {
-        setLoading(true)
-        const pricingPlans = await getPricingPlans()
-        setPlans(pricingPlans)
+    const unsubscribe = subscribeToPricingChanges((updatedPlans) => {
+      const activePlans = updatedPlans.filter((plan) => plan.active)
+      setPlans(activePlans)
 
-        // Find current plan
-        if (subscription) {
-          const current = pricingPlans.find((p) => p.id === subscription.tier)
-          setCurrentPlan(current || null)
-        }
-      } catch (err) {
-        console.error("Error loading pricing plans:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
+      // Find current user's plan
+      const userPlanName = userProfile?.subscriptionType === "premium" ? "Premium" : "Free"
+      const userPlan = activePlans.find((plan) => plan.name.toLowerCase() === userPlanName.toLowerCase())
+      setCurrentPlan(userPlan || null)
+      setLoading(false)
+    })
 
-    loadPlans()
-  }, [subscription])
+    return unsubscribe
+  }, [userProfile?.subscriptionType])
 
-  if (loading || subscriptionLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-          Memuat informasi langganan...
-        </CardContent>
-      </Card>
-    )
+  // Mock usage data - in real app, this would come from Firebase
+  useEffect(() => {
+    // This would be replaced with actual Firebase query
+    setUsage({
+      studentsCount: 3,
+      teachersCount: 1,
+    })
+  }, [])
+
+  const handleUpgrade = (planName: string) => {
+    const phoneNumber = "+628977712345"
+    const message = `Bismillah, afwan Admin saya ingin upgrade ke paket ${planName}`
+    const encodedMessage = encodeURIComponent(message)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+
+    window.open(whatsappUrl, "_blank")
   }
 
-  if (!currentPlan) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-500" />
-            Paket Tidak Ditemukan
-          </CardTitle>
-          <CardDescription>Informasi paket langganan tidak tersedia</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild>
-            <Link href="/upgrade">Pilih Paket Langganan</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    )
+  const getUsagePercentage = (used: number, limit: number | null) => {
+    if (limit === null) return 0 // unlimited
+    return Math.min((used / limit) * 100, 100)
   }
 
-  // Calculate usage percentages
-  const studentUsage =
-    currentPlan.features.maxStudents === -1 ? 0 : (usage.studentsCount / currentPlan.features.maxStudents) * 100
+  const getUsageColor = (percentage: number) => {
+    if (percentage >= 90) return "bg-red-500"
+    if (percentage >= 70) return "bg-yellow-500"
+    return "bg-green-500"
+  }
 
-  const ustadzUsage =
-    currentPlan.features.maxUstadz === -1 ? 0 : (usage.ustadzCount / currentPlan.features.maxUstadz) * 100
-
-  const ustadzahUsage =
-    currentPlan.features.maxUstadzah === -1 ? 0 : (usage.ustadzahCount / currentPlan.features.maxUstadzah) * 100
-
-  // Get upgrade options (higher tier plans)
-  const upgradeOptions = plans
-    .filter((plan) => plan.price > currentPlan.price && plan.id !== currentPlan.id)
-    .slice(0, 2) // Show max 2 upgrade options
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-32 bg-gray-200 rounded animate-pulse" />
+        <div className="h-48 bg-gray-200 rounded animate-pulse" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      {/* Current Plan */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-primary" />
-                Paket Saat Ini: {currentPlan.name}
-                {currentPlan.popular && <Badge variant="secondary">Popular</Badge>}
-                {currentPlan.recommended && <Badge>Recommended</Badge>}
-              </CardTitle>
-              <CardDescription>{currentPlan.description}</CardDescription>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-primary">{formatPrice(currentPlan.price)}</div>
-              <div className="text-sm text-muted-foreground">per bulan</div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          {/* Usage Statistics */}
-          <div className="space-y-4">
-            <h4 className="font-semibold flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Penggunaan Saat Ini
-            </h4>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Students Usage */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Santri</span>
-                  <span>
-                    {usage.studentsCount} /{" "}
-                    {currentPlan.features.maxStudents === -1 ? "∞" : currentPlan.features.maxStudents}
-                  </span>
-                </div>
-                {currentPlan.features.maxStudents !== -1 && (
-                  <Progress
-                    value={studentUsage}
-                    className={`h-2 ${studentUsage > 80 ? "bg-red-100" : studentUsage > 60 ? "bg-yellow-100" : "bg-green-100"}`}
-                  />
-                )}
-              </div>
-
-              {/* Ustadz Usage */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Ustadz</span>
-                  <span>
-                    {usage.ustadzCount} / {currentPlan.features.maxUstadz === -1 ? "∞" : currentPlan.features.maxUstadz}
-                  </span>
-                </div>
-                {currentPlan.features.maxUstadz !== -1 && (
-                  <Progress
-                    value={ustadzUsage}
-                    className={`h-2 ${ustadzUsage > 80 ? "bg-red-100" : ustadzUsage > 60 ? "bg-yellow-100" : "bg-green-100"}`}
-                  />
-                )}
-              </div>
-
-              {/* Ustadzah Usage */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Ustadzah</span>
-                  <span>
-                    {usage.ustadzahCount} /{" "}
-                    {currentPlan.features.maxUstadzah === -1 ? "∞" : currentPlan.features.maxUstadzah}
-                  </span>
-                </div>
-                {currentPlan.features.maxUstadzah !== -1 && (
-                  <Progress
-                    value={ustadzahUsage}
-                    className={`h-2 ${ustadzahUsage > 80 ? "bg-red-100" : ustadzahUsage > 60 ? "bg-yellow-100" : "bg-green-100"}`}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Features */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Fitur Aktif</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-              {Object.entries(currentPlan.features).map(([key, value]) => {
-                if (["maxStudents", "maxUstadz", "maxUstadzah"].includes(key)) return null
-
-                const labels: Record<string, string> = {
-                  exportPDF: "Export PDF",
-                  prioritySupport: "Priority Support",
-                  customReports: "Custom Reports",
-                  multipleInstitutions: "Multiple Institutions",
-                  apiAccess: "API Access",
-                  advancedAnalytics: "Advanced Analytics",
-                  bulkImport: "Bulk Import",
-                }
-
-                return (
-                  <div key={key} className="flex items-center gap-2">
-                    <CheckCircle className={`h-4 w-4 ${value ? "text-green-500" : "text-gray-300"}`} />
-                    <span className={value ? "" : "text-muted-foreground"}>{labels[key]}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Upgrade Options */}
-      {upgradeOptions.length > 0 && (
+      {/* Current Plan Status */}
+      {currentPlan && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+              {currentPlan.name === "Premium" && <Crown className="w-5 h-5 text-yellow-500" />}
+              Paket Saat Ini: {currentPlan.name}
+              {currentPlan.isPopular && <Badge variant="secondary">Populer</Badge>}
+            </CardTitle>
+            <CardDescription>{currentPlan.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-2xl font-bold">{formatPrice(currentPlan.price)}</span>
+              <span className="text-sm text-muted-foreground">per bulan</span>
+            </div>
+
+            {/* Usage Statistics */}
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm font-medium">Santri</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {usage.studentsCount} / {currentPlan.maxStudents === null ? "∞" : currentPlan.maxStudents}
+                  </span>
+                </div>
+                {currentPlan.maxStudents !== null && (
+                  <Progress value={getUsagePercentage(usage.studentsCount, currentPlan.maxStudents)} className="h-2" />
+                )}
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    <span className="text-sm font-medium">Penguji</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {usage.teachersCount} / {currentPlan.maxTeachers === null ? "∞" : currentPlan.maxTeachers}
+                  </span>
+                </div>
+                {currentPlan.maxTeachers !== null && (
+                  <Progress value={getUsagePercentage(usage.teachersCount, currentPlan.maxTeachers)} className="h-2" />
+                )}
+              </div>
+            </div>
+
+            {/* Features Status */}
+            <div className="space-y-2">
+              <h4 className="font-medium">Fitur Aktif</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {currentPlan.features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <Check className="w-3 h-3 text-green-500" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Upgrade Options */}
+      {currentPlan?.name !== "Premium" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
               Upgrade Paket
             </CardTitle>
-            <CardDescription>Tingkatkan paket untuk mendapatkan fitur lebih lengkap</CardDescription>
+            <CardDescription>Tingkatkan paket Anda untuk mendapatkan fitur lebih lengkap</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {upgradeOptions.map((plan) => (
-                <Card key={plan.id} className="border-2 border-dashed">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
+            <div className="grid gap-4 md:grid-cols-2">
+              {plans
+                .filter((plan) => plan.name !== currentPlan?.name && plan.price > (currentPlan?.price || 0))
+                .map((plan) => (
+                  <Card key={plan.id} className="relative">
+                    {plan.isRecommended && (
+                      <div className="absolute -top-2 -right-2">
+                        <Badge className="bg-primary">
+                          <Crown className="w-3 h-3 mr-1" />
+                          Direkomendasikan
+                        </Badge>
+                      </div>
+                    )}
+
+                    <CardHeader className="pb-3">
                       <CardTitle className="text-lg">{plan.name}</CardTitle>
-                      <Badge variant="outline">
-                        <Zap className="h-3 w-3 mr-1" />
-                        Upgrade
-                      </Badge>
-                    </div>
-                    <CardDescription className="text-sm">{plan.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">{formatPrice(plan.price)}</div>
-                      <div className="text-sm text-muted-foreground">per bulan</div>
-                    </div>
+                      <CardDescription className="text-sm">{plan.description}</CardDescription>
+                    </CardHeader>
 
-                    <div className="text-sm space-y-1">
-                      <div className="flex justify-between">
-                        <span>Santri:</span>
-                        <span className="font-medium">
-                          {plan.features.maxStudents === -1 ? "Unlimited" : plan.features.maxStudents}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Ustadz:</span>
-                        <span className="font-medium">
-                          {plan.features.maxUstadz === -1 ? "Unlimited" : plan.features.maxUstadz}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Ustadzah:</span>
-                        <span className="font-medium">
-                          {plan.features.maxUstadzah === -1 ? "Unlimited" : plan.features.maxUstadzah}
-                        </span>
-                      </div>
-                    </div>
+                    <CardContent className="space-y-3">
+                      <div className="text-2xl font-bold">{formatPrice(plan.price)}</div>
 
-                    <Button asChild className="w-full" size="sm">
-                      <Link href={`/upgrade?plan=${plan.id}`}>Upgrade ke {plan.name}</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="space-y-1 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3 h-3" />
+                          <span>
+                            {plan.maxStudents === null ? "Santri tidak terbatas" : `${plan.maxStudents} santri`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="w-3 h-3" />
+                          <span>
+                            {plan.maxTeachers === null ? "Penguji tidak terbatas" : `${plan.maxTeachers} penguji`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        {plan.features.slice(0, 3).map((feature, index) => (
+                          <div key={index} className="flex items-center gap-2 text-xs">
+                            <Check className="w-3 h-3 text-green-500" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                        {plan.features.length > 3 && (
+                          <div className="text-xs text-muted-foreground">+{plan.features.length - 3} fitur lainnya</div>
+                        )}
+                      </div>
+
+                      <Button className="w-full" size="sm" onClick={() => handleUpgrade(plan.name)}>
+                        Upgrade ke {plan.name}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
           </CardContent>
         </Card>
