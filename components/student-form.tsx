@@ -1,180 +1,125 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import type React from "react"
+
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { PlusCircle, X, Save } from "lucide-react"
-import type { Student } from "@/lib/types"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Loader2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { addDoc, collection, serverTimestamp } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/hooks/use-subscription"
+import { checkFeatureLimit } from "@/lib/subscription-system"
 
-interface StudentFormProps {
-  onAddStudent: (student: Omit<Student, "id">) => Promise<void>
-  onUpdateStudent: (student: Student) => Promise<void>
-  editingStudent: Student | null
-  setEditingStudent: (student: Student | null) => void
-  students: Student[]
-  subscriptionStatus: any
-}
-
-export default function StudentForm({
-  onAddStudent,
-  onUpdateStudent,
-  editingStudent,
-  setEditingStudent,
-  students,
-  subscriptionStatus,
-}: StudentFormProps) {
+export function StudentForm() {
   const [name, setName] = useState("")
+  const [dob, setDob] = useState("")
+  const [gender, setGender] = useState("")
   const [kelas, setKelas] = useState("")
-  const [target, setTarget] = useState("")
-  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
+  const { currentUser } = useAuth()
+  const { userSubscription } = useSubscription()
 
-  useEffect(() => {
-    if (editingStudent) {
-      setName(editingStudent.name)
-      setKelas(editingStudent.kelas || "")
-      setTarget(editingStudent.target || "")
-    } else {
-      resetForm()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "Anda harus login untuk menambah santri.",
+        variant: "destructive",
+      })
+      return
     }
-  }, [editingStudent])
 
-  const resetForm = () => {
-    setName("")
-    setKelas("")
-    setTarget("")
-    setError("")
-  }
-
-  const handleSubmit = async () => {
-    setError("")
     setLoading(true)
-
     try {
-      if (!name.trim()) {
-        setError("Nama murid tidak boleh kosong.")
-        return
-      }
-
-      // Cek duplikasi nama
-      const isDuplicate = students.some(
-        (student) =>
-          student.name.toLowerCase() === name.toLowerCase() && (!editingStudent || student.id !== editingStudent.id),
-      )
-
-      if (isDuplicate) {
-        setError("Nama murid sudah ada.")
-        return
-      }
-
-      // Check subscription limits for new students
-      if (!editingStudent && subscriptionStatus && !subscriptionStatus.canAddStudent) {
-        setError(
-          `Limit maksimal ${subscriptionStatus.limits.maxStudents} murid untuk paket saat ini. Upgrade untuk menambah lebih banyak murid.`,
-        )
-        return
-      }
-
-      if (editingStudent) {
-        await onUpdateStudent({
-          ...editingStudent,
-          name: name.trim(),
-          kelas: kelas.trim(),
-          target: target.trim(),
+      const hasLimitReached = await checkFeatureLimit(currentUser.uid, userSubscription, "maxStudents")
+      if (hasLimitReached) {
+        toast({
+          title: "Batas Santri Tercapai",
+          description:
+            "Anda telah mencapai batas maksimal santri untuk paket langganan Anda. Silakan upgrade paket untuk menambah lebih banyak santri.",
+          variant: "destructive",
         })
-      } else {
-        await onAddStudent({
-          name: name.trim(),
-          kelas: kelas.trim(),
-          target: target.trim(),
-          hafalan: [],
-        })
+        setLoading(false)
+        return
       }
 
-      resetForm()
-    } catch (err: any) {
-      console.error("Error saving student:", err)
-      setError(err.message || "Terjadi kesalahan saat menyimpan data.")
+      await addDoc(collection(db, "users", currentUser.uid, "students"), {
+        name,
+        dob: new Date(dob),
+        gender,
+        kelas,
+        createdAt: serverTimestamp(),
+      })
+      toast({
+        title: "Sukses",
+        description: "Santri berhasil ditambahkan.",
+      })
+      setName("")
+      setDob("")
+      setGender("")
+      setKelas("")
+    } catch (error) {
+      console.error("Error adding student:", error)
+      toast({
+        title: "Error",
+        description: "Gagal menambahkan santri.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCancel = () => {
-    setEditingStudent(null)
-    resetForm()
-  }
-
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">
-        {editingStudent ? "Edit Data Murid" : "Tambah Murid Baru"}
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label htmlFor="studentName" className="block text-sm font-medium text-gray-600 mb-1">
-            Nama Murid:
-          </label>
-          <Input
-            id="studentName"
-            placeholder="Nama Murid"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label htmlFor="studentKelas" className="block text-sm font-medium text-gray-600 mb-1">
-            Kelas/Halaqah:
-          </label>
-          <Input
-            id="studentKelas"
-            placeholder="Contoh: Kelas A"
-            value={kelas}
-            onChange={(e) => setKelas(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label htmlFor="studentTarget" className="block text-sm font-medium text-gray-600 mb-1">
-            Target Hafalan (Opsional):
-          </label>
-          <Input
-            id="studentTarget"
-            placeholder="Contoh: Selesai Juz 30"
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button onClick={handleSubmit} className="w-full sm:w-auto" disabled={loading}>
-          {loading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              <span>Menyimpan...</span>
-            </>
-          ) : editingStudent ? (
-            <>
-              <Save className="w-5 h-5 mr-2" />
-              <span>Simpan Perubahan</span>
-            </>
-          ) : (
-            <>
-              <PlusCircle className="w-5 h-5 mr-2" />
-              <span>Tambah Murid</span>
-            </>
-          )}
-        </Button>
-        {editingStudent && (
-          <Button variant="secondary" onClick={handleCancel} className="w-full sm:w-auto" disabled={loading}>
-            <X className="w-5 h-5 mr-2" />
-            <span>Batal Edit</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Tambah Santri Baru</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nama Santri</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="dob">Tanggal Lahir</Label>
+            <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} required />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="gender">Jenis Kelamin</Label>
+            <Select value={gender} onValueChange={setGender} required>
+              <SelectTrigger id="gender">
+                <SelectValue placeholder="Pilih Jenis Kelamin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                <SelectItem value="Perempuan">Perempuan</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="kelas">Kelas</Label>
+            <Input
+              id="kelas"
+              value={kelas}
+              onChange={(e) => setKelas(e.target.value)}
+              placeholder="Contoh: Kelas A, Tahfidz 1"
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Tambah Santri
           </Button>
-        )}
-      </div>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

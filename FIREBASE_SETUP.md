@@ -92,3 +92,4 @@ After setting up your database, you need to deploy the security rules to control
     Refer to `DEPLOY_RULES.md` for more detailed instructions on deploying rules.
 
 By following these steps, your Firebase project will be correctly set up and integrated with your Next.js application.
+\`\`\`
