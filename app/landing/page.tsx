@@ -1,9 +1,5 @@
-import HeroSection from "@/components/landing/hero-section"
+import LandingPage from "@/components/auth/landing-page"
 
-export default function LandingPage() {
-  return (
-    <>
-      <HeroSection />
-    </>
-  )
+export default function Landing() {
+  return <LandingPage />
 }

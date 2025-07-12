@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, AlertTriangle, RefreshCw, Crown } from "lucide-react"
+import { Shield, AlertTriangle, RefreshCw, Crown, DollarSign } from "lucide-react"
 import Link from "next/link"
 import AdminUsersList from "@/components/admin/admin-users-list"
 import AdminStats from "@/components/admin/admin-stats"
@@ -14,6 +14,7 @@ import AdminDebug from "@/components/admin/admin-debug"
 import SubscriptionManager from "@/components/admin/subscription-manager"
 import UserManagement from "@/components/admin/user-management"
 import PremiumDashboard from "@/components/admin/premium-dashboard"
+import PricingManagement from "@/components/admin/pricing-management"
 import LoginPage from "@/components/auth/login-page"
 import FirebaseRulesSetup from "@/components/admin/firebase-rules-setup"
 
@@ -22,16 +23,16 @@ export default function AdminPage() {
   const { users, analytics, loading, error, isAdmin, refreshData } = useAdmin()
 
   // Only log when there's meaningful state change
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log("AdminPage render:", {
-      user: user?.email || 'undefined',
+      user: user?.email || "undefined",
       userIsAdmin,
       hookIsAdmin: isAdmin,
       usersCount: users?.length || 0,
       authLoading,
       dataLoading: loading,
       error,
-      analytics: analytics ? 'loaded' : 'null',
+      analytics: analytics ? "loaded" : "null",
     })
   }
 
@@ -56,9 +57,7 @@ export default function AdminPage() {
             <CardTitle className="text-2xl font-bold text-red-600">Akses Ditolak</CardTitle>
             <CardDescription>Anda tidak memiliki akses ke halaman admin</CardDescription>
             <p className="text-sm text-muted-foreground mt-2">Email Anda: {user.email}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Admin email yang diizinkan: dabasrianto@gmail.com
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Admin email yang diizinkan: dabasrianto@gmail.com</p>
           </CardHeader>
           <CardContent className="text-center">
             <Button asChild>
@@ -103,10 +102,10 @@ export default function AdminPage() {
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="flex items-center justify-between">
               <strong>Error:</strong> {error}
               <br />
-              <Button variant="outline" size="sm" onClick={refreshData} className="mt-2">
+              <Button variant="outline" size="sm" onClick={refreshData} className="mt-2 bg-transparent">
                 Coba Lagi
               </Button>
             </AlertDescription>
@@ -119,6 +118,10 @@ export default function AdminPage() {
               <Crown className="h-4 w-4" />
               Premium Management
             </TabsTrigger>
+            <TabsTrigger value="pricing" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Kelola Harga
+            </TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Kelola User</TabsTrigger>
             <TabsTrigger value="subscriptions">Kelola Langganan</TabsTrigger>
@@ -127,6 +130,10 @@ export default function AdminPage() {
 
           <TabsContent value="premium">
             <PremiumDashboard />
+          </TabsContent>
+
+          <TabsContent value="pricing">
+            <PricingManagement />
           </TabsContent>
 
           <TabsContent value="overview">
