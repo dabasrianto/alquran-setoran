@@ -1,104 +1,116 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import {
-  Save,
-  DollarSign,
-  Users,
-  FileText,
-  Shield,
-  Building,
-  Zap,
-  TrendingUp,
-  Download,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react"
-import { getPricingTiers, updatePricingTier, formatPrice } from "@/lib/firebase-pricing"
-import type { SubscriptionTierInfo } from "@/lib/types"
+  getPricingPlans,
+  updatePricingPlans,
+  formatPrice,
+  calculateDiscount,
+  type PricingPlan,
+} from "@/lib/firebase-pricing"
+import { Save, Plus, Trash2, DollarSign, Star, Award, Loader2, CheckCircle } from "lucide-react"
 
-export function PricingManagement() {
-  const [tiers, setTiers] = useState<SubscriptionTierInfo[]>([])
+export default function PricingManagement() {
+  const [plans, setPlans] = useState<PricingPlan[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {
-    loadPricingTiers()
+    loadPricingPlans()
   }, [])
 
-  const loadPricingTiers = async () => {
+  const loadPricingPlans = async () => {
     try {
       setLoading(true)
-      const pricingTiers = await getPricingTiers()
-      setTiers(pricingTiers)
+      const pricingPlans = await getPricingPlans()
+      setPlans(pricingPlans.sort((a, b) => a.order - b.order))
     } catch (error) {
-      console.error("Error loading pricing tiers:", error)
-      setMessage({ type: "error", text: "Gagal memuat data harga langganan" })
+      console.error("Error loading pricing plans:", error)
+      setMessage({ type: "error", text: "Gagal memuat data harga" })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleUpdateTier = async (tierId: string, updates: Partial<SubscriptionTierInfo>) => {
+  const handleSave = async () => {
     try {
-      setSaving(tierId)
-      await updatePricingTier(tierId, updates)
+      setSaving(true)
+      setMessage(null)
 
-      // Update local state
-      setTiers((prev) => prev.map((tier) => (tier.id === tierId ? { ...tier, ...updates } : tier)))
+      // Validate plans
+      for (const plan of plans) {
+        if (!plan.name.trim()) {
+          throw new Error("Nama paket tidak boleh kosong")
+        }
+        if (plan.price < 0) {
+          throw new Error("Harga tidak boleh negatif")
+        }
+        if (plan.features.length === 0) {
+          throw new Error(`Paket ${plan.name} harus memiliki minimal 1 fitur`)
+        }
+      }
 
-      setMessage({ type: "success", text: `Berhasil memperbarui paket ${tierId}` })
-    } catch (error) {
-      console.error("Error updating tier:", error)
-      setMessage({ type: "error", text: "Gagal memperbarui paket langganan" })
+      await updatePricingPlans(plans)
+      setMessage({ type: "success", text: "Harga berhasil diperbarui!" })
+    } catch (error: any) {
+      console.error("Error saving pricing plans:", error)
+      setMessage({ type: "error", text: error.message || "Gagal menyimpan perubahan" })
     } finally {
-      setSaving(null)
+      setSaving(false)
     }
   }
 
-  const handlePriceChange = (tierId: string, newPrice: string) => {
-    const price = Number.parseInt(newPrice.replace(/\D/g, "")) || 0
-    setTiers((prev) => prev.map((tier) => (tier.id === tierId ? { ...tier, price } : tier)))
+  const updatePlan = (planId: string, updates: Partial<PricingPlan>) => {
+    setPlans((prev) => prev.map((plan) => (plan.id === planId ? { ...plan, ...updates } : plan)))
   }
 
-  const handleFeatureToggle = (tierId: string, featureKey: string, value: boolean | number) => {
-    setTiers((prev) =>
-      prev.map((tier) =>
-        tier.id === tierId
-          ? {
-              ...tier,
-              features: {
-                ...tier.features,
-                [featureKey]: value,
-              },
-            }
-          : tier,
-      ),
-    )
+  const addFeature = (planId: string) => {
+    updatePlan(planId, {
+      features: [...(plans.find((p) => p.id === planId)?.features || []), ""],
+    })
   }
 
-  const handleBasicInfoChange = (tierId: string, field: string, value: string | boolean) => {
-    setTiers((prev) => prev.map((tier) => (tier.id === tierId ? { ...tier, [field]: value } : tier)))
+  const updateFeature = (planId: string, featureIndex: number, value: string) => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan) return
+
+    const newFeatures = [...plan.features]
+    newFeatures[featureIndex] = value
+    updatePlan(planId, { features: newFeatures })
+  }
+
+  const removeFeature = (planId: string, featureIndex: number) => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan) return
+
+    const newFeatures = plan.features.filter((_, index) => index !== featureIndex)
+    updatePlan(planId, { features: newFeatures })
+  }
+
+  const toggleUnlimited = (planId: string, field: "maxStudents" | "maxTeachers") => {
+    const plan = plans.find((p) => p.id === planId)
+    if (!plan) return
+
+    const currentValue = plan[field]
+    const newValue = currentValue === "unlimited" ? 1 : "unlimited"
+    updatePlan(planId, { [field]: newValue })
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat data harga langganan...</p>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Memuat data harga...</span>
       </div>
     )
   }
@@ -107,286 +119,225 @@ export function PricingManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Manajemen Harga Langganan</h2>
-          <p className="text-gray-600 mt-1">Kelola harga dan fitur untuk setiap paket langganan</p>
+          <h2 className="text-2xl font-bold">Manajemen Harga Langganan</h2>
+          <p className="text-muted-foreground">Kelola paket langganan dan harga untuk aplikasi</p>
         </div>
-        <Button onClick={loadPricingTiers} variant="outline">
-          <TrendingUp className="mr-2 h-4 w-4" />
-          Refresh Data
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Menyimpan...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Simpan Perubahan
+            </>
+          )}
         </Button>
       </div>
 
       {message && (
-        <Alert className={message.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
-          {message.type === "success" ? (
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-red-600" />
-          )}
-          <AlertDescription className={message.type === "success" ? "text-green-800" : "text-red-800"}>
-            {message.text}
-          </AlertDescription>
+        <Alert variant={message.type === "error" ? "destructive" : "default"}>
+          {message.type === "success" && <CheckCircle className="h-4 w-4" />}
+          <AlertDescription>{message.text}</AlertDescription>
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {tiers.map((tier) => (
-          <Card key={tier.id} className="relative">
+      <div className="grid gap-6">
+        {plans.map((plan) => (
+          <Card key={plan.id} className="relative">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
-                    {tier.name}
-                    {tier.popular && <Badge variant="secondary">Popular</Badge>}
-                    {tier.recommended && <Badge className="bg-green-100 text-green-800">Recommended</Badge>}
+                <div className="flex items-center space-x-2">
+                  <CardTitle className="flex items-center space-x-2">
+                    <DollarSign className="h-5 w-5" />
+                    <Input
+                      value={plan.name}
+                      onChange={(e) => updatePlan(plan.id, { name: e.target.value })}
+                      className="text-lg font-bold border-0 p-0 h-auto bg-transparent"
+                      placeholder="Nama Paket"
+                    />
                   </CardTitle>
-                  <CardDescription className="mt-1">{tier.description}</CardDescription>
+                  {plan.isPopular && (
+                    <Badge variant="secondary">
+                      <Star className="h-3 w-3 mr-1" />
+                      Popular
+                    </Badge>
+                  )}
+                  {plan.isRecommended && (
+                    <Badge>
+                      <Award className="h-3 w-3 mr-1" />
+                      Recommended
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor={`active-${plan.id}`} className="text-sm">
+                    Aktif
+                  </Label>
+                  <Switch
+                    id={`active-${plan.id}`}
+                    checked={plan.isActive}
+                    onCheckedChange={(checked) => updatePlan(plan.id, { isActive: checked })}
+                  />
                 </div>
               </div>
+              <CardDescription>
+                <Textarea
+                  value={plan.description}
+                  onChange={(e) => updatePlan(plan.id, { description: e.target.value })}
+                  placeholder="Deskripsi paket..."
+                  className="min-h-[60px]"
+                />
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="basic">Info Dasar</TabsTrigger>
-                  <TabsTrigger value="features">Fitur</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="basic" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor={`name-${tier.id}`}>Nama Paket</Label>
-                      <Input
-                        id={`name-${tier.id}`}
-                        value={tier.name}
-                        onChange={(e) => handleBasicInfoChange(tier.id, "name", e.target.value)}
-                        placeholder="Nama paket"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`price-${tier.id}`}>Harga (IDR)</Label>
-                      <Input
-                        id={`price-${tier.id}`}
-                        value={tier.price === 0 ? "0" : tier.price.toLocaleString("id-ID")}
-                        onChange={(e) => handlePriceChange(tier.id, e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor={`description-${tier.id}`}>Deskripsi</Label>
-                    <Textarea
-                      id={`description-${tier.id}`}
-                      value={tier.description}
-                      onChange={(e) => handleBasicInfoChange(tier.id, "description", e.target.value)}
-                      placeholder="Deskripsi paket"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id={`popular-${tier.id}`}
-                        checked={tier.popular || false}
-                        onCheckedChange={(checked) => handleBasicInfoChange(tier.id, "popular", checked)}
-                      />
-                      <Label htmlFor={`popular-${tier.id}`}>Paket Popular</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id={`recommended-${tier.id}`}
-                        checked={tier.recommended || false}
-                        onCheckedChange={(checked) => handleBasicInfoChange(tier.id, "recommended", checked)}
-                      />
-                      <Label htmlFor={`recommended-${tier.id}`}>Direkomendasikan</Label>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="features" className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <Label>Maksimal Murid</Label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Switch
-                          checked={tier.features.maxStudents === Number.POSITIVE_INFINITY}
-                          onCheckedChange={(checked) =>
-                            handleFeatureToggle(tier.id, "maxStudents", checked ? Number.POSITIVE_INFINITY : 50)
-                          }
-                        />
-                        <Label className="text-sm">Unlimited</Label>
-                        {tier.features.maxStudents !== Number.POSITIVE_INFINITY && (
-                          <Input
-                            type="number"
-                            value={tier.features.maxStudents}
-                            onChange={(e) =>
-                              handleFeatureToggle(tier.id, "maxStudents", Number.parseInt(e.target.value) || 0)
-                            }
-                            className="w-20"
-                            min="0"
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Maksimal Ustadz</Label>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Switch
-                            checked={tier.features.maxUstadz === Number.POSITIVE_INFINITY}
-                            onCheckedChange={(checked) =>
-                              handleFeatureToggle(tier.id, "maxUstadz", checked ? Number.POSITIVE_INFINITY : 5)
-                            }
-                          />
-                          <Label className="text-sm">Unlimited</Label>
-                          {tier.features.maxUstadz !== Number.POSITIVE_INFINITY && (
-                            <Input
-                              type="number"
-                              value={tier.features.maxUstadz}
-                              onChange={(e) =>
-                                handleFeatureToggle(tier.id, "maxUstadz", Number.parseInt(e.target.value) || 0)
-                              }
-                              className="w-16"
-                              min="0"
-                            />
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label>Maksimal Ustadzah</Label>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Switch
-                            checked={tier.features.maxUstadzah === Number.POSITIVE_INFINITY}
-                            onCheckedChange={(checked) =>
-                              handleFeatureToggle(tier.id, "maxUstadzah", checked ? Number.POSITIVE_INFINITY : 5)
-                            }
-                          />
-                          <Label className="text-sm">Unlimited</Label>
-                          {tier.features.maxUstadzah !== Number.POSITIVE_INFINITY && (
-                            <Input
-                              type="number"
-                              value={tier.features.maxUstadzah}
-                              onChange={(e) =>
-                                handleFeatureToggle(tier.id, "maxUstadzah", Number.parseInt(e.target.value) || 0)
-                              }
-                              className="w-16"
-                              min="0"
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Download className="h-4 w-4 text-gray-500" />
-                          <Label>Export PDF</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.exportPDF}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "exportPDF", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Shield className="h-4 w-4 text-gray-500" />
-                          <Label>Priority Support</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.prioritySupport}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "prioritySupport", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <FileText className="h-4 w-4 text-gray-500" />
-                          <Label>Custom Reports</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.customReports}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "customReports", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Building className="h-4 w-4 text-gray-500" />
-                          <Label>Multiple Institutions</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.multipleInstitutions}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "multipleInstitutions", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Zap className="h-4 w-4 text-gray-500" />
-                          <Label>API Access</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.apiAccess}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "apiAccess", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="h-4 w-4 text-gray-500" />
-                          <Label>Advanced Analytics</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.advancedAnalytics}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "advancedAnalytics", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          <Label>Bulk Import</Label>
-                        </div>
-                        <Switch
-                          checked={tier.features.bulkImport}
-                          onCheckedChange={(checked) => handleFeatureToggle(tier.id, "bulkImport", checked)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="text-sm text-gray-600">
-                  Harga saat ini: <span className="font-semibold">{formatPrice(tier.price)}</span>
+              {/* Pricing */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Harga Saat Ini (Rp)</Label>
+                  <Input
+                    type="number"
+                    value={plan.price}
+                    onChange={(e) => updatePlan(plan.id, { price: Number.parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                  <p className="text-sm text-muted-foreground">Tampil: {formatPrice(plan.price)}</p>
                 </div>
-                <Button
-                  onClick={() => handleUpdateTier(tier.id, tier)}
-                  disabled={saving === tier.id}
-                  className="min-w-[100px]"
-                >
-                  {saving === tier.id ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Menyimpan...
-                    </div>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Simpan
-                    </>
+                <div className="space-y-2">
+                  <Label>Harga Asli (Opsional)</Label>
+                  <Input
+                    type="number"
+                    value={plan.originalPrice || ""}
+                    onChange={(e) =>
+                      updatePlan(plan.id, {
+                        originalPrice: e.target.value ? Number.parseInt(e.target.value) : undefined,
+                      })
+                    }
+                    placeholder="Kosongkan jika tidak ada diskon"
+                  />
+                  {plan.originalPrice && plan.originalPrice > plan.price && (
+                    <p className="text-sm text-green-600">
+                      Diskon: {calculateDiscount(plan.originalPrice, plan.price)}%
+                    </p>
                   )}
-                </Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Limits */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Maksimal Murid</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="number"
+                      value={plan.maxStudents === "unlimited" ? "" : plan.maxStudents}
+                      onChange={(e) =>
+                        updatePlan(plan.id, {
+                          maxStudents: e.target.value ? Number.parseInt(e.target.value) : 1,
+                        })
+                      }
+                      disabled={plan.maxStudents === "unlimited"}
+                      placeholder="Jumlah murid"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={plan.maxStudents === "unlimited"}
+                        onCheckedChange={() => toggleUnlimited(plan.id, "maxStudents")}
+                      />
+                      <Label className="text-sm">Unlimited</Label>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Maksimal Ustadz</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="number"
+                      value={plan.maxTeachers === "unlimited" ? "" : plan.maxTeachers}
+                      onChange={(e) =>
+                        updatePlan(plan.id, {
+                          maxTeachers: e.target.value ? Number.parseInt(e.target.value) : 1,
+                        })
+                      }
+                      disabled={plan.maxTeachers === "unlimited"}
+                      placeholder="Jumlah ustadz"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={plan.maxTeachers === "unlimited"}
+                        onCheckedChange={() => toggleUnlimited(plan.id, "maxTeachers")}
+                      />
+                      <Label className="text-sm">Unlimited</Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Features */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Fitur-fitur</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addFeature(plan.id)}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Tambah Fitur
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {plan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Input
+                        value={feature}
+                        onChange={(e) => updateFeature(plan.id, index, e.target.value)}
+                        placeholder="Nama fitur..."
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeFeature(plan.id, index)}
+                        disabled={plan.features.length <= 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Badges */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={plan.isPopular || false}
+                    onCheckedChange={(checked) => updatePlan(plan.id, { isPopular: checked })}
+                  />
+                  <Label>Popular</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={plan.isRecommended || false}
+                    onCheckedChange={(checked) => updatePlan(plan.id, { isRecommended: checked })}
+                  />
+                  <Label>Recommended</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label>Urutan</Label>
+                  <Input
+                    type="number"
+                    value={plan.order}
+                    onChange={(e) => updatePlan(plan.id, { order: Number.parseInt(e.target.value) || 1 })}
+                    min="1"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -1,226 +1,174 @@
-import { collection, doc, getDocs, updateDoc, addDoc, serverTimestamp, query, orderBy } from "firebase/firestore"
+import { doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp } from "firebase/firestore"
 import { db } from "./firebase"
-import type { SubscriptionTierInfo } from "./types"
 
-// Helper function to ensure db is available
-const ensureDb = () => {
-  if (!db) {
-    throw new Error("Firestore not initialized. Please check your Firebase configuration.")
-  }
-  return db
+export interface PricingPlan {
+  id: string
+  name: string
+  price: number
+  originalPrice?: number
+  description: string
+  features: string[]
+  maxStudents: number | "unlimited"
+  maxTeachers: number | "unlimited"
+  isPopular?: boolean
+  isRecommended?: boolean
+  isActive: boolean
+  order: number
+  createdAt?: Date
+  updatedAt?: Date
 }
 
-// Get all pricing tiers from Firestore
-export const getPricingTiers = async (): Promise<SubscriptionTierInfo[]> => {
-  try {
-    const database = ensureDb()
-    const pricingRef = collection(database, "pricing")
-    const q = query(pricingRef, orderBy("order", "asc"))
-    const snapshot = await getDocs(q)
+export const defaultPricingPlans: PricingPlan[] = [
+  {
+    id: "free",
+    name: "Gratis",
+    price: 0,
+    description: "Cocok untuk ustadz pemula atau TPQ kecil",
+    features: ["Maksimal 10 murid", "1 penguji/ustadz", "Laporan dasar", "Backup manual", "Support email"],
+    maxStudents: 10,
+    maxTeachers: 1,
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: "basic",
+    name: "Basic",
+    price: 49000,
+    originalPrice: 69000,
+    description: "Untuk TPQ atau madrasah kecil hingga menengah",
+    features: [
+      "Maksimal 50 murid",
+      "3 penguji/ustadz",
+      "Laporan lengkap",
+      "Backup otomatis",
+      "Export PDF",
+      "Support prioritas",
+    ],
+    maxStudents: 50,
+    maxTeachers: 3,
+    isPopular: true,
+    isActive: true,
+    order: 2,
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: 99000,
+    originalPrice: 149000,
+    description: "Untuk madrasah besar atau yayasan",
+    features: [
+      "Murid unlimited",
+      "Ustadz unlimited",
+      "Analytics mendalam",
+      "Multi-cabang",
+      "API access",
+      "Custom branding",
+      "Support 24/7",
+    ],
+    maxStudents: "unlimited",
+    maxTeachers: "unlimited",
+    isRecommended: true,
+    isActive: true,
+    order: 3,
+  },
+]
 
-    if (snapshot.empty) {
-      // If no pricing data exists, return default tiers and save them
-      console.log("No pricing data found, initializing default tiers...")
-      await initializeDefaultPricing()
-      return getDefaultTiers()
+// Get all pricing plans
+export const getPricingPlans = async (): Promise<PricingPlan[]> => {
+  try {
+    const pricingDoc = await getDoc(doc(db, "settings", "pricing"))
+
+    if (pricingDoc.exists()) {
+      const data = pricingDoc.data()
+      return data.plans || defaultPricingPlans
+    } else {
+      // Initialize with default plans
+      await initializePricingPlans()
+      return defaultPricingPlans
     }
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.data().id,
-      name: doc.data().name,
-      description: doc.data().description,
-      price: doc.data().price,
-      currency: doc.data().currency,
-      billingPeriod: doc.data().billingPeriod,
-      features: doc.data().features,
-      popular: doc.data().popular || false,
-      recommended: doc.data().recommended || false,
-    })) as SubscriptionTierInfo[]
   } catch (error) {
-    console.error("Error getting pricing tiers:", error)
-    // Return default tiers as fallback
-    return getDefaultTiers()
+    console.error("Error fetching pricing plans:", error)
+    return defaultPricingPlans
   }
 }
 
-// Update a pricing tier
-export const updatePricingTier = async (tierId: string, updates: Partial<SubscriptionTierInfo>): Promise<void> => {
+// Initialize pricing plans with defaults
+export const initializePricingPlans = async (): Promise<void> => {
   try {
-    console.log(`🔄 Updating pricing tier ${tierId}`)
-
-    const database = ensureDb()
-    const tierRef = doc(database, "pricing", tierId)
-
-    await updateDoc(tierRef, {
-      ...updates,
+    const pricingRef = doc(db, "settings", "pricing")
+    await setDoc(pricingRef, {
+      plans: defaultPricingPlans,
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
-
-    console.log(`✅ Successfully updated pricing tier ${tierId}`)
+    console.log("✅ Pricing plans initialized")
   } catch (error) {
-    console.error(`❌ Error updating pricing tier ${tierId}:`, error)
-    throw new Error(`Failed to update pricing tier: ${(error as any).message}`)
+    console.error("❌ Error initializing pricing plans:", error)
+    throw error
   }
 }
 
-// Initialize default pricing in Firestore
-export const initializeDefaultPricing = async (): Promise<void> => {
+// Update pricing plans (admin only)
+export const updatePricingPlans = async (plans: PricingPlan[]): Promise<void> => {
   try {
-    console.log("🔄 Initializing default pricing tiers...")
-
-    const database = ensureDb()
-    const pricingRef = collection(database, "pricing")
-
-    const defaultTiers = getDefaultTiers()
-
-    for (let i = 0; i < defaultTiers.length; i++) {
-      const tier = defaultTiers[i]
-      await addDoc(pricingRef, {
-        ...tier,
-        order: i,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
-    }
-
-    console.log("✅ Successfully initialized default pricing tiers")
+    const pricingRef = doc(db, "settings", "pricing")
+    await updateDoc(pricingRef, {
+      plans: plans,
+      updatedAt: serverTimestamp(),
+    })
+    console.log("✅ Pricing plans updated")
   } catch (error) {
-    console.error("❌ Error initializing default pricing:", error)
-    throw new Error(`Failed to initialize pricing: ${(error as any).message}`)
+    console.error("❌ Error updating pricing plans:", error)
+    throw error
   }
 }
 
-// Get default pricing tiers (fallback)
-const getDefaultTiers = (): SubscriptionTierInfo[] => {
-  return [
-    {
-      id: "basic",
-      name: "Basic (Gratis)",
-      description: "Cocok untuk pengajar individual dengan murid terbatas",
-      price: 0,
-      currency: "IDR",
-      billingPeriod: "monthly",
-      features: {
-        maxStudents: 5,
-        maxUstadz: 1,
-        maxUstadzah: 1,
-        exportPDF: false,
-        prioritySupport: false,
-        customReports: false,
-        multipleInstitutions: false,
-        apiAccess: false,
-        advancedAnalytics: false,
-        bulkImport: false,
-      },
+// Subscribe to pricing changes (real-time)
+export const subscribeToPricingPlans = (callback: (plans: PricingPlan[]) => void) => {
+  const pricingRef = doc(db, "settings", "pricing")
+
+  return onSnapshot(
+    pricingRef,
+    (doc) => {
+      if (doc.exists()) {
+        const data = doc.data()
+        callback(data.plans || defaultPricingPlans)
+      } else {
+        callback(defaultPricingPlans)
+      }
     },
-    {
-      id: "pro",
-      name: "Pro",
-      description: "Untuk madrasah dan lembaga pendidikan kecil",
-      price: 150000,
-      currency: "IDR",
-      billingPeriod: "monthly",
-      features: {
-        maxStudents: 200,
-        maxUstadz: 20,
-        maxUstadzah: 20,
-        exportPDF: true,
-        prioritySupport: true,
-        customReports: true,
-        multipleInstitutions: false,
-        apiAccess: true,
-        advancedAnalytics: true,
-        bulkImport: true,
-      },
+    (error) => {
+      console.error("Error listening to pricing changes:", error)
+      callback(defaultPricingPlans)
     },
-    {
-      id: "premium",
-      name: "Premium (Institusi)",
-      description: "Untuk institusi dan madrasah",
-      price: 750000,
-      currency: "IDR",
-      billingPeriod: "monthly",
-      popular: true,
-      features: {
-        maxStudents: Number.POSITIVE_INFINITY,
-        maxUstadz: Number.POSITIVE_INFINITY,
-        maxUstadzah: Number.POSITIVE_INFINITY,
-        exportPDF: true,
-        prioritySupport: true,
-        customReports: false,
-        multipleInstitutions: true,
-        apiAccess: false,
-        advancedAnalytics: true,
-        bulkImport: true,
-      },
-    },
-    {
-      id: "institution",
-      name: "Institution",
-      description: "Untuk jaringan lembaga pendidikan",
-      price: 1500000,
-      currency: "IDR",
-      billingPeriod: "monthly",
-      recommended: true,
-      features: {
-        maxStudents: Number.POSITIVE_INFINITY,
-        maxUstadz: Number.POSITIVE_INFINITY,
-        maxUstadzah: Number.POSITIVE_INFINITY,
-        exportPDF: true,
-        prioritySupport: true,
-        customReports: true,
-        multipleInstitutions: true,
-        apiAccess: true,
-        advancedAnalytics: true,
-        bulkImport: true,
-      },
-    },
-  ]
+  )
 }
 
-// Format price for display
-export const formatPrice = (price: number, currency = "IDR"): string => {
+// Get single pricing plan
+export const getPricingPlan = async (planId: string): Promise<PricingPlan | null> => {
+  try {
+    const plans = await getPricingPlans()
+    return plans.find((plan) => plan.id === planId) || null
+  } catch (error) {
+    console.error("Error fetching pricing plan:", error)
+    return null
+  }
+}
+
+// Format price to Indonesian Rupiah
+export const formatPrice = (price: number): string => {
   if (price === 0) return "Gratis"
-
-  if (currency === "IDR") {
-    return `Rp ${price.toLocaleString("id-ID")}`
-  }
 
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
-    currency: currency,
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(price)
 }
 
-// Get tier features list for display
-export const getTierFeaturesList = (tier: SubscriptionTierInfo): string[] => {
-  const features: string[] = []
-
-  if (tier.features.maxStudents === Number.POSITIVE_INFINITY) {
-    features.push("Unlimited Murid")
-  } else {
-    features.push(`Maksimal ${tier.features.maxStudents} Murid`)
-  }
-
-  if (tier.features.maxUstadz === Number.POSITIVE_INFINITY) {
-    features.push("Unlimited Ustadz")
-  } else {
-    features.push(`Maksimal ${tier.features.maxUstadz} Ustadz`)
-  }
-
-  if (tier.features.maxUstadzah === Number.POSITIVE_INFINITY) {
-    features.push("Unlimited Ustadzah")
-  } else {
-    features.push(`Maksimal ${tier.features.maxUstadzah} Ustadzah`)
-  }
-
-  if (tier.features.exportPDF) features.push("Export PDF")
-  if (tier.features.prioritySupport) features.push("Priority Support")
-  if (tier.features.customReports) features.push("Custom Reports")
-  if (tier.features.multipleInstitutions) features.push("Multiple Institutions")
-  if (tier.features.apiAccess) features.push("API Access")
-  if (tier.features.advancedAnalytics) features.push("Advanced Analytics")
-  if (tier.features.bulkImport) features.push("Bulk Import")
-
-  return features
+// Calculate discount percentage
+export const calculateDiscount = (originalPrice: number, currentPrice: number): number => {
+  if (!originalPrice || originalPrice <= currentPrice) return 0
+  return Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
 }

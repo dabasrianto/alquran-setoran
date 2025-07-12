@@ -1,9 +1,8 @@
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   updateProfile,
-  type User 
 } from "firebase/auth"
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
 import { auth, db } from "./firebase"
@@ -19,11 +18,7 @@ export interface UserProfile {
   updatedAt: Date
 }
 
-export const signUpWithEmail = async (
-  email: string, 
-  password: string, 
-  displayName: string
-): Promise<UserProfile> => {
+export const signUpWithEmail = async (email: string, password: string, displayName: string): Promise<UserProfile> => {
   try {
     if (!auth) {
       throw new Error("Firebase Auth not initialized")
@@ -38,13 +33,23 @@ export const signUpWithEmail = async (
       throw new Error("Password minimal 6 karakter")
     }
 
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      throw new Error("Format email tidak valid")
+    }
+
+    console.log("🔄 Creating user with email:", email)
+
     // Create user dengan email dan password
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
     const user = userCredential.user
 
+    console.log("✅ User created successfully:", user.uid)
+
     // Update profile dengan display name
     await updateProfile(user, {
-      displayName: displayName
+      displayName: displayName,
     })
 
     // Create user profile di Firestore
@@ -60,16 +65,17 @@ export const signUpWithEmail = async (
     const userDocRef = doc(db, "users", user.uid)
     const firestoreData = {
       ...userProfile,
-      photoURL: null, // Use null instead of undefined
+      photoURL: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }
 
     await setDoc(userDocRef, firestoreData)
+    console.log("✅ User profile created in Firestore")
 
     return userProfile
   } catch (error: any) {
-    console.error("Error signing up with email:", error)
+    console.error("❌ Error signing up with email:", error)
 
     // Handle specific Firebase auth errors
     if (error.code) {
@@ -106,55 +112,97 @@ export const signInWithEmail = async (email: string, password: string): Promise<
       throw new Error("Email dan password harus diisi")
     }
 
+    // Clean and validate email
+    email = email.trim().toLowerCase()
+    password = password.trim()
+
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      throw new Error("Format email tidak valid")
+    }
+
+    console.log("🔄 Attempting to sign in with email:", email)
+
     // Sign in dengan email dan password
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     const user = userCredential.user
 
+    console.log("✅ User signed in successfully:", user.uid)
+
     // Get atau create user profile di Firestore
     const userDocRef = doc(db, "users", user.uid)
-    const userDoc = await getDoc(userDocRef)
+    let userDoc
+
+    try {
+      userDoc = await getDoc(userDocRef)
+    } catch (firestoreError) {
+      console.warn("⚠️ Error fetching user profile from Firestore:", firestoreError)
+      // Continue without profile for now
+    }
 
     let userProfile: UserProfile
 
-    if (!userDoc.exists()) {
+    if (!userDoc || !userDoc.exists()) {
+      console.log("📝 Creating new user profile for existing user")
       // Create profile jika belum ada (untuk user lama)
       userProfile = {
         uid: user.uid,
         email: user.email!,
-        displayName: user.displayName || user.email!,
+        displayName: user.displayName || user.email!.split("@")[0],
         subscriptionType: "free",
         createdAt: new Date(),
         updatedAt: new Date(),
       }
 
-      const firestoreData = {
-        ...userProfile,
-        photoURL: user.photoURL || null, // Use null instead of undefined
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }
+      try {
+        const firestoreData = {
+          ...userProfile,
+          photoURL: user.photoURL || null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }
 
-      await setDoc(userDocRef, firestoreData)
+        await setDoc(userDocRef, firestoreData)
+        console.log("✅ User profile created in Firestore")
+      } catch (firestoreError) {
+        console.warn("⚠️ Error creating user profile in Firestore:", firestoreError)
+        // Continue without saving to Firestore for now
+      }
     } else {
-      // Update last login
-      const existingData = userDoc.data()
-      const updateData = {
-        ...existingData,
-        updatedAt: serverTimestamp(),
+      console.log("✅ User profile found, updating last login")
+      try {
+        // Update last login
+        const existingData = userDoc.data()
+        const updateData = {
+          ...existingData,
+          updatedAt: serverTimestamp(),
+        }
+
+        await setDoc(userDocRef, updateData, { merge: true })
+
+        userProfile = {
+          ...existingData,
+          createdAt: existingData.createdAt?.toDate() || new Date(),
+          updatedAt: new Date(),
+        } as UserProfile
+      } catch (firestoreError) {
+        console.warn("⚠️ Error updating user profile in Firestore:", firestoreError)
+        // Fallback to basic profile
+        userProfile = {
+          uid: user.uid,
+          email: user.email!,
+          displayName: user.displayName || user.email!.split("@")[0],
+          subscriptionType: "free",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
       }
-
-      await setDoc(userDocRef, updateData, { merge: true })
-
-      userProfile = {
-        ...existingData,
-        createdAt: existingData.createdAt?.toDate() || new Date(),
-        updatedAt: new Date(),
-      } as UserProfile
     }
 
     return userProfile
   } catch (error: any) {
-    console.error("Error signing in with email:", error)
+    console.error("❌ Error signing in with email:", error)
 
     // Handle specific Firebase auth errors
     if (error.code) {
@@ -172,7 +220,13 @@ export const signInWithEmail = async (email: string, password: string): Promise<
         case "auth/network-request-failed":
           throw new Error("Koneksi internet bermasalah. Silakan coba lagi.")
         case "auth/invalid-credential":
-          throw new Error("Email atau password salah.")
+          throw new Error("Email atau password salah. Pastikan email dan password benar.")
+        case "auth/invalid-login-credentials":
+          throw new Error("Email atau password salah. Pastikan email dan password benar.")
+        case "auth/missing-password":
+          throw new Error("Password harus diisi.")
+        case "auth/missing-email":
+          throw new Error("Email harus diisi.")
         default:
           throw new Error(`Error login: ${error.message}`)
       }
@@ -192,9 +246,18 @@ export const resetPassword = async (email: string): Promise<void> => {
       throw new Error("Email harus diisi")
     }
 
+    // Trim and validate email
+    email = email.trim().toLowerCase()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      throw new Error("Format email tidak valid")
+    }
+
+    console.log("🔄 Sending password reset email to:", email)
     await sendPasswordResetEmail(auth, email)
+    console.log("✅ Password reset email sent successfully")
   } catch (error: any) {
-    console.error("Error sending password reset email:", error)
+    console.error("❌ Error sending password reset email:", error)
 
     if (error.code) {
       switch (error.code) {

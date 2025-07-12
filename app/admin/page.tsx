@@ -1,26 +1,25 @@
-```tsx file="components/landing/hero-section.tsx"
-[v0-no-op-code-block-prefix]import React from 'react';
-import { PricingSection } from "./pricing-section"
+"use client"
 
-const HeroSection = () => {
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import PricingManagement from "@/components/admin/pricing-management"
+
+export default function AdminPage() {
   return (
-    <section className="bg-gray-100 py-20">
-      <div className="container mx-auto text-center">
-        <h1 className="text-5xl font-bold mb-4">
-          Welcome to Our Amazing Product
-        </h1>
-        <p className="text-xl text-gray-700 mb-8">
-          Discover the power of our innovative solutions.
-        </p>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Get Started
-        </button>
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
 
-        {/* Add this after the existing hero content */}
-        <PricingSection />
-      </div>
-    </section>
-  );
-};
-
-export default HeroSection;
+      <Tabs defaultValue="users" className="w-[400px]">
+        <TabsList>
+          <TabsTrigger value="users">Pengguna</TabsTrigger>
+          <TabsTrigger value="pricing">Harga Langganan</TabsTrigger>
+        </TabsList>
+        <TabsContent value="users">
+          <p>Manage users here.</p>
+        </TabsContent>
+        <TabsContent value="pricing">
+          <PricingManagement />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

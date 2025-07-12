@@ -1,147 +1,281 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Check, Crown, Zap, TrendingUp } from "lucide-react"
-import { getPricingTiers, formatPrice, getTierFeaturesList } from "@/lib/firebase-pricing"
-import type { SubscriptionTierInfo } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/contexts/auth-context"
+import { getPricingPlans, formatPrice, calculateDiscount, type PricingPlan } from "@/lib/firebase-pricing"
+import { Check, Star, Award, Users, BookOpen, ArrowUp } from "lucide-react"
 
 interface PricingDisplayProps {
-  currentTier?: string
-  onUpgrade?: (tierId: string) => void
+  onUpgrade?: (planId: string) => void
+  showCurrentPlan?: boolean
 }
 
-export function PricingDisplay({ currentTier = "basic", onUpgrade }: PricingDisplayProps) {
-  const [tiers, setTiers] = useState<SubscriptionTierInfo[]>([])
+export default function PricingDisplay({ onUpgrade, showCurrentPlan = true }: PricingDisplayProps) {
+  const { userProfile } = useAuth()
+  const [plans, setPlans] = useState<PricingPlan[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadPricingTiers()
+    loadPricingPlans()
   }, [])
 
-  const loadPricingTiers = async () => {
+  const loadPricingPlans = async () => {
     try {
       setLoading(true)
-      const pricingTiers = await getPricingTiers()
-      setTiers(pricingTiers)
+      const pricingPlans = await getPricingPlans()
+      setPlans(pricingPlans.filter((plan) => plan.isActive).sort((a, b) => a.order - b.order))
     } catch (error) {
-      console.error("Error loading pricing tiers:", error)
+      console.error("Error loading pricing plans:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const isCurrentTier = (tierId: string) => tierId === currentTier
+  const handleUpgrade = (planId: string) => {
+    if (onUpgrade) {
+      onUpgrade(planId)
+    } else {
+      // Default behavior - redirect to upgrade page
+      window.location.href = `/upgrade?plan=${planId}`
+    }
+  }
 
-  const canUpgrade = (tierId: string) => {
-    const tierOrder = ["basic", "pro", "premium", "institution"]
-    const currentIndex = tierOrder.indexOf(currentTier)
-    const targetIndex = tierOrder.indexOf(tierId)
-    return targetIndex > currentIndex
+  const getCurrentPlan = () => {
+    if (!userProfile) return null
+    return plans.find((plan) => plan.id === userProfile.subscriptionType) || plans.find((plan) => plan.id === "free")
+  }
+
+  const getUpgradeOptions = () => {
+    const currentPlan = getCurrentPlan()
+    if (!currentPlan) return plans
+
+    // Show plans that are higher tier than current plan
+    return plans.filter((plan) => plan.order > currentPlan.order)
   }
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="animate-pulse">
-            <div className="bg-white rounded-lg shadow p-6 h-80">
-              <div className="h-6 bg-gray-200 rounded mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-              </div>
-            </div>
+      <div className="space-y-6">
+        {showCurrentPlan && (
+          <div>
+            <Skeleton className="h-6 w-32 mb-4" />
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </CardContent>
+            </Card>
           </div>
-        ))}
+        )}
+        <div>
+          <Skeleton className="h-6 w-40 mb-4" />
+          <div className="grid md:grid-cols-2 gap-4">
+            {[1, 2].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-24 mb-2" />
+                  <Skeleton className="h-8 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((j) => (
+                      <Skeleton key={j} className="h-4 w-full" />
+                    ))}
+                  </div>
+                  <Skeleton className="h-10 w-full mt-4" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
 
+  const currentPlan = getCurrentPlan()
+  const upgradeOptions = getUpgradeOptions()
+
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Upgrade Paket Langganan</h3>
-        <p className="text-gray-600">Tingkatkan paket Anda untuk mendapatkan fitur yang lebih lengkap</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {tiers.map((tier) => (
-          <Card
-            key={tier.id}
-            className={`relative transition-all duration-300 ${
-              isCurrentTier(tier.id) ? "ring-2 ring-blue-500 bg-blue-50" : "hover:shadow-lg"
-            }`}
-          >
-            {isCurrentTier(tier.id) && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-blue-500 text-white">Paket Saat Ini</Badge>
-              </div>
-            )}
-
-            {tier.popular && !isCurrentTier(tier.id) && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-green-500 text-white">Populer</Badge>
-              </div>
-            )}
-
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-center mb-2">
-                {tier.id === "premium" && <Crown className="h-6 w-6 text-yellow-500" />}
-                {tier.id === "pro" && <Zap className="h-6 w-6 text-purple-500" />}
-                {tier.id === "institution" && <TrendingUp className="h-6 w-6 text-orange-500" />}
-              </div>
-
-              <CardTitle className="text-lg font-bold">{tier.name}</CardTitle>
-
-              <CardDescription className="text-sm text-gray-600">{tier.description}</CardDescription>
-
-              <div className="mt-3">
-                <div className="text-2xl font-bold text-gray-900">{formatPrice(tier.price)}</div>
-                {tier.price > 0 && <div className="text-xs text-gray-500">per bulan</div>}
+      {/* Current Plan */}
+      {showCurrentPlan && currentPlan && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Paket Saat Ini</h3>
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center space-x-2">
+                    <span>{currentPlan.name}</span>
+                    <Badge variant="outline">Aktif</Badge>
+                  </CardTitle>
+                  <CardDescription>{currentPlan.description}</CardDescription>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold">{formatPrice(currentPlan.price)}</div>
+                  {currentPlan.price > 0 && <div className="text-sm text-muted-foreground">/bulan</div>}
+                </div>
               </div>
             </CardHeader>
-
-            <CardContent className="pt-0">
-              <ul className="space-y-2 mb-4 text-sm">
-                {getTierFeaturesList(tier)
-                  .slice(0, 4)
-                  .map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
-                      <span className="text-gray-700 text-xs">{feature}</span>
-                    </li>
-                  ))}
-                {getTierFeaturesList(tier).length > 4 && (
-                  <li className="text-xs text-gray-500 italic">
-                    +{getTierFeaturesList(tier).length - 4} fitur lainnya
-                  </li>
-                )}
-              </ul>
-
-              {isCurrentTier(tier.id) ? (
-                <Button disabled className="w-full" size="sm">
-                  Paket Aktif
-                </Button>
-              ) : canUpgrade(tier.id) ? (
-                <Button onClick={() => onUpgrade?.(tier.id)} className="w-full" size="sm">
-                  Upgrade
-                </Button>
-              ) : (
-                <Button disabled className="w-full bg-transparent" size="sm" variant="outline">
-                  Downgrade
-                </Button>
-              )}
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center">
+                    <Users className="h-4 w-4 mr-1 text-primary" />
+                    <span className="font-semibold">
+                      {currentPlan.maxStudents === "unlimited" ? "Unlimited" : `${currentPlan.maxStudents} murid`}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center">
+                    <BookOpen className="h-4 w-4 mr-1 text-primary" />
+                    <span className="font-semibold">
+                      {currentPlan.maxTeachers === "unlimited" ? "Unlimited" : `${currentPlan.maxTeachers} ustadz`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {currentPlan.features.slice(0, 4).map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    <span className="text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Upgrade Options */}
+      {upgradeOptions.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <ArrowUp className="h-5 w-5 mr-2 text-primary" />
+            Upgrade Paket
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {upgradeOptions.map((plan) => {
+              const discount = plan.originalPrice ? calculateDiscount(plan.originalPrice, plan.price) : 0
+
+              return (
+                <Card
+                  key={plan.id}
+                  className={`relative transition-all hover:shadow-lg ${
+                    plan.isRecommended ? "ring-2 ring-primary" : ""
+                  }`}
+                >
+                  {/* Badges */}
+                  {(plan.isPopular || plan.isRecommended) && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                      {plan.isPopular && (
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                          <Star className="h-3 w-3 mr-1" />
+                          Popular
+                        </Badge>
+                      )}
+                      {plan.isRecommended && (
+                        <Badge className="bg-primary text-primary-foreground">
+                          <Award className="h-3 w-3 mr-1" />
+                          Recommended
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl font-bold">{formatPrice(plan.price)}</span>
+                        {plan.originalPrice && plan.originalPrice > plan.price && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {formatPrice(plan.originalPrice)}
+                          </span>
+                        )}
+                      </div>
+                      {discount > 0 && (
+                        <Badge variant="destructive" className="text-xs">
+                          Hemat {discount}%
+                        </Badge>
+                      )}
+                      {plan.price > 0 && <p className="text-sm text-muted-foreground">/bulan</p>}
+                    </div>
+                    <CardDescription>{plan.description}</CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {/* Limits */}
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-center">
+                          <Users className="h-4 w-4 mr-1 text-primary" />
+                          <span className="font-semibold">
+                            {plan.maxStudents === "unlimited" ? "∞" : plan.maxStudents}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Murid</p>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-center">
+                          <BookOpen className="h-4 w-4 mr-1 text-primary" />
+                          <span className="font-semibold">
+                            {plan.maxTeachers === "unlimited" ? "∞" : plan.maxTeachers}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Ustadz</p>
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    <div className="space-y-2">
+                      {plan.features.slice(0, 5).map((feature, index) => (
+                        <div key={index} className="flex items-start space-x-2">
+                          <Check className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
+                      {plan.features.length > 5 && (
+                        <p className="text-xs text-muted-foreground">+{plan.features.length - 5} fitur lainnya</p>
+                      )}
+                    </div>
+
+                    {/* CTA Button */}
+                    <Button
+                      className="w-full"
+                      variant={plan.isRecommended ? "default" : "outline"}
+                      onClick={() => handleUpgrade(plan.id)}
+                    >
+                      <ArrowUp className="h-4 w-4 mr-2" />
+                      Upgrade ke {plan.name}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {upgradeOptions.length === 0 && showCurrentPlan && (
+        <div className="text-center py-8">
+          <div className="text-muted-foreground">
+            <Award className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Anda sudah menggunakan paket terbaik!</h3>
+            <p>Terima kasih telah mempercayai layanan premium kami.</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
