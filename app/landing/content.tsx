@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import PricingSection from "@/components/landing/pricing-section"
 import {
   BookOpen,
   Users,
@@ -17,40 +16,41 @@ import {
   ArrowRight,
   Play,
 } from "lucide-react"
+import PricingSection from "@/components/landing/pricing-section"
 
 export default function LandingContent() {
-  const [showDemo, setShowDemo] = useState(false)
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
 
   const features = [
     {
       icon: BookOpen,
-      title: "Manajemen Setoran Al-Quran",
-      description: "Catat dan pantau progress hafalan setiap murid dengan mudah dan terstruktur",
+      title: "Manajemen Hafalan",
+      description: "Kelola progress hafalan Al-Quran murid dengan mudah dan terstruktur",
     },
     {
       icon: Users,
-      title: "Multi Penguji/Ustadz",
-      description: "Kelola beberapa penguji sekaligus dengan sistem role yang fleksibel",
+      title: "Multi Penguji",
+      description: "Dukung banyak ustadz dan ustadzah untuk menguji hafalan murid",
     },
     {
       icon: BarChart3,
-      title: "Laporan & Analytics",
-      description: "Dashboard lengkap dengan statistik dan laporan progress yang detail",
+      title: "Laporan Lengkap",
+      description: "Dapatkan insight mendalam tentang progress hafalan setiap murid",
     },
     {
       icon: Shield,
-      title: "Data Aman & Terpercaya",
-      description: "Sistem keamanan tingkat enterprise dengan backup otomatis",
+      title: "Data Aman",
+      description: "Data tersimpan aman di cloud dengan backup otomatis",
     },
     {
       icon: Smartphone,
-      title: "Responsive Design",
-      description: "Akses dari mana saja, kapan saja melalui smartphone atau komputer",
+      title: "Mobile Friendly",
+      description: "Akses dari mana saja menggunakan smartphone atau tablet",
     },
     {
       icon: Cloud,
-      title: "Cloud Storage",
-      description: "Data tersimpan aman di cloud dengan sinkronisasi real-time",
+      title: "Sinkronisasi Real-time",
+      description: "Data tersinkronisasi secara real-time antar perangkat",
     },
   ]
 
@@ -59,138 +59,103 @@ export default function LandingContent() {
       name: "Ustadz Ahmad",
       role: "Pengajar TPQ Al-Hidayah",
       content:
-        "Aplikasi ini sangat membantu dalam mengelola setoran hafalan murid-murid. Interface yang mudah dan fitur yang lengkap.",
+        "Aplikasi ini sangat membantu dalam mengelola hafalan murid-murid saya. Interface yang mudah dipahami dan fitur yang lengkap.",
       rating: 5,
     },
     {
       name: "Ustadzah Fatimah",
       role: "Koordinator Tahfidz",
       content:
-        "Dengan aplikasi ini, saya bisa memantau progress semua murid dengan lebih efisien. Laporan yang dihasilkan juga sangat detail.",
+        "Dengan Tasmi, saya bisa memantau progress semua murid dengan mudah. Laporan yang dihasilkan sangat detail dan membantu.",
       rating: 5,
     },
     {
       name: "Ust. Muhammad",
-      role: "Pengelola Madrasah",
+      role: "Kepala Madrasah",
       content:
-        "Fitur multi penguji sangat membantu madrasah kami yang memiliki banyak ustadz. Koordinasi jadi lebih mudah.",
+        "Sistem yang sangat baik untuk madrasah kami. Memudahkan koordinasi antar ustadz dan monitoring progress murid.",
       rating: 5,
     },
   ]
 
-  const handleGetStarted = () => {
-    // Scroll to pricing section
-    const pricingSection = document.getElementById("pricing-section")
-    if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: "smooth" })
-    }
-  }
-
-  const handleSelectPlan = (planId: string) => {
-    // Redirect to registration with selected plan
-    window.location.href = `/auth?plan=${planId}`
-  }
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <div className="max-w-6xl mx-auto text-center">
-          <Badge className="mb-4" variant="secondary">
-            🚀 Platform Terdepan untuk Manajemen Tahfidz
-          </Badge>
-
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Kelola Setoran Al-Quran
-            <br />
-            dengan Mudah & Efisien
-          </h1>
-
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Platform digital terpercaya untuk mengelola hafalan Al-Quran murid-murid Anda. Dilengkapi fitur lengkap,
-            interface yang intuitif, dan sistem keamanan terbaik.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" onClick={handleGetStarted} className="text-lg px-8">
-              Mulai Gratis Sekarang
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => setShowDemo(true)} className="text-lg px-8">
-              <Play className="mr-2 h-5 w-5" />
-              Lihat Demo
-            </Button>
-          </div>
-
-          <div className="mt-12 flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              Gratis untuk 10 murid
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-4 bg-blue-100 text-blue-800">Platform Terdepan untuk Tahfidz</Badge>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+                Kelola Hafalan Al-Quran dengan <span className="text-blue-600">Mudah & Efektif</span>
+              </h1>
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                Platform digital terpercaya untuk mengelola progress hafalan Al-Quran murid. Dilengkapi fitur lengkap
+                untuk ustadz, madrasah, dan lembaga tahfidz.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  Mulai Gratis Sekarang
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => setIsVideoPlaying(true)}>
+                  <Play className="mr-2 h-5 w-5" />
+                  Lihat Demo
+                </Button>
+              </div>
+              <div className="mt-8 flex items-center space-x-6 text-sm text-gray-600">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  Gratis untuk 10 murid
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  Setup dalam 5 menit
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  Support 24/7
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              Setup dalam 5 menit
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              Dukungan 24/7
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-2xl p-8">
+                <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-200 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Dashboard Tasmi</h3>
+                    <p className="text-gray-600">Interface yang intuitif dan mudah digunakan</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-muted/30">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Fitur Lengkap untuk Kebutuhan Anda</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Semua yang Anda butuhkan untuk mengelola setoran Al-Quran dalam satu platform
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Fitur Lengkap untuk Kebutuhan Tahfidz</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Semua yang Anda butuhkan untuk mengelola hafalan Al-Quran dalam satu platform
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-primary" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <feature.icon className="h-6 w-6 text-blue-600" />
                   </div>
                   <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-base">{feature.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Dipercaya oleh Ribuan Ustadz</h2>
-            <p className="text-lg text-muted-foreground">Lihat apa kata para pengguna tentang aplikasi kami</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-0 shadow-md">
-                <CardHeader>
-                  <div className="flex items-center space-x-1 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <CardDescription className="text-base italic">"{testimonial.content}"</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                  </div>
+                  <CardDescription className="text-gray-600 leading-relaxed">{feature.description}</CardDescription>
                 </CardContent>
               </Card>
             ))}
@@ -199,21 +164,63 @@ export default function LandingContent() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing-section" className="py-20 px-4 bg-muted/30">
-        <PricingSection onSelectPlan={handleSelectPlan} />
+      <PricingSection />
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Dipercaya oleh Ribuan Ustadz</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Bergabunglah dengan komunitas ustadz dan madrasah yang telah merasakan manfaatnya
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="border-0 shadow-lg">
+                <CardContent className="pt-6">
+                  <div className="flex items-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-6 leading-relaxed">"{testimonial.content}"</p>
+                  <div>
+                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                    <div className="text-sm text-gray-600">{testimonial.role}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-primary to-secondary text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Siap Memulai Perjalanan Digital Anda?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Bergabunglah dengan ribuan ustadz yang telah mempercayai platform kami
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-700">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Siap Memulai Perjalanan Digital Tahfidz?</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Bergabunglah dengan ribuan ustadz dan madrasah yang telah mempercayai Tasmi untuk mengelola hafalan Al-Quran
+            murid-murid mereka.
           </p>
-          <Button size="lg" variant="secondary" onClick={handleGetStarted} className="text-lg px-8">
-            Mulai Gratis Hari Ini
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+              Daftar Gratis Sekarang
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
+            >
+              Hubungi Tim Sales
+            </Button>
+          </div>
+          <div className="mt-8 text-blue-100">
+            <p>Gratis untuk 10 murid • Tidak perlu kartu kredit • Setup dalam 5 menit</p>
+          </div>
         </div>
       </section>
     </div>

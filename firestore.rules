@@ -49,6 +49,30 @@ service cloud.firestore {
       }
     }
     
+    // Settings collection - Public read for pricing, admin write
+    match /settings/{settingId} {
+      // Anyone can read pricing settings (for landing page)
+      allow read: if true;
+      
+      // Only admin can write settings
+      allow write: if isAdmin();
+      
+      // Allow creation of settings if they don't exist
+      allow create: if isAdmin();
+    }
+    
+    // Pricing collection - Public read, admin write
+    match /pricing/{planId} {
+      // Anyone can read pricing plans (for landing page and user dashboard)
+      allow read: if true;
+      
+      // Only admin can write pricing
+      allow write: if isAdmin();
+      
+      // Allow creation of pricing plans
+      allow create: if isAdmin();
+    }
+    
     // Subscriptions collection - Users can read their own, admin can read/write all
     match /subscriptions/{subscriptionId} {
       // Users can read their own subscription data
