@@ -1,27 +1,27 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { CheckCircle2, Loader2 } from "lucide-react"
-import { type PricingPlan, formatPrice, calculateYearlyPrice, subscribeToPricingChanges } from "@/lib/firebase-pricing"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import Link from "next/link"
-import { useAuth } from "@/contexts/auth-context"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { PricingPlan, getPricingPlans, formatPrice, calculateYearlyPrice, subscribeToPricingChanges } from '@/lib/firebase-pricing'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/auth-context'
 
 export function PricingSection() {
   const { currentUser } = useAuth()
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([])
   const [loading, setLoading] = useState(true)
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
 
   useEffect(() => {
     setLoading(true)
     const unsubscribe = subscribeToPricingChanges((fetchedPlans) => {
-      setPricingPlans(fetchedPlans.filter((p) => p.active)) // Only show active plans
+      setPricingPlans(fetchedPlans.filter(p => p.active)) // Only show active plans
       setLoading(false)
     })
 
@@ -55,7 +55,7 @@ export function PricingSection() {
             <ToggleGroup
               type="single"
               value={billingPeriod}
-              onValueChange={(value: "monthly" | "yearly") => {
+              onValueChange={(value: 'monthly' | 'yearly') => {
                 if (value) setBillingPeriod(value)
               }}
               className="border rounded-md"
@@ -71,9 +71,8 @@ export function PricingSection() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {pricingPlans.map((plan) => {
-            const displayPrice =
-              billingPeriod === "monthly" ? plan.price : plan.yearlyPrice || calculateYearlyPrice(plan.price)
-            const displayInterval = billingPeriod === "monthly" ? "/bulan" : "/tahun"
+            const displayPrice = billingPeriod === 'monthly' ? plan.price : (plan.yearlyPrice || calculateYearlyPrice(plan.price))
+            const displayInterval = billingPeriod === 'monthly' ? '/bulan' : '/tahun'
 
             return (
               <Card
@@ -81,7 +80,7 @@ export function PricingSection() {
                 className={cn(
                   "flex flex-col justify-between p-6 border-2",
                   plan.isPopular && "border-blue-500 dark:border-blue-400",
-                  plan.isRecommended && "border-green-500 dark:border-green-400",
+                  plan.isRecommended && "border-green-500 dark:border-green-400"
                 )}
               >
                 <div>
@@ -111,13 +110,13 @@ export function PricingSection() {
                       {plan.maxStudents !== undefined && (
                         <li className="flex items-center">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                          Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri
+                          Maksimal {plan.maxStudents === null ? 'Tidak Terbatas' : plan.maxStudents} Santri
                         </li>
                       )}
                       {plan.maxTeachers !== undefined && (
                         <li className="flex items-center">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                          Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji
+                          Maksimal {plan.maxTeachers === null ? 'Tidak Terbatas' : plan.maxTeachers} Penguji
                         </li>
                       )}
                     </ul>

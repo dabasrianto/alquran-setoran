@@ -1,38 +1,25 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Loader2 } from "lucide-react"
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { Input } from "@/components/ui/input"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { format } from "date-fns"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Loader2 } from 'lucide-react'
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { Input } from '@/components/ui/input'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { format } from 'date-fns'
 
 interface Payment {
   id: string
   userId: string
   amount: number
   currency: string
-  status: "pending" | "completed" | "failed"
+  status: 'pending' | 'completed' | 'failed'
   timestamp: Date
   planId: string
   transactionId?: string
@@ -41,44 +28,40 @@ interface Payment {
 export function PaymentManagement() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [paymentsPerPage] = useState(10)
   const { toast } = useToast()
 
   useEffect(() => {
     setLoading(true)
-    const paymentsRef = collection(db, "payments")
+    const paymentsRef = collection(db, 'payments')
     const q = query(paymentsRef)
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedPayments: Payment[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp.toDate(),
-        })) as Payment[]
-        setPayments(fetchedPayments)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching payments:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat daftar pembayaran.",
-          variant: "destructive",
-        })
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedPayments: Payment[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp.toDate(),
+      })) as Payment[]
+      setPayments(fetchedPayments)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching payments:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat daftar pembayaran.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribe()
   }, [toast])
 
-  const handleUpdatePaymentStatus = async (paymentId: string, newStatus: "pending" | "completed" | "failed") => {
+  const handleUpdatePaymentStatus = async (paymentId: string, newStatus: 'pending' | 'completed' | 'failed') => {
     try {
-      await updateDoc(doc(db, "payments", paymentId), { status: newStatus })
+      await updateDoc(doc(db, 'payments', paymentId), { status: newStatus })
       toast({
         title: "Sukses",
         description: `Status pembayaran berhasil diubah menjadi ${newStatus}.`,
@@ -98,7 +81,7 @@ export function PaymentManagement() {
       return
     }
     try {
-      await deleteDoc(doc(db, "payments", paymentId))
+      await deleteDoc(doc(db, 'payments', paymentId))
       toast({
         title: "Sukses",
         description: "Pembayaran berhasil dihapus.",
@@ -113,12 +96,11 @@ export function PaymentManagement() {
     }
   }
 
-  const filteredPayments = payments.filter(
-    (payment) =>
-      payment.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.planId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (payment.transactionId && payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase())),
+  const filteredPayments = payments.filter(payment =>
+    payment.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.planId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (payment.transactionId && payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const indexOfLastPayment = currentPage * paymentsPerPage
@@ -170,35 +152,25 @@ export function PaymentManagement() {
           <TableBody>
             {currentPayments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  Tidak ada pembayaran ditemukan.
-                </TableCell>
+                <TableCell colSpan={7} className="text-center">Tidak ada pembayaran ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentPayments.map((payment) => (
                 <TableRow key={payment.id}>
                   <TableCell className="font-mono text-xs">{payment.userId}</TableCell>
                   <TableCell>{payment.planId}</TableCell>
+                  <TableCell>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: payment.currency }).format(payment.amount)}</TableCell>
                   <TableCell>
-                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: payment.currency }).format(
-                      payment.amount,
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        payment.status === "completed"
-                          ? "default"
-                          : payment.status === "pending"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                    >
+                    <Badge variant={
+                      payment.status === 'completed' ? 'default' :
+                      payment.status === 'pending' ? 'secondary' :
+                      'destructive'
+                    }>
                       {payment.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{format(payment.timestamp, "dd MMM yyyy HH:mm")}</TableCell>
-                  <TableCell className="font-mono text-xs">{payment.transactionId || "N/A"}</TableCell>
+                  <TableCell>{format(payment.timestamp, 'dd MMM yyyy HH:mm')}</TableCell>
+                  <TableCell className="font-mono text-xs">{payment.transactionId || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -209,13 +181,13 @@ export function PaymentManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleUpdatePaymentStatus(payment.id, "completed")}>
+                        <DropdownMenuItem onClick={() => handleUpdatePaymentStatus(payment.id, 'completed')}>
                           Tandai Selesai
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdatePaymentStatus(payment.id, "pending")}>
+                        <DropdownMenuItem onClick={() => handleUpdatePaymentStatus(payment.id, 'pending')}>
                           Tandai Tertunda
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdatePaymentStatus(payment.id, "failed")}>
+                        <DropdownMenuItem onClick={() => handleUpdatePaymentStatus(payment.id, 'failed')}>
                           Tandai Gagal
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -237,7 +209,10 @@ export function PaymentManagement() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>

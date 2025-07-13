@@ -1,27 +1,16 @@
-"use client"
+'use client'
 
-import { Label } from "@/components/ui/label"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Timeline,
-  TimelineItem,
-  TimelineConnector,
-  TimelineHeader,
-  TimelineIcon,
-  TimelineContent,
-  TimelineTitle,
-  TimelineDescription,
-} from "@/components/ui/timeline"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, BookOpen } from "lucide-react"
-import { collection, query, onSnapshot, orderBy, where } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { QURAN_DATA } from "@/lib/quran-data"
-import { format } from "date-fns"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineIcon, TimelineContent, TimelineTitle, TimelineDescription } from '@/components/ui/timeline'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2, BookOpen, CheckCircle2 } from 'lucide-react'
+import { collection, query, onSnapshot, orderBy, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/contexts/auth-context'
+import { QURAN_DATA } from '@/lib/quran-data'
+import { format } from 'date-fns'
 
 interface Student {
   id: string
@@ -39,7 +28,7 @@ interface ProgressEntry {
 
 export function ProgressTimeline() {
   const [students, setStudents] = useState<Student[]>([])
-  const [selectedStudent, setSelectedStudent] = useState("")
+  const [selectedStudent, setSelectedStudent] = useState('')
   const [progressEntries, setProgressEntries] = useState<ProgressEntry[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -52,35 +41,31 @@ export function ProgressTimeline() {
     }
 
     const fetchStudents = async () => {
-      const studentsRef = collection(db, "users", currentUser.uid, "students")
+      const studentsRef = collection(db, 'users', currentUser.uid, 'students')
       const q = query(studentsRef)
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const fetchedStudents: Student[] = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-          }))
-          setStudents(fetchedStudents)
-          if (fetchedStudents.length > 0 && !selectedStudent) {
-            setSelectedStudent(fetchedStudents[0].id)
-          }
-        },
-        (error) => {
-          console.error("Error fetching students:", error)
-          toast({
-            title: "Error",
-            description: "Gagal memuat daftar santri.",
-            variant: "destructive",
-          })
-        },
-      )
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const fetchedStudents: Student[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+        }))
+        setStudents(fetchedStudents)
+        if (fetchedStudents.length > 0 && !selectedStudent) {
+          setSelectedStudent(fetchedStudents[0].id)
+        }
+      }, (error) => {
+        console.error("Error fetching students:", error)
+        toast({
+          title: "Error",
+          description: "Gagal memuat daftar santri.",
+          variant: "destructive",
+        })
+      })
       return unsubscribe
     }
 
     const unsubscribeStudents = fetchStudents()
     return () => {
-      unsubscribeStudents.then((unsub) => unsub && unsub())
+      unsubscribeStudents.then(unsub => unsub && unsub())
     }
   }, [currentUser, selectedStudent, toast])
 
@@ -92,36 +77,32 @@ export function ProgressTimeline() {
     }
 
     setLoading(true)
-    const progressRef = collection(db, "users", currentUser.uid, "progress")
-    const q = query(progressRef, where("studentId", "==", selectedStudent), orderBy("timestamp", "desc"))
+    const progressRef = collection(db, 'users', currentUser.uid, 'progress')
+    const q = query(progressRef, where('studentId', '==', selectedStudent), orderBy('timestamp', 'desc'))
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedProgress: ProgressEntry[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp.toDate(),
-        })) as ProgressEntry[]
-        setProgressEntries(fetchedProgress)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching progress entries:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat progres hafalan.",
-          variant: "destructive",
-        })
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedProgress: ProgressEntry[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp.toDate(),
+      })) as ProgressEntry[]
+      setProgressEntries(fetchedProgress)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching progress entries:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat progres hafalan.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribe()
   }, [currentUser, selectedStudent, toast])
 
   const getSurahName = (surahId: string) => {
-    const surah = QURAN_DATA.find((s) => s.name.transliteration.id === surahId)
+    const surah = QURAN_DATA.find(s => s.name.transliteration.id === surahId)
     return surah ? `${surah.number}. ${surah.name.transliteration.id}` : surahId
   }
 
@@ -166,10 +147,8 @@ export function ProgressTimeline() {
                       <TimelineIcon className="bg-primary text-primary-foreground">
                         <BookOpen className="h-4 w-4" />
                       </TimelineIcon>
-                      <TimelineTitle>
-                        {getSurahName(entry.surah)} ({entry.startAyat}-{entry.endAyat})
-                      </TimelineTitle>
-                      <TimelineDescription>{format(entry.timestamp, "dd MMMM yyyy, HH:mm")}</TimelineDescription>
+                      <TimelineTitle>{getSurahName(entry.surah)} ({entry.startAyat}-{entry.endAyat})</TimelineTitle>
+                      <TimelineDescription>{format(entry.timestamp, 'dd MMMM yyyy, HH:mm')}</TimelineDescription>
                     </TimelineHeader>
                     <TimelineContent>
                       <p className="text-muted-foreground">

@@ -206,3 +206,7 @@ service cloud.firestore {
 * **Test Locally**: Before deploying to production, it's highly recommended to test your rules using the Firebase Emulator Suite.
 * **Version Control**: Always keep your `firestore.rules` file under version control (e.g., Git) to track changes and revert if necessary.
 * **Impact**: Be aware that changes to security rules immediately affect how your database can be accessed. Ensure your rules are secure and correctly configured to prevent unauthorized access.
+\`\`\`
+
+
+\`\`\`

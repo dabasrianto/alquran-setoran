@@ -1,37 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Loader2 } from "lucide-react"
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { Input } from "@/components/ui/input"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { format } from "date-fns"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Loader2 } from 'lucide-react'
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { Input } from '@/components/ui/input'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { format } from 'date-fns'
 
 interface UpgradeRequest {
   id: string
   userId: string
   requestedTier: string
-  status: "pending" | "approved" | "rejected"
+  status: 'pending' | 'approved' | 'rejected'
   timestamp: Date
   notes?: string
 }
@@ -39,44 +26,40 @@ interface UpgradeRequest {
 export function UpgradeRequestsTable() {
   const [requests, setRequests] = useState<UpgradeRequest[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [requestsPerPage] = useState(10)
   const { toast } = useToast()
 
   useEffect(() => {
     setLoading(true)
-    const requestsRef = collection(db, "upgradeRequests")
+    const requestsRef = collection(db, 'upgradeRequests')
     const q = query(requestsRef)
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedRequests: UpgradeRequest[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp.toDate(),
-        })) as UpgradeRequest[]
-        setRequests(fetchedRequests)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching upgrade requests:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat permintaan upgrade.",
-          variant: "destructive",
-        })
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedRequests: UpgradeRequest[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp.toDate(),
+      })) as UpgradeRequest[]
+      setRequests(fetchedRequests)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching upgrade requests:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat permintaan upgrade.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribe()
   }, [toast])
 
-  const handleUpdateStatus = async (requestId: string, newStatus: "pending" | "approved" | "rejected") => {
+  const handleUpdateStatus = async (requestId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
     try {
-      await updateDoc(doc(db, "upgradeRequests", requestId), { status: newStatus })
+      await updateDoc(doc(db, 'upgradeRequests', requestId), { status: newStatus })
       toast({
         title: "Sukses",
         description: `Status permintaan berhasil diubah menjadi ${newStatus}.`,
@@ -96,7 +79,7 @@ export function UpgradeRequestsTable() {
       return
     }
     try {
-      await deleteDoc(doc(db, "upgradeRequests", requestId))
+      await deleteDoc(doc(db, 'upgradeRequests', requestId))
       toast({
         title: "Sukses",
         description: "Permintaan berhasil dihapus.",
@@ -111,11 +94,10 @@ export function UpgradeRequestsTable() {
     }
   }
 
-  const filteredRequests = requests.filter(
-    (req) =>
-      req.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.requestedTier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.status.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredRequests = requests.filter(req =>
+    req.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    req.requestedTier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    req.status.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const indexOfLastRequest = currentPage * requestsPerPage
@@ -166,9 +148,7 @@ export function UpgradeRequestsTable() {
           <TableBody>
             {currentRequests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
-                  Tidak ada permintaan upgrade ditemukan.
-                </TableCell>
+                <TableCell colSpan={6} className="text-center">Tidak ada permintaan upgrade ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentRequests.map((req) => (
@@ -176,16 +156,16 @@ export function UpgradeRequestsTable() {
                   <TableCell className="font-mono text-xs">{req.userId}</TableCell>
                   <TableCell>{req.requestedTier}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        req.status === "approved" ? "default" : req.status === "pending" ? "secondary" : "destructive"
-                      }
-                    >
+                    <Badge variant={
+                      req.status === 'approved' ? 'default' :
+                      req.status === 'pending' ? 'secondary' :
+                      'destructive'
+                    }>
                       {req.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{format(req.timestamp, "dd MMM yyyy HH:mm")}</TableCell>
-                  <TableCell className="text-xs max-w-[200px] truncate">{req.notes || "N/A"}</TableCell>
+                  <TableCell>{format(req.timestamp, 'dd MMM yyyy HH:mm')}</TableCell>
+                  <TableCell className="text-xs max-w-[200px] truncate">{req.notes || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -196,10 +176,10 @@ export function UpgradeRequestsTable() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, "approved")}>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'approved')}>
                           Setujui
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, "rejected")}>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, 'rejected')}>
                           Tolak
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -221,7 +201,10 @@ export function UpgradeRequestsTable() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>

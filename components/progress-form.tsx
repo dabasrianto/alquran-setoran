@@ -1,19 +1,17 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { addDoc, collection, serverTimestamp, getDocs, query } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useAuth } from "@/contexts/auth-context"
-import { QURAN_DATA } from "@/lib/quran-data"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
+import { addDoc, collection, serverTimestamp, getDocs, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/auth-context'
+import { QURAN_DATA } from '@/lib/quran-data'
 
 interface Student {
   id: string
@@ -21,10 +19,10 @@ interface Student {
 }
 
 export function ProgressForm() {
-  const [selectedStudent, setSelectedStudent] = useState("")
-  const [surah, setSurah] = useState("")
-  const [startAyat, setStartAyat] = useState("")
-  const [endAyat, setEndAyat] = useState("")
+  const [selectedStudent, setSelectedStudent] = useState('')
+  const [surah, setSurah] = useState('')
+  const [startAyat, setStartAyat] = useState('')
+  const [endAyat, setEndAyat] = useState('')
   const [loading, setLoading] = useState(false)
   const [students, setStudents] = useState<Student[]>([])
   const { toast } = useToast()
@@ -33,10 +31,10 @@ export function ProgressForm() {
   useEffect(() => {
     const fetchStudents = async () => {
       if (!currentUser) return
-      const studentsRef = collection(db, "users", currentUser.uid, "students")
+      const studentsRef = collection(db, 'users', currentUser.uid, 'students')
       const q = query(studentsRef)
       const querySnapshot = await getDocs(q)
-      const fetchedStudents: Student[] = querySnapshot.docs.map((doc) => ({
+      const fetchedStudents: Student[] = querySnapshot.docs.map(doc => ({
         id: doc.id,
         name: doc.data().name,
       }))
@@ -58,21 +56,21 @@ export function ProgressForm() {
 
     setLoading(true)
     try {
-      await addDoc(collection(db, "users", currentUser.uid, "progress"), {
+      await addDoc(collection(db, 'users', currentUser.uid, 'progress'), {
         studentId: selectedStudent,
         surah,
-        startAyat: Number.parseInt(startAyat),
-        endAyat: Number.parseInt(endAyat),
+        startAyat: parseInt(startAyat),
+        endAyat: parseInt(endAyat),
         timestamp: serverTimestamp(),
       })
       toast({
         title: "Sukses",
         description: "Progres hafalan berhasil dicatat.",
       })
-      setSelectedStudent("")
-      setSurah("")
-      setStartAyat("")
-      setEndAyat("")
+      setSelectedStudent('')
+      setSurah('')
+      setStartAyat('')
+      setEndAyat('')
     } catch (error) {
       console.error("Error adding progress:", error)
       toast({

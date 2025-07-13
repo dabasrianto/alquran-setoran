@@ -1,33 +1,31 @@
-"use client"
+'use client'
 
-import { Separator } from "@/components/ui/separator"
-
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats"
-import { UserManagement } from "@/components/admin/user-management"
-import { SubscriptionManager } from "@/components/admin/subscription-manager"
-import { AdminActionLogs } from "@/components/admin/admin-action-logs"
-import { AdminDebug } from "@/components/admin/admin-debug"
-import { FirebaseRulesSetup } from "@/components/admin/firebase-rules-setup"
-import { PricingManagement } from "@/components/admin/pricing-management"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AdminDashboardStats } from '@/components/admin/admin-dashboard-stats'
+import { UserManagement } from '@/components/admin/user-management'
+import { SubscriptionManager } from '@/components/admin/subscription-manager'
+import { AdminActionLogs } from '@/components/admin/admin-action-logs'
+import { AdminDebug } from '@/components/admin/admin-debug'
+import { FirebaseRulesSetup } from '@/components/admin/firebase-rules-setup'
+import { PricingManagement } from '@/components/admin/pricing-management'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
 export default function AdminPage() {
   const { currentUser, loading, isAdmin } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
     if (!loading) {
       if (!currentUser) {
-        router.push("/login")
+        router.push('/login')
       } else if (!isAdmin) {
-        router.push("/dashboard") // Redirect non-admins
+        router.push('/dashboard') // Redirect non-admins
       }
     }
   }, [currentUser, loading, isAdmin, router])
@@ -84,7 +82,9 @@ export default function AdminPage() {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Admin Panel</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Admin Panel
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">

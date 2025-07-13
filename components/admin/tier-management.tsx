@@ -1,23 +1,23 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Loader2, PlusCircle, Edit, Trash2, CheckCircle2, XCircle } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, PlusCircle, Edit, Trash2, CheckCircle2, XCircle } from 'lucide-react'
 import {
   createSubscriptionTier,
+  getSubscriptionTiers,
   updateSubscriptionTier,
   deleteSubscriptionTier,
-  type SubscriptionTier,
+  SubscriptionTier,
   subscribeToSubscriptionTierChanges,
-} from "@/lib/subscription-tiers"
-import { useToast } from "@/components/ui/use-toast"
+} from '@/lib/subscription-tiers'
+import { useToast } from '@/components/ui/use-toast'
 import {
   Dialog,
   DialogContent,
@@ -25,8 +25,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
 
 export function TierManagement() {
   const [tiers, setTiers] = useState<SubscriptionTier[]>([])
@@ -49,16 +50,16 @@ export function TierManagement() {
   const handleAddTier = () => {
     setCurrentTier(null)
     setFormState({
-      name: "",
-      description: "",
+      name: '',
+      description: '',
       maxStudents: 0,
       maxTeachers: 0,
       canExportPdf: false,
       hasPrioritySupport: false,
       hasCustomReports: false,
       price: 0,
-      currency: "IDR",
-      interval: "monthly",
+      currency: 'IDR',
+      interval: 'monthly',
       active: true,
     })
     setIsModalOpen(true)
@@ -71,21 +72,21 @@ export function TierManagement() {
   }
 
   const handleDeleteTier = async (tierId: string) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus tier langganan ini?")) {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus tier langganan ini?')) {
       return
     }
     try {
       await deleteSubscriptionTier(tierId)
       toast({
-        title: "Sukses",
-        description: "Tier langganan berhasil dihapus.",
+        title: 'Sukses',
+        description: 'Tier langganan berhasil dihapus.',
       })
     } catch (error) {
-      console.error("Error deleting subscription tier:", error)
+      console.error('Error deleting subscription tier:', error)
       toast({
-        title: "Error",
-        description: "Gagal menghapus tier langganan.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal menghapus tier langganan.',
+        variant: 'destructive',
       })
     }
   }
@@ -94,7 +95,7 @@ export function TierManagement() {
     const { name, value, type, checked } = e.target as HTMLInputElement
     setFormState((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === 'checkbox' ? checked : value,
     }))
   }
 
@@ -112,23 +113,23 @@ export function TierManagement() {
       if (currentTier) {
         await updateSubscriptionTier(currentTier.id, formState)
         toast({
-          title: "Sukses",
-          description: "Tier langganan berhasil diperbarui.",
+          title: 'Sukses',
+          description: 'Tier langganan berhasil diperbarui.',
         })
       } else {
         await createSubscriptionTier(formState as SubscriptionTier)
         toast({
-          title: "Sukses",
-          description: "Tier langganan baru berhasil ditambahkan.",
+          title: 'Sukses',
+          description: 'Tier langganan baru berhasil ditambahkan.',
         })
       }
       setIsModalOpen(false)
     } catch (error) {
-      console.error("Error saving subscription tier:", error)
+      console.error('Error saving subscription tier:', error)
       toast({
-        title: "Error",
-        description: "Gagal menyimpan tier langganan.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal menyimpan tier langganan.',
+        variant: 'destructive',
       })
     }
   }
@@ -165,7 +166,7 @@ export function TierManagement() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="text-4xl font-bold mb-4">
-                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: tier.currency }).format(tier.price)}
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: tier.currency }).format(tier.price)}
                     <span className="text-base text-muted-foreground font-normal">/{tier.interval}</span>
                   </div>
                   <Separator className="my-4" />
@@ -218,24 +219,30 @@ export function TierManagement() {
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{currentTier ? "Edit Tier Langganan" : "Tambah Tier Langganan Baru"}</DialogTitle>
+              <DialogTitle>{currentTier ? 'Edit Tier Langganan' : 'Tambah Tier Langganan Baru'}</DialogTitle>
               <DialogDescription>
                 {currentTier
-                  ? "Ubah detail tier langganan yang sudah ada."
-                  : "Buat tier langganan baru untuk aplikasi Anda."}
+                  ? 'Ubah detail tier langganan yang sudah ada.'
+                  : 'Buat tier langganan baru untuk aplikasi Anda.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Nama Tier</Label>
-                <Input id="name" name="name" value={formState.name || ""} onChange={handleFormChange} required />
+                <Input
+                  id="name"
+                  name="name"
+                  value={formState.name || ''}
+                  onChange={handleFormChange}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Deskripsi</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  value={formState.description || ""}
+                  value={formState.description || ''}
                   onChange={handleFormChange}
                   required
                 />
@@ -247,7 +254,7 @@ export function TierManagement() {
                     id="price"
                     name="price"
                     type="number"
-                    value={formState.price || ""}
+                    value={formState.price || ''}
                     onChange={handleNumberChange}
                     required
                   />
@@ -257,7 +264,7 @@ export function TierManagement() {
                   <Input
                     id="currency"
                     name="currency"
-                    value={formState.currency || "IDR"}
+                    value={formState.currency || 'IDR'}
                     onChange={handleFormChange}
                     required
                   />
@@ -270,7 +277,7 @@ export function TierManagement() {
                     id="maxStudents"
                     name="maxStudents"
                     type="number"
-                    value={formState.maxStudents || ""}
+                    value={formState.maxStudents || ''}
                     onChange={handleNumberChange}
                     required
                   />
@@ -281,7 +288,7 @@ export function TierManagement() {
                     id="maxTeachers"
                     name="maxTeachers"
                     type="number"
-                    value={formState.maxTeachers || ""}
+                    value={formState.maxTeachers || ''}
                     onChange={handleNumberChange}
                     required
                   />
@@ -326,7 +333,7 @@ export function TierManagement() {
               <DialogFooter>
                 <Button type="submit" disabled={loading}>
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  {currentTier ? "Simpan Perubahan" : "Tambah Tier"}
+                  {currentTier ? 'Simpan Perubahan' : 'Tambah Tier'}
                 </Button>
               </DialogFooter>
             </form>

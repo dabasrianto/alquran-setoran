@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, Users, BarChart, CheckCircle } from "lucide-react"
-import { useEffect, useState } from "react"
-import { collection, getDocs, query, where } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useAuth } from "@/contexts/auth-context"
-import { Loader2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DollarSign, Users, BarChart, CheckCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/auth-context'
+import { Loader2 } from 'lucide-react'
 
 export function AdminDashboardStats() {
   const { currentUser } = useAuth()
@@ -26,33 +26,29 @@ export function AdminDashboardStats() {
       setLoading(true)
       try {
         // Total Users
-        const usersSnapshot = await getDocs(collection(db, "users"))
+        const usersSnapshot = await getDocs(collection(db, 'users'))
         const totalUsers = usersSnapshot.size
 
         // Active Subscriptions
-        const subscriptionsSnapshot = await getDocs(
-          query(collection(db, "subscriptions"), where("status", "==", "active")),
-        )
+        const subscriptionsSnapshot = await getDocs(query(collection(db, 'subscriptions'), where('status', '==', 'active')))
         const activeSubscriptions = subscriptionsSnapshot.size
 
         // Total Students
         let totalStudents = 0
         for (const userDoc of usersSnapshot.docs) {
-          const studentsSnapshot = await getDocs(collection(db, "users", userDoc.id, "students"))
+          const studentsSnapshot = await getDocs(collection(db, 'users', userDoc.id, 'students'))
           totalStudents += studentsSnapshot.size
         }
 
         // Total Penguji
         let totalPenguji = 0
         for (const userDoc of usersSnapshot.docs) {
-          const pengujiSnapshot = await getDocs(collection(db, "users", userDoc.id, "pengujis"))
+          const pengujiSnapshot = await getDocs(collection(db, 'users', userDoc.id, 'pengujis'))
           totalPenguji += pengujiSnapshot.size
         }
 
         // Upgrade Requests
-        const upgradeRequestsSnapshot = await getDocs(
-          query(collection(db, "upgradeRequests"), where("status", "==", "pending")),
-        )
+        const upgradeRequestsSnapshot = await getDocs(query(collection(db, 'upgradeRequests'), where('status', '==', 'pending')))
         const upgradeRequests = upgradeRequestsSnapshot.size
 
         setStats({

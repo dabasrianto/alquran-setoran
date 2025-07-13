@@ -4,27 +4,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { LandingNavbar } from "@/components/landing/navbar"
-import Link from "next/link"
-import {
-  BookOpen,
-  BarChart,
-  Crown,
-  CheckCircle,
-  Star,
-  Play,
-  Shield,
-  Cloud,
-  Smartphone,
-  GraduationCap,
-  Target,
-  TrendingUp,
-} from "lucide-react"
+import Link from 'next/link'
+import { BookOpen, Users, BarChart, Crown, CheckCircle, Star, ArrowRight, Play, Shield, Cloud, Smartphone, GraduationCap, Target, TrendingUp } from 'lucide-react'
 
 export default function HeroSection() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <LandingNavbar />
-
+      
       {/* Hero Section */}
       <section id="home" className="relative overflow-hidden pt-24">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-green-600/10"></div>
@@ -34,24 +21,32 @@ export default function HeroSection() {
               <div className="bg-primary rounded-full p-3 mr-4">
                 <BookOpen className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900">Platform Pembelajaran Tasmi'</h1>
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900">
+                Platform Pembelajaran Tasmi'
+              </h1>
             </div>
-
+            
             <h2 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-4">
               Solusi Digital untuk Pembelajaran yang Lebih Efektif
             </h2>
-
+            
             <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
-              Platform pembelajaran digital terdepan untuk mengelola kelas, melacak progres murid, dan meningkatkan
-              efektivitas pembelajaran dengan teknologi modern.
+              Platform pembelajaran digital terdepan untuk mengelola kelas, melacak progres murid, 
+              dan meningkatkan efektivitas pembelajaran dengan teknologi modern.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button size="lg" className="bg-primary hover:bg-primary/90">
+              <Button 
+                size="lg" 
+                className="bg-primary hover:bg-primary/90"
+              >
                 <Play className="mr-2 h-5 w-5" />
                 Mulai Trial Gratis 14 Hari
               </Button>
-              <Button variant="outline" size="lg">
+              <Button 
+                variant="outline" 
+                size="lg"
+              >
                 <Crown className="mr-2 h-5 w-5" />
                 Upgrade ke Premium
               </Button>
@@ -80,7 +75,9 @@ export default function HeroSection() {
       <section id="features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Fitur Unggulan Platform</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Fitur Unggulan Platform
+            </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Dilengkapi dengan berbagai fitur canggih untuk mendukung pembelajaran yang efektif
             </p>
@@ -91,33 +88,33 @@ export default function HeroSection() {
               {
                 icon: GraduationCap,
                 title: "Manajemen Kelas Digital",
-                description: "Kelola kelas, murid, dan materi pembelajaran dalam satu platform terintegrasi",
+                description: "Kelola kelas, murid, dan materi pembelajaran dalam satu platform terintegrasi"
               },
               {
                 icon: TrendingUp,
                 title: "Tracking Progress Pembelajaran",
-                description: "Pantau perkembangan setiap murid dengan analitik yang detail dan real-time",
+                description: "Pantau perkembangan setiap murid dengan analitik yang detail dan real-time"
               },
               {
                 icon: Cloud,
                 title: "Resource Sharing",
-                description: "Bagikan materi pembelajaran, tugas, dan sumber belajar dengan mudah",
+                description: "Bagikan materi pembelajaran, tugas, dan sumber belajar dengan mudah"
               },
               {
                 icon: BarChart,
                 title: "Advanced Analytics",
-                description: "Dashboard analitik lengkap untuk evaluasi dan peningkatan kualitas pembelajaran",
+                description: "Dashboard analitik lengkap untuk evaluasi dan peningkatan kualitas pembelajaran"
               },
               {
                 icon: Shield,
                 title: "Keamanan Data",
-                description: "Database terenkripsi dengan backup otomatis untuk menjaga keamanan data",
+                description: "Database terenkripsi dengan backup otomatis untuk menjaga keamanan data"
               },
               {
                 icon: Smartphone,
                 title: "Mobile Responsive",
-                description: "Akses dari berbagai perangkat dengan tampilan yang optimal",
-              },
+                description: "Akses dari berbagai perangkat dengan tampilan yang optimal"
+              }
             ].map((feature, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
@@ -139,8 +136,12 @@ export default function HeroSection() {
       <section id="pricing" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Pilih Paket yang Sesuai</h2>
-            <p className="text-lg text-gray-600">Mulai dengan trial gratis 14 hari, upgrade sesuai kebutuhan</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Pilih Paket yang Sesuai
+            </h2>
+            <p className="text-lg text-gray-600">
+              Mulai dengan trial gratis 14 hari, upgrade sesuai kebutuhan
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -163,7 +164,7 @@ export default function HeroSection() {
                     "Akses semua fitur dasar",
                     "Dukungan teknis",
                     "Manajemen kelas digital",
-                    "Tracking progress pembelajaran",
+                    "Tracking progress pembelajaran"
                   ].map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -171,14 +172,18 @@ export default function HeroSection() {
                     </div>
                   ))}
                 </div>
-                <Button className="w-full">Mulai Trial Gratis</Button>
+                <Button className="w-full">
+                  Mulai Trial Gratis
+                </Button>
               </CardContent>
             </Card>
 
             {/* Premium Plan */}
             <Card className="border-2 border-amber-200 bg-amber-50 relative">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-amber-600 text-white px-4 py-1">Rekomendasi</Badge>
+                <Badge className="bg-amber-600 text-white px-4 py-1">
+                  Rekomendasi
+                </Badge>
               </div>
               <CardHeader className="text-center">
                 <div className="bg-amber-100 text-amber-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -198,7 +203,7 @@ export default function HeroSection() {
                     "Semua fitur premium",
                     "Resource sharing",
                     "Advanced analytics",
-                    "Export data",
+                    "Export data"
                   ].map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -233,7 +238,7 @@ export default function HeroSection() {
                     "Semua fitur premium",
                     "Priority support",
                     "Export data",
-                    "Untuk 1 nama lembaga",
+                    "Untuk 1 nama lembaga"
                   ].map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -254,7 +259,9 @@ export default function HeroSection() {
       {/* CTA Section */}
       <section id="cta" className="py-16 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-4">Siap Meningkatkan Kualitas Pembelajaran?</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Siap Meningkatkan Kualitas Pembelajaran?
+          </h2>
           <p className="text-xl mb-8 opacity-90">
             Bergabunglah dengan ribuan ustadz dan ustadzah yang telah merasakan manfaatnya. Trial gratis 7 hari!
           </p>
@@ -262,11 +269,7 @@ export default function HeroSection() {
             <Button asChild className="bg-primary-foreground text-primary hover:bg-gray-200">
               <Link href="/register">Mulai Gratis</Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary bg-transparent"
-            >
+            <Button asChild variant="outline" className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary">
               <Link href="/panduan">Pelajari Lebih Lanjut</Link>
             </Button>
           </div>

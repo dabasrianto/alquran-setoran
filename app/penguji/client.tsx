@@ -1,24 +1,22 @@
-"use client"
+'use client'
 
-import { Separator } from "@/components/ui/separator"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PengujiForm } from "@/components/penguji-form"
-import { PengujiList } from "@/components/penguji-list"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PengujiForm } from '@/components/penguji-form'
+import { PengujiList } from '@/components/penguji-list'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 export default function PengujiClient() {
   const { currentUser, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("list")
+  const [activeTab, setActiveTab] = useState('list')
 
   useEffect(() => {
     if (!loading && !currentUser) {
-      router.push("/login")
+      router.push('/login')
     }
   }, [currentUser, loading, router])
 
@@ -54,7 +52,9 @@ export default function PengujiClient() {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Manajemen Penguji</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Manajemen Penguji
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">

@@ -1,25 +1,25 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/hooks/use-subscription"
-import { useEffect, useState } from "react"
-import { collection, getDocs } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { Loader2 } from "lucide-react"
-import { type PricingPlan, getPricingPlans } from "@/lib/firebase-pricing"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/contexts/auth-context'
+import { useSubscription } from '@/hooks/use-subscription'
+import { useEffect, useState } from 'react'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { Loader2 } from 'lucide-react'
+import { PricingPlan, getPricingPlans } from '@/lib/firebase-pricing'
 import { GradientStatCard } from "@/components/ui/gradient-stat-card"
-import { Button } from "@/components/ui/button"
-import { Link } from "next/link"
-import { CheckCircle2 } from "lucide-react"
+import { Button } from '@/components/ui/button'
+import { Link } from 'next/link'
+import { CheckCircle2 } from 'lucide-react'
 
 // Generate sample data for the charts
 const generateChartData = (points: number, trend: "up" | "down" | "volatile") => {
   const data = []
   let value = trend === "up" ? 10 : 100
-
+  
   for (let i = 0; i < points; i++) {
     if (trend === "up") {
       value += Math.random() * 10
@@ -31,13 +31,13 @@ const generateChartData = (points: number, trend: "up" | "down" | "volatile") =>
       value += (Math.random() - 0.5) * 20
       value = Math.max(value, 5) // Ensure we don't go below 5
     }
-
+    
     data.push({
       name: `Day ${i + 1}`,
-      value: Math.round(value),
+      value: Math.round(value)
     })
   }
-
+  
   return data
 }
 
@@ -62,10 +62,10 @@ export function UserStats() {
 
       setLoadingCounts(true)
       try {
-        const studentsSnapshot = await getDocs(collection(db, "users", currentUser.uid, "students"))
+        const studentsSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'students'))
         setStudentCount(studentsSnapshot.size)
 
-        const pengujiSnapshot = await getDocs(collection(db, "users", currentUser.uid, "pengujis"))
+        const pengujiSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'pengujis'))
         setPengujiCount(pengujiSnapshot.size)
       } catch (error) {
         console.error("Error fetching user specific counts:", error)
@@ -93,13 +93,13 @@ export function UserStats() {
     )
   }
 
-  const currentPlan = pricingPlans.find((plan) => plan.id === userSubscription?.tier)
+  const currentPlan = pricingPlans.find(plan => plan.id === userSubscription?.tier)
 
-  const maxStudents = currentPlan?.maxStudents === null ? Number.POSITIVE_INFINITY : currentPlan?.maxStudents || 0
-  const maxTeachers = currentPlan?.maxTeachers === null ? Number.POSITIVE_INFINITY : currentPlan?.maxTeachers || 0
+  const maxStudents = currentPlan?.maxStudents === null ? Infinity : currentPlan?.maxStudents || 0
+  const maxTeachers = currentPlan?.maxTeachers === null ? Infinity : currentPlan?.maxTeachers || 0
 
-  const studentProgress = maxStudents === Number.POSITIVE_INFINITY ? 100 : (studentCount / maxStudents) * 100
-  const pengujiProgress = maxTeachers === Number.POSITIVE_INFINITY ? 100 : (pengujiCount / maxTeachers) * 100
+  const studentProgress = maxStudents === Infinity ? 100 : (studentCount / maxStudents) * 100
+  const pengujiProgress = maxTeachers === Infinity ? 100 : (pengujiCount / maxTeachers) * 100
 
   return (
     <div className="space-y-6">
@@ -111,11 +111,9 @@ export function UserStats() {
               <CardTitle className="text-sm font-medium">Paket Aktif</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{currentPlan?.name || "Gratis"}</div>
+              <div className="text-2xl font-bold">{currentPlan?.name || 'Gratis'}</div>
               <p className="text-xs text-muted-foreground">
-                {userSubscription?.status === "active"
-                  ? `Berakhir: ${userSubscription.endDate?.toLocaleDateString()}`
-                  : "Tidak Aktif"}
+                {userSubscription?.status === 'active' ? `Berakhir: ${userSubscription.endDate?.toLocaleDateString()}` : 'Tidak Aktif'}
               </p>
             </CardContent>
           </Card>
@@ -125,7 +123,7 @@ export function UserStats() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {studentCount} / {maxStudents === Number.POSITIVE_INFINITY ? "∞" : maxStudents}
+                {studentCount} / {maxStudents === Infinity ? '∞' : maxStudents}
               </div>
               <Progress value={studentProgress} className="mt-2" />
               <p className="text-xs text-muted-foreground">Penggunaan santri</p>
@@ -137,7 +135,7 @@ export function UserStats() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {pengujiCount} / {maxTeachers === Number.POSITIVE_INFINITY ? "∞" : maxTeachers}
+                {pengujiCount} / {maxTeachers === Infinity ? '∞' : maxTeachers}
               </div>
               <Progress value={pengujiProgress} className="mt-2" />
               <p className="text-xs text-muted-foreground">Penggunaan penguji</p>
@@ -176,9 +174,27 @@ export function UserStats() {
           data={studentsData}
           color="purple"
         />
-        <GradientStatCard title="Total Ayat Dihafal" value="1,240" change={8} data={setoranData} color="blue" />
-        <GradientStatCard title="Surat Selesai" value="7" change={5} data={completedSurahData} color="green" />
-        <GradientStatCard title="Juz Selesai" value="2" change={0} data={completedJuzData} color="amber" />
+        <GradientStatCard
+          title="Total Ayat Dihafal"
+          value="1,240"
+          change={8}
+          data={setoranData}
+          color="blue"
+        />
+        <GradientStatCard
+          title="Surat Selesai"
+          value="7"
+          change={5}
+          data={completedSurahData}
+          color="green"
+        />
+        <GradientStatCard
+          title="Juz Selesai"
+          value="2"
+          change={0}
+          data={completedJuzData}
+          color="amber"
+        />
       </div>
     </div>
   )

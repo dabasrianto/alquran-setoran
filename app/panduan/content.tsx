@@ -1,7 +1,10 @@
 "use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from '@/components/ui/separator'
+import { InfoIcon, Edit, Trash2, ChevronDown, Crown, Users } from 'lucide-react'
 
 export default function PanduanContent() {
   return (
@@ -15,8 +18,7 @@ export default function PanduanContent() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Selamat datang di aplikasi Tasmi! Panduan ini akan membantu Anda memahami dan menggunakan semua fitur
-                  yang tersedia.
+                  Selamat datang di aplikasi Tasmi! Panduan ini akan membantu Anda memahami dan menggunakan semua fitur yang tersedia.
                 </p>
                 <Separator className="my-4" />
                 <Accordion type="single" collapsible className="w-full">
@@ -24,8 +26,8 @@ export default function PanduanContent() {
                     <AccordionTrigger>1. Memulai dan Login</AccordionTrigger>
                     <AccordionContent>
                       <p>
-                        Untuk memulai, Anda perlu mendaftar akun atau login jika sudah memiliki akun. Gunakan email dan
-                        kata sandi Anda. Jika Anda adalah admin, Anda akan memiliki akses ke fitur tambahan.
+                        Untuk memulai, Anda perlu mendaftar akun atau login jika sudah memiliki akun.
+                        Gunakan email dan kata sandi Anda. Jika Anda adalah admin, Anda akan memiliki akses ke fitur tambahan.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -49,9 +51,8 @@ export default function PanduanContent() {
                     <AccordionTrigger>3. Mengelola Santri</AccordionTrigger>
                     <AccordionContent>
                       <p>
-                        Di tab "Santri", Anda bisa menambah santri baru dengan mengisi nama, tanggal lahir, dan
-                        informasi lainnya. Anda juga bisa mengedit detail santri yang sudah ada atau menghapus mereka
-                        dari daftar.
+                        Di tab "Santri", Anda bisa menambah santri baru dengan mengisi nama, tanggal lahir, dan informasi lainnya.
+                        Anda juga bisa mengedit detail santri yang sudah ada atau menghapus mereka dari daftar.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -59,9 +60,8 @@ export default function PanduanContent() {
                     <AccordionTrigger>4. Mencatat Setoran Tasmi</AccordionTrigger>
                     <AccordionContent>
                       <p>
-                        Pilih tab "Setoran" untuk mencatat setoran tasmi. Pilih santri, penguji, tanggal, jenis setoran
-                        (baru/murajaah), surat, ayat awal, ayat akhir, dan nilai. Ini akan membantu melacak progres
-                        hafalan.
+                        Pilih tab "Setoran" untuk mencatat setoran tasmi. Pilih santri, penguji, tanggal, jenis setoran (baru/murajaah),
+                        surat, ayat awal, ayat akhir, dan nilai. Ini akan membantu melacak progres hafalan.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -78,16 +78,18 @@ export default function PanduanContent() {
                     <AccordionTrigger>6. Fitur Premium dan Upgrade</AccordionTrigger>
                     <AccordionContent>
                       <p>
-                        Aplikasi ini menawarkan berbagai paket langganan dengan fitur yang berbeda. Anda bisa melihat
-                        detail paket di halaman "Paket & Harga" di dashboard Anda. Untuk upgrade, ikuti petunjuk di
-                        halaman tersebut.
+                        Aplikasi ini menawarkan berbagai paket langganan dengan fitur yang berbeda.
+                        Anda bisa melihat detail paket di halaman "Paket & Harga" di dashboard Anda.
+                        Untuk upgrade, ikuti petunjuk di halaman tersebut.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-7">
                     <AccordionTrigger>7. Panel Admin (Khusus Admin)</AccordionTrigger>
                     <AccordionContent>
-                      <p>Jika Anda adalah admin, Anda memiliki akses ke panel admin. Di sini Anda bisa:</p>
+                      <p>
+                        Jika Anda adalah admin, Anda memiliki akses ke panel admin. Di sini Anda bisa:
+                      </p>
                       <ul className="list-disc pl-5 mt-2 text-muted-foreground">
                         <li>Mengelola Pengguna: Melihat, mengedit peran, dan menghapus pengguna.</li>
                         <li>Mengelola Langganan: Melihat status langganan, menyetujui permintaan upgrade.</li>
@@ -102,8 +104,8 @@ export default function PanduanContent() {
                     <AccordionTrigger>8. Bantuan dan Dukungan</AccordionTrigger>
                     <AccordionContent>
                       <p>
-                        Jika Anda mengalami masalah atau memiliki pertanyaan, jangan ragu untuk menghubungi tim dukungan
-                        kami. Kami siap membantu Anda!
+                        Jika Anda mengalami masalah atau memiliki pertanyaan, jangan ragu untuk menghubungi tim dukungan kami.
+                        Kami siap membantu Anda!
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -115,7 +117,9 @@ export default function PanduanContent() {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Informasi Tambahan</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Informasi Tambahan
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">

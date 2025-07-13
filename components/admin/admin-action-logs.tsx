@@ -1,22 +1,16 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Loader2 } from "lucide-react"
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { format } from "date-fns"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Loader2 } from 'lucide-react'
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { format } from 'date-fns'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 interface AdminLog {
   id: string
@@ -31,38 +25,33 @@ export function AdminActionLogs() {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [logsPerPage] = useState(10)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     setLoading(true)
-    const logsRef = collection(db, "adminLogs")
-    const q = query(logsRef, orderBy("timestamp", "desc"))
+    const logsRef = collection(db, 'adminLogs')
+    const q = query(logsRef, orderBy('timestamp', 'desc'))
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedLogs: AdminLog[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp.toDate(),
-        })) as AdminLog[]
-        setLogs(fetchedLogs)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching admin logs:", error)
-        setLoading(false)
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedLogs: AdminLog[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp.toDate(),
+      })) as AdminLog[]
+      setLogs(fetchedLogs)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching admin logs:", error)
+      setLoading(false)
+    })
 
     return () => unsubscribe()
   }, [])
 
-  const filteredLogs = logs.filter(
-    (log) =>
-      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredLogs = logs.filter(log =>
+    log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    log.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const indexOfLastLog = currentPage * logsPerPage
@@ -111,14 +100,12 @@ export function AdminActionLogs() {
           <TableBody>
             {currentLogs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  Tidak ada log aktivitas ditemukan.
-                </TableCell>
+                <TableCell colSpan={4} className="text-center">Tidak ada log aktivitas ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentLogs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell>{format(log.timestamp, "dd MMM yyyy HH:mm:ss")}</TableCell>
+                  <TableCell>{format(log.timestamp, 'dd MMM yyyy HH:mm:ss')}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{log.action}</Badge>
                   </TableCell>
@@ -138,7 +125,10 @@ export function AdminActionLogs() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>

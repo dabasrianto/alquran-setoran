@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
-import { Copy, CheckCircle2 } from "lucide-react"
-import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/use-toast'
+import { Copy, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
 
 const firestoreRules = `
 rules_version = '2';
@@ -190,15 +190,19 @@ export function FirebaseRulesSetup() {
       </CardHeader>
       <CardContent className="space-y-6">
         <p className="text-muted-foreground">
-          Aturan di bawah ini mengontrol akses ke database Firestore Anda. Pastikan Anda memahami setiap aturan sebelum
-          menerapkannya. Aturan ini memungkinkan akses baca publik ke koleksi `pricing` dan `subscriptionTiers` untuk
-          menampilkan harga di landing page dan dashboard pengguna. Akses tulis ke koleksi ini hanya diizinkan untuk
-          admin.
+          Aturan di bawah ini mengontrol akses ke database Firestore Anda. Pastikan Anda memahami setiap aturan sebelum menerapkannya.
+          Aturan ini memungkinkan akses baca publik ke koleksi `pricing` dan `subscriptionTiers` untuk menampilkan harga di landing page dan dashboard pengguna.
+          Akses tulis ke koleksi ini hanya diizinkan untuk admin.
         </p>
 
         <div className="relative rounded-md bg-muted p-4 font-mono text-sm overflow-auto max-h-[400px]">
           <pre>{firestoreRules}</pre>
-          <Button size="sm" variant="ghost" className="absolute top-2 right-2" onClick={handleCopyRules}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="absolute top-2 right-2"
+            onClick={handleCopyRules}
+          >
             {copySuccess ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             <span className="sr-only">Copy rules</span>
           </Button>
@@ -208,30 +212,19 @@ export function FirebaseRulesSetup() {
           <h3 className="font-semibold">Cara Menerapkan Aturan:</h3>
           <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
             <li>Pastikan Anda telah menginstal Firebase CLI (`npm install -g firebase-tools`).</li>
-            <li>
-              Login ke Firebase di terminal Anda:{" "}
-              <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
-                firebase login
-              </code>
-            </li>
-            <li>
-              Pilih proyek Firebase Anda:{" "}
-              <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
-                firebase use --add
-              </code>
-            </li>
-            <li>
-              Salin aturan di atas ke file{" "}
-              <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
-                firestore.rules
-              </code>{" "}
-              di root proyek Anda.
-            </li>
+            <li>Login ke Firebase di terminal Anda: <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">firebase login</code></li>
+            <li>Pilih proyek Firebase Anda: <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">firebase use --add</code></li>
+            <li>Salin aturan di atas ke file <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">firestore.rules</code> di root proyek Anda.</li>
             <li>Jalankan perintah deploy:</li>
           </ol>
           <div className="relative rounded-md bg-muted p-4 font-mono text-sm">
             <pre>{deployCommand}</pre>
-            <Button size="sm" variant="ghost" className="absolute top-2 right-2" onClick={handleCopyCommand}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="absolute top-2 right-2"
+              onClick={handleCopyCommand}
+            >
               {copySuccess ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
               <span className="sr-only">Copy command</span>
             </Button>

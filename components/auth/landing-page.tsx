@@ -1,9 +1,12 @@
-"use client"
-import { useAuth } from "@/contexts/auth-context"
-import { Loader2 } from "lucide-react"
-import { LandingNavbar } from "@/components/landing/navbar"
-import { HeroSection } from "@/components/landing/hero-section"
-import { PricingSection } from "@/components/landing/pricing-section"
+'use client'
+
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/auth-context'
+import { Loader2 } from 'lucide-react'
+import { LandingNavbar } from '@/components/landing/navbar'
+import { HeroSection } from '@/components/landing/hero-section'
+import { PricingSection } from '@/components/landing/pricing-section'
 
 export function LandingPage() {
   const { currentUser, loading } = useAuth()
@@ -24,7 +27,9 @@ export function LandingPage() {
         <PricingSection />
       </main>
       <footer className="bg-gray-100 p-4 text-center dark:bg-gray-800">
-        <p className="text-sm text-gray-600 dark:text-gray-400">&copy; 2023 Tasmi App. All rights reserved.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          &copy; 2023 Tasmi App. All rights reserved.
+        </p>
       </footer>
     </div>
   )

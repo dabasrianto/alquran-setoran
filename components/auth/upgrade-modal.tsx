@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   Dialog,
@@ -7,14 +7,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
-import { useState } from "react"
-import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { createUpgradeRequest } from "@/lib/firebase-subscription"
-import type { SubscriptionTierInfo } from "@/lib/types"
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/contexts/auth-context'
+import { createUpgradeRequest } from '@/lib/firebase-subscription'
+import { SubscriptionTierInfo } from '@/lib/types'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -63,8 +63,8 @@ export function UpgradeModal({ isOpen, onClose, tier }: UpgradeModalProps) {
         <DialogHeader>
           <DialogTitle>Konfirmasi Upgrade ke {tier.name}</DialogTitle>
           <DialogDescription>
-            Anda akan mengupgrade ke paket **{tier.name}** dengan harga **{tier.price} {tier.currency}/
-            {tier.billingPeriod}**. Fitur yang akan Anda dapatkan:
+            Anda akan mengupgrade ke paket **{tier.name}** dengan harga **{tier.price} {tier.currency}/{tier.billingPeriod}**.
+            Fitur yang akan Anda dapatkan:
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -76,9 +76,9 @@ export function UpgradeModal({ isOpen, onClose, tier }: UpgradeModalProps) {
             {tier.features.apiAccess && <li>Akses API</li>}
             {tier.features.advancedAnalytics && <li>Analitik Lanjutan</li>}
             {tier.features.bulkImport && <li>Impor Massal</li>}
-            <li>Maksimal {tier.features.maxStudents === -1 ? "Tidak Terbatas" : tier.features.maxStudents} Santri</li>
-            <li>Maksimal {tier.features.maxUstadz === -1 ? "Tidak Terbatas" : tier.features.maxUstadz} Ustadz</li>
-            <li>Maksimal {tier.features.maxUstadzah === -1 ? "Tidak Terbatas" : tier.features.maxUstadzah} Ustadzah</li>
+            <li>Maksimal {tier.features.maxStudents === -1 ? 'Tidak Terbatas' : tier.features.maxStudents} Santri</li>
+            <li>Maksimal {tier.features.maxUstadz === -1 ? 'Tidak Terbatas' : tier.features.maxUstadz} Ustadz</li>
+            <li>Maksimal {tier.features.maxUstadzah === -1 ? 'Tidak Terbatas' : tier.features.maxUstadzah} Ustadzah</li>
           </ul>
           <p className="text-sm text-red-500">
             **Catatan**: Ini adalah permintaan upgrade. Anda akan dihubungi untuk proses pembayaran lebih lanjut.

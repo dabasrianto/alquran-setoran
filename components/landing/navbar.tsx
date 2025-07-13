@@ -13,11 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
-import { Crown, LogOut, User, BookOpen, BarChart, Users, Shield } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu } from "lucide-react"
-import { UserMenu } from "@/components/auth/user-menu"
-import Image from "next/image"
+import { Crown, LogOut, User, BookOpen, BarChart, Users, Shield } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Menu } from 'lucide-react'
+import { UserMenu } from '@/components/auth/user-menu'
+import Image from 'next/image'
 
 export function LandingNavbar() {
   const { user, userProfile, signOut, isAdmin } = useAuth()
@@ -181,12 +181,7 @@ export function LandingNavbar() {
               stroke="currentColor"
             >
               {mobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12M6 12l12-12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12M6 12l12-12" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               )}
@@ -249,7 +244,7 @@ export function LandingNavbar() {
       {/* Sheet for Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="md:hidden bg-transparent">
+          <Button variant="outline" size="icon" className="md:hidden">
             <Menu className="h-6 w-6" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>

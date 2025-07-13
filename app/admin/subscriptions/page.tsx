@@ -1,28 +1,26 @@
-"use client"
+'use client'
 
-import { Separator } from "@/components/ui/separator"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SubscriptionManager } from "@/components/admin/subscription-manager"
-import { UpgradeRequestsTable } from "@/components/admin/upgrade-requests-table"
-import { PaymentManagement } from "@/components/admin/payment-management"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { SubscriptionManager } from '@/components/admin/subscription-manager'
+import { UpgradeRequestsTable } from '@/components/admin/upgrade-requests-table'
+import { PaymentManagement } from '@/components/admin/payment-management'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 export default function AdminSubscriptionsPage() {
   const { currentUser, loading, isAdmin } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("subscriptions")
+  const [activeTab, setActiveTab] = useState('subscriptions')
 
   useEffect(() => {
     if (!loading) {
       if (!currentUser) {
-        router.push("/login")
+        router.push('/login')
       } else if (!isAdmin) {
-        router.push("/dashboard") // Redirect non-admins
+        router.push('/dashboard') // Redirect non-admins
       }
     }
   }, [currentUser, loading, isAdmin, router])
@@ -63,7 +61,9 @@ export default function AdminSubscriptionsPage() {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Manajemen Langganan</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Manajemen Langganan
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">

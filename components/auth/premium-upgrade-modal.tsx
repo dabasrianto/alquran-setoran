@@ -1,12 +1,8 @@
 "use client"
 
-import { DialogTrigger } from "@/components/ui/dialog"
-
-import type React from "react"
-
 import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from '@/components/ui/use-toast'
 import {
   Dialog,
   DialogContent,
@@ -19,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Crown, Check, CreditCard, Smartphone, Building, QrCode, Info, Loader2, CheckCircle } from "lucide-react"
+import { Crown, Check, CreditCard, Smartphone, Building, QrCode, Info, Loader2, CheckCircle } from 'lucide-react'
 import { SUBSCRIPTION_TIERS, formatPrice, getTierFeaturesList, calculateYearlyPrice } from "@/lib/subscription-tiers"
 import { createUpgradeRequest } from "@/lib/firebase-premium"
 import type { SubscriptionTier, PricingPlan } from "@/lib/types"
@@ -29,16 +25,10 @@ interface PremiumUpgradeModalProps {
   isOpen: boolean
   onClose: () => void
   plan: PricingPlan
-  billingPeriod: "monthly" | "yearly"
+  billingPeriod: 'monthly' | 'yearly'
 }
 
-export default function PremiumUpgradeModal({
-  children,
-  isOpen,
-  onClose,
-  plan,
-  billingPeriod,
-}: PremiumUpgradeModalProps) {
+export default function PremiumUpgradeModal({ children, isOpen, onClose, plan, billingPeriod }: PremiumUpgradeModalProps) {
   const { user, userProfile } = useAuth()
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>("premium")
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
@@ -48,8 +38,8 @@ export default function PremiumUpgradeModal({
   const { toast } = useToast()
 
   const currentTier = (userProfile?.subscriptionType as SubscriptionTier) || "basic"
-  const availableTiers = Object.values(SUBSCRIPTION_TIERS).filter(
-    (tier) => tier.id !== currentTier && tier.price > SUBSCRIPTION_TIERS[currentTier].price,
+  const availableTiers = Object.values(SUBSCRIPTION_TIERS).filter(tier => 
+    tier.id !== currentTier && tier.price > SUBSCRIPTION_TIERS[currentTier].price
   )
 
   const selectedTierInfo = SUBSCRIPTION_TIERS[selectedTier]
@@ -100,7 +90,7 @@ export default function PremiumUpgradeModal({
     setError(null)
 
     try {
-      const priceToPay = billingPeriod === "monthly" ? plan.price : plan.yearlyPrice || calculateYearlyPrice(plan.price)
+      const priceToPay = billingPeriod === 'monthly' ? plan.price : (plan.yearlyPrice || calculateYearlyPrice(plan.price));
 
       await createUpgradeRequest(
         user.uid,
@@ -108,7 +98,7 @@ export default function PremiumUpgradeModal({
         userProfile.displayName || user.email!,
         currentTier,
         selectedTier,
-        priceToPay,
+        priceToPay
       )
 
       toast({
@@ -167,8 +157,8 @@ export default function PremiumUpgradeModal({
             <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Request Upgrade Berhasil!</h3>
             <p className="text-muted-foreground mb-6">
-              Request upgrade Anda telah dikirim dan sedang diproses oleh admin. Anda akan menerima notifikasi melalui
-              email setelah request disetujui.
+              Request upgrade Anda telah dikirim dan sedang diproses oleh admin. 
+              Anda akan menerima notifikasi melalui email setelah request disetujui.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <h4 className="font-medium text-blue-800 mb-2">Langkah Selanjutnya:</h4>
@@ -179,7 +169,9 @@ export default function PremiumUpgradeModal({
                 <li>4. Akun akan otomatis upgrade setelah pembayaran dikonfirmasi</li>
               </ol>
             </div>
-            <Button onClick={onClose}>Tutup</Button>
+            <Button onClick={onClose}>
+              Tutup
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -191,16 +183,16 @@ export default function PremiumUpgradeModal({
                   <CardDescription>{SUBSCRIPTION_TIERS[currentTier].description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="text-2xl font-bold">{formatPrice(SUBSCRIPTION_TIERS[currentTier].price)}</div>
+                  <div className="text-2xl font-bold">
+                    {formatPrice(SUBSCRIPTION_TIERS[currentTier].price)}
+                  </div>
                   <div className="space-y-1">
-                    {getTierFeaturesList(SUBSCRIPTION_TIERS[currentTier])
-                      .slice(0, 3)
-                      .map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <Check className="h-4 w-4 text-green-600" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
+                    {getTierFeaturesList(SUBSCRIPTION_TIERS[currentTier]).slice(0, 3).map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -214,24 +206,28 @@ export default function PremiumUpgradeModal({
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="text-2xl font-bold text-amber-600">{formatPrice(plan.price, plan.currency)}</div>
+                  <div className="text-2xl font-bold text-amber-600">
+                    {formatPrice(plan.price, plan.currency)}
+                  </div>
                   <div className="space-y-1">
                     {(plan.features || []).map((feature, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-green-600" />
-                        <span className={feature.includes("Unlimited") ? "font-semibold" : ""}>{feature}</span>
+                        <span className={feature.includes("Unlimited") ? "font-semibold" : ""}>
+                          {feature}
+                        </span>
                       </div>
                     ))}
                     {plan.maxStudents !== undefined && (
                       <div className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-green-600" />
-                        <span>Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri</span>
+                        <span>Maksimal {plan.maxStudents === null ? 'Tidak Terbatas' : plan.maxStudents} Santri</span>
                       </div>
                     )}
                     {plan.maxTeachers !== undefined && (
                       <div className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-green-600" />
-                        <span>Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji</span>
+                        <span>Maksimal {plan.maxTeachers === null ? 'Tidak Terbatas' : plan.maxTeachers} Penguji</span>
                       </div>
                     )}
                   </div>
@@ -245,10 +241,12 @@ export default function PremiumUpgradeModal({
                 <h3 className="text-lg font-semibold mb-4">Pilih Paket Upgrade</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {availableTiers.map((tier) => (
-                    <Card
-                      key={tier.id}
+                    <Card 
+                      key={tier.id} 
                       className={`cursor-pointer transition-all ${
-                        selectedTier === tier.id ? "border-amber-500 bg-amber-50" : "hover:border-amber-300"
+                        selectedTier === tier.id
+                          ? "border-amber-500 bg-amber-50"
+                          : "hover:border-amber-300"
                       }`}
                       onClick={() => setSelectedTier(tier.id)}
                     >
@@ -257,12 +255,18 @@ export default function PremiumUpgradeModal({
                           <Crown className="h-6 w-6 text-amber-600" />
                         </div>
                         <h4 className="font-medium">{tier.name}</h4>
-                        <div className="text-xl font-bold text-amber-600 mt-2">{formatPrice(tier.price)}</div>
+                        <div className="text-xl font-bold text-amber-600 mt-2">
+                          {formatPrice(tier.price)}
+                        </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           per {tier.billingPeriod === "monthly" ? "bulan" : "tahun"}
                         </p>
-                        {tier.popular && <Badge className="mt-2 bg-blue-100 text-blue-800">Popular</Badge>}
-                        {tier.recommended && <Badge className="mt-2 bg-amber-100 text-amber-800">Recommended</Badge>}
+                        {tier.popular && (
+                          <Badge className="mt-2 bg-blue-100 text-blue-800">Popular</Badge>
+                        )}
+                        {tier.recommended && (
+                          <Badge className="mt-2 bg-amber-100 text-amber-800">Recommended</Badge>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -311,14 +315,19 @@ export default function PremiumUpgradeModal({
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                <strong>Proses Upgrade:</strong> Setelah Anda submit request, admin akan review dan mengirimkan link
-                pembayaran dalam 1-2 hari kerja. Akun akan otomatis upgrade setelah pembayaran dikonfirmasi.
+                <strong>Proses Upgrade:</strong> Setelah Anda submit request, admin akan review dan mengirimkan 
+                link pembayaran dalam 1-2 hari kerja. Akun akan otomatis upgrade setelah pembayaran dikonfirmasi.
               </AlertDescription>
             </Alert>
 
             {/* Action Buttons */}
             <DialogFooter>
-              <Button onClick={handleUpgrade} disabled={!selectedMethod || loading} className="flex-1" size="lg">
+              <Button 
+                onClick={handleUpgrade} 
+                disabled={!selectedMethod || loading} 
+                className="flex-1" 
+                size="lg"
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

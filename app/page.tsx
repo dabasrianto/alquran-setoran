@@ -3,7 +3,7 @@
 import TasmiApp from "@/components/tasmi-app"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BarChart, Users, BookOpen, Shield } from "lucide-react"
+import { BarChart, Users, BookOpen, Shield } from 'lucide-react'
 import { useAuth } from "@/contexts/auth-context"
 import LandingPage from "@/components/auth/landing-page"
 import SubscriptionBanner from "@/components/auth/subscription-banner"

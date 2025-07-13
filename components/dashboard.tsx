@@ -1,23 +1,40 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+} from "recharts"
 import type { Student } from "@/lib/types"
 import { calculateStudentSummary } from "@/lib/utils"
 import { quranData } from "@/lib/quran-data"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { UserDashboardStats } from "@/components/dashboard/user-stats"
 import dynamic from "next/dynamic"
-import { OverallStats } from "@/components/overall-stats"
-import { StudentList } from "@/components/student-list"
-import { PengujiList } from "@/components/penguji-list"
-import { SetoranHistory } from "@/components/setoran-history"
-import { StudentProgress } from "@/components/student-progress"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
-import UserStats from "@/components/dashboard/user-stats" // Import UserStats component
+import { OverallStats } from '@/components/overall-stats'
+import { StudentList } from '@/components/student-list'
+import { PengujiList } from '@/components/penguji-list'
+import { SetoranHistory } from '@/components/setoran-history'
+import { StudentProgress } from '@/components/student-progress'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { Separator } from '@/components/ui/separator'
+import UserStats from '@/components/dashboard/user-stats' // Import UserStats component
 
 interface DashboardProps {
   students: Student[]
@@ -25,20 +42,20 @@ interface DashboardProps {
 
 // Dynamically import Recharts components with SSR disabled
 const DynamicUserDashboardStats = dynamic(
-  () => import("@/components/dashboard/user-stats").then((mod) => mod.UserDashboardStats),
-  { ssr: false },
+  () => import("@/components/dashboard/user-stats").then(mod => mod.UserDashboardStats),
+  { ssr: false }
 )
 
 export default function Dashboard({ students }: DashboardProps) {
   const { currentUser, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState('overview')
   const [filterKelas, setFilterKelas] = useState("all")
   const isMobile = useMediaQuery("(max-width: 768px)")
 
   useEffect(() => {
     if (!loading && !currentUser) {
-      router.push("/login")
+      router.push('/login')
     }
   }, [currentUser, loading, router])
 
@@ -167,7 +184,9 @@ export default function Dashboard({ students }: DashboardProps) {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Dashboard Pengguna</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Dashboard Pengguna
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">
@@ -175,7 +194,9 @@ export default function Dashboard({ students }: DashboardProps) {
                   <div className="font-semibold">Selamat datang, {currentUser.email}!</div>
                   <ul className="grid gap-3">
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Gunakan tab di atas untuk mengelola data Anda.</span>
+                      <span className="text-muted-foreground">
+                        Gunakan tab di atas untuk mengelola data Anda.
+                      </span>
                     </li>
                   </ul>
                 </div>

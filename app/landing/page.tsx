@@ -1,6 +1,6 @@
-import { LandingNavbar } from "@/components/landing/navbar"
-import { HeroSection } from "@/components/landing/hero-section"
-import { PricingSection } from "@/components/landing/pricing-section"
+import { LandingNavbar } from '@/components/landing/navbar'
+import { HeroSection } from '@/components/landing/hero-section'
+import { PricingSection } from '@/components/landing/pricing-section'
 
 export default function LandingPage() {
   return (

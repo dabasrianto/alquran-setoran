@@ -1,19 +1,12 @@
-"use client"
+'use client'
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
-import Link from "next/link"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 export function UserMenu() {
   const { currentUser, logout, loading, isAdmin } = useAuth()
@@ -22,7 +15,7 @@ export function UserMenu() {
   const handleLogout = async () => {
     try {
       await logout()
-      router.push("/login")
+      router.push('/login')
     } catch (error) {
       console.error("Error logging out:", error)
     }
@@ -44,7 +37,7 @@ export function UserMenu() {
     )
   }
 
-  const userInitial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : "U"
+  const userInitial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'
 
   return (
     <DropdownMenu>

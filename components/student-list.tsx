@@ -1,37 +1,22 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Loader2, Edit, Trash2 } from "lucide-react"
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { Input } from "@/components/ui/input"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { format } from "date-fns"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Loader2, Edit, Trash2 } from 'lucide-react'
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/contexts/auth-context'
+import { Input } from '@/components/ui/input'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { format } from 'date-fns'
 
 interface Student {
   id: string
@@ -45,7 +30,7 @@ interface Student {
 export function StudentList() {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [studentsPerPage] = useState(10)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -60,31 +45,27 @@ export function StudentList() {
     }
 
     setLoading(true)
-    const studentsRef = collection(db, "users", currentUser.uid, "students")
+    const studentsRef = collection(db, 'users', currentUser.uid, 'students')
     const q = query(studentsRef)
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedStudents: Student[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          dob: doc.data().dob?.toDate() || new Date(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        })) as Student[]
-        setStudents(fetchedStudents)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching students:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat daftar santri.",
-          variant: "destructive",
-        })
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedStudents: Student[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        dob: doc.data().dob?.toDate() || new Date(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      })) as Student[]
+      setStudents(fetchedStudents)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching students:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat daftar santri.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribe()
   }, [currentUser, toast])
@@ -103,7 +84,7 @@ export function StudentList() {
 
     setLoading(true)
     try {
-      await updateDoc(doc(db, "users", currentUser.uid, "students", currentStudent.id), {
+      await updateDoc(doc(db, 'users', currentUser.uid, 'students', currentStudent.id), {
         name: currentStudent.name,
         dob: currentStudent.dob,
         gender: currentStudent.gender,
@@ -133,7 +114,7 @@ export function StudentList() {
     }
     setLoading(true)
     try {
-      await deleteDoc(doc(db, "users", currentUser.uid, "students", studentId))
+      await deleteDoc(doc(db, 'users', currentUser.uid, 'students', studentId))
       toast({
         title: "Sukses",
         description: "Santri berhasil dihapus.",
@@ -150,11 +131,10 @@ export function StudentList() {
     }
   }
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.kelas.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.gender.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredStudents = students.filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.kelas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.gender.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const indexOfLastStudent = currentPage * studentsPerPage
@@ -205,20 +185,20 @@ export function StudentList() {
           <TableBody>
             {currentStudents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
-                  Tidak ada santri ditemukan.
-                </TableCell>
+                <TableCell colSpan={6} className="text-center">Tidak ada santri ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentStudents.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{format(student.dob, "dd MMM yyyy")}</TableCell>
+                  <TableCell>{format(student.dob, 'dd MMM yyyy')}</TableCell>
                   <TableCell>
-                    <Badge variant={student.gender === "Laki-laki" ? "default" : "secondary"}>{student.gender}</Badge>
+                    <Badge variant={student.gender === 'Laki-laki' ? 'default' : 'secondary'}>
+                      {student.gender}
+                    </Badge>
                   </TableCell>
                   <TableCell>{student.kelas}</TableCell>
-                  <TableCell>{format(student.createdAt, "dd MMM yyyy")}</TableCell>
+                  <TableCell>{format(student.createdAt, 'dd MMM yyyy')}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -251,7 +231,10 @@ export function StudentList() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>
@@ -273,8 +256,8 @@ export function StudentList() {
               <Label htmlFor="edit-name">Nama Santri</Label>
               <Input
                 id="edit-name"
-                value={currentStudent?.name || ""}
-                onChange={(e) => setCurrentStudent((prev) => (prev ? { ...prev, name: e.target.value } : null))}
+                value={currentStudent?.name || ''}
+                onChange={(e) => setCurrentStudent(prev => prev ? { ...prev, name: e.target.value } : null)}
                 required
               />
             </div>
@@ -283,18 +266,16 @@ export function StudentList() {
               <Input
                 id="edit-dob"
                 type="date"
-                value={currentStudent?.dob ? format(currentStudent.dob, "yyyy-MM-dd") : ""}
-                onChange={(e) =>
-                  setCurrentStudent((prev) => (prev ? { ...prev, dob: new Date(e.target.value) } : null))
-                }
+                value={currentStudent?.dob ? format(currentStudent.dob, 'yyyy-MM-dd') : ''}
+                onChange={(e) => setCurrentStudent(prev => prev ? { ...prev, dob: new Date(e.target.value) } : null)}
                 required
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-gender">Jenis Kelamin</Label>
               <Select
-                value={currentStudent?.gender || ""}
-                onValueChange={(value) => setCurrentStudent((prev) => (prev ? { ...prev, gender: value } : null))}
+                value={currentStudent?.gender || ''}
+                onValueChange={(value) => setCurrentStudent(prev => prev ? { ...prev, gender: value } : null)}
                 required
               >
                 <SelectTrigger id="edit-gender">
@@ -310,8 +291,8 @@ export function StudentList() {
               <Label htmlFor="edit-kelas">Kelas</Label>
               <Input
                 id="edit-kelas"
-                value={currentStudent?.kelas || ""}
-                onChange={(e) => setCurrentStudent((prev) => (prev ? { ...prev, kelas: e.target.value } : null))}
+                value={currentStudent?.kelas || ''}
+                onChange={(e) => setCurrentStudent(prev => prev ? { ...prev, kelas: e.target.value } : null)}
                 placeholder="Contoh: Kelas A, Tahfidz 1"
               />
             </div>

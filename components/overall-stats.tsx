@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, BookOpen, CheckCircle, Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
-import { collection, getDocs, query, where } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useAuth } from "@/contexts/auth-context"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Users, BookOpen, CheckCircle, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/auth-context'
 
 export function OverallStats() {
   const { currentUser } = useAuth()
@@ -23,18 +23,16 @@ export function OverallStats() {
 
       setLoading(true)
       try {
-        const studentsSnapshot = await getDocs(collection(db, "users", currentUser.uid, "students"))
+        const studentsSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'students'))
         const totalStudents = studentsSnapshot.size
 
-        const pengujiSnapshot = await getDocs(collection(db, "users", currentUser.uid, "pengujis"))
+        const pengujiSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'pengujis'))
         const totalPenguji = pengujiSnapshot.size
 
-        const setoranSnapshot = await getDocs(collection(db, "users", currentUser.uid, "setoran"))
+        const setoranSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'setoran'))
         const totalSetoran = setoranSnapshot.size
 
-        const completedSetoranSnapshot = await getDocs(
-          query(collection(db, "users", currentUser.uid, "setoran"), where("status", "==", "completed")),
-        )
+        const completedSetoranSnapshot = await getDocs(query(collection(db, 'users', currentUser.uid, 'setoran'), where('status', '==', 'completed')))
         const completedSetoran = completedSetoranSnapshot.size
 
         setStats({

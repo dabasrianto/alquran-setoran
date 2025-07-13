@@ -1,34 +1,19 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Loader2, Edit, Trash2 } from "lucide-react"
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { Input } from "@/components/ui/input"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Loader2, Edit, Trash2 } from 'lucide-react'
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/contexts/auth-context'
+import { Input } from '@/components/ui/input'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 
 interface Penguji {
   id: string
@@ -40,7 +25,7 @@ interface Penguji {
 export function PengujiList() {
   const [pengujis, setPengujis] = useState<Penguji[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pengujisPerPage] = useState(10)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -55,30 +40,26 @@ export function PengujiList() {
     }
 
     setLoading(true)
-    const pengujisRef = collection(db, "users", currentUser.uid, "pengujis")
+    const pengujisRef = collection(db, 'users', currentUser.uid, 'pengujis')
     const q = query(pengujisRef)
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedPengujis: Penguji[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        })) as Penguji[]
-        setPengujis(fetchedPengujis)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching pengujis:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat daftar penguji.",
-          variant: "destructive",
-        })
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedPengujis: Penguji[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      })) as Penguji[]
+      setPengujis(fetchedPengujis)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching pengujis:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat daftar penguji.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribe()
   }, [currentUser, toast])
@@ -94,7 +75,7 @@ export function PengujiList() {
 
     setLoading(true)
     try {
-      await updateDoc(doc(db, "users", currentUser.uid, "pengujis", currentPenguji.id), {
+      await updateDoc(doc(db, 'users', currentUser.uid, 'pengujis', currentPenguji.id), {
         name: currentPenguji.name,
         phone: currentPenguji.phone,
       })
@@ -122,7 +103,7 @@ export function PengujiList() {
     }
     setLoading(true)
     try {
-      await deleteDoc(doc(db, "users", currentUser.uid, "pengujis", pengujiId))
+      await deleteDoc(doc(db, 'users', currentUser.uid, 'pengujis', pengujiId))
       toast({
         title: "Sukses",
         description: "Penguji berhasil dihapus.",
@@ -139,10 +120,9 @@ export function PengujiList() {
     }
   }
 
-  const filteredPengujis = pengujis.filter(
-    (penguji) =>
-      penguji.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      penguji.phone.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredPengujis = pengujis.filter(penguji =>
+    penguji.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    penguji.phone.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const indexOfLastPenguji = currentPage * pengujisPerPage
@@ -191,9 +171,7 @@ export function PengujiList() {
           <TableBody>
             {currentPengujis.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  Tidak ada penguji ditemukan.
-                </TableCell>
+                <TableCell colSpan={4} className="text-center">Tidak ada penguji ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentPengujis.map((penguji) => (
@@ -233,7 +211,10 @@ export function PengujiList() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>
@@ -255,8 +236,8 @@ export function PengujiList() {
               <Label htmlFor="edit-name">Nama Penguji</Label>
               <Input
                 id="edit-name"
-                value={currentPenguji?.name || ""}
-                onChange={(e) => setCurrentPenguji((prev) => (prev ? { ...prev, name: e.target.value } : null))}
+                value={currentPenguji?.name || ''}
+                onChange={(e) => setCurrentPenguji(prev => prev ? { ...prev, name: e.target.value } : null)}
                 required
               />
             </div>
@@ -265,8 +246,8 @@ export function PengujiList() {
               <Input
                 id="edit-phone"
                 type="tel"
-                value={currentPenguji?.phone || ""}
-                onChange={(e) => setCurrentPenguji((prev) => (prev ? { ...prev, phone: e.target.value } : null))}
+                value={currentPenguji?.phone || ''}
+                onChange={(e) => setCurrentPenguji(prev => prev ? { ...prev, phone: e.target.value } : null)}
               />
             </div>
             <DialogFooter>

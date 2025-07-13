@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
@@ -9,28 +7,29 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Mail, Eye, EyeOff, CheckCircle } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from "next/navigation"
-import { useToast } from "@/components/ui/use-toast"
+import { Loader2, Mail, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/use-toast'
 
 interface EmailAuthFormProps {
   onSuccess?: () => void
-  type: "login" | "register"
+  type: 'login' | 'register'
 }
 
 export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
   const { signInEmail, signUpEmail, resetPasswordEmail, error: authError } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
-
+  
   // Form states
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [displayName, setDisplayName] = useState("")
   const [resetEmail, setResetEmail] = useState("")
-
+  
   // UI states
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,7 +65,7 @@ export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
         title: "Login Berhasil",
         description: "Anda telah berhasil masuk.",
       })
-      router.push("/dashboard")
+      router.push('/dashboard')
       resetForm()
       onSuccess?.()
     } catch (error: any) {
@@ -103,7 +102,7 @@ export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
         title: "Registrasi Berhasil",
         description: "Akun Anda telah berhasil dibuat. Silakan login.",
       })
-      router.push("/login")
+      router.push('/login')
       resetForm()
       onSuccess?.()
     } catch (error: any) {
@@ -141,13 +140,17 @@ export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">{type === "login" ? "Login" : "Daftar"}</CardTitle>
+          <CardTitle className="text-3xl font-bold">
+            {type === 'login' ? 'Login' : 'Daftar'}
+          </CardTitle>
           <CardDescription>
-            {type === "login" ? "Masukkan email dan kata sandi Anda untuk masuk." : "Daftar untuk membuat akun baru."}
+            {type === 'login'
+              ? 'Masukkan email dan kata sandi Anda untuk masuk.'
+              : 'Daftar untuk membuat akun baru.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {type === "login" ? (
+          {type === 'login' ? (
             <form onSubmit={handleLogin} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
@@ -190,7 +193,7 @@ export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
                 Login
               </Button>
             </form>
-          ) : type === "register" ? (
+          ) : type === 'register' ? (
             <form onSubmit={handleSignUp} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="displayName">Nama Lengkap</Label>
@@ -483,8 +486,8 @@ export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
                     <AlertDescription>
                       <strong>Email reset password telah dikirim!</strong>
                       <br />
-                      Silakan cek email Anda dan ikuti instruksi untuk reset password. Jika tidak ada di inbox, cek
-                      folder spam/junk.
+                      Silakan cek email Anda dan ikuti instruksi untuk reset password.
+                      Jika tidak ada di inbox, cek folder spam/junk.
                     </AlertDescription>
                   </Alert>
                 ) : (
@@ -519,9 +522,9 @@ export default function EmailAuthForm({ onSuccess, type }: EmailAuthFormProps) {
                 )}
 
                 {resetSent && (
-                  <Button
-                    variant="outline"
-                    className="w-full bg-transparent"
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
                     onClick={() => {
                       setResetSent(false)
                       setResetEmail("")

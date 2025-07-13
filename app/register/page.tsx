@@ -1,22 +1,23 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { BookOpen, AlertCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Loader2, BookOpen, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { EmailAuthForm } from "@/components/auth/email-auth-form"
+import { EmailAuthForm } from '@/components/auth/email-auth-form'
 
 export default function RegisterPage() {
   const { signUpEmail, error: authError, user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
+  
   // Form states
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -71,7 +72,7 @@ export default function RegisterPage() {
           <Link href="/" className="absolute top-4 left-4 text-sm text-gray-500 hover:text-gray-700">
             ← Kembali ke Beranda
           </Link>
-
+          
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
             <BookOpen className="w-8 h-8 text-white" />
           </div>

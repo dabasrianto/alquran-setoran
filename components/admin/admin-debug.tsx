@@ -1,16 +1,16 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/hooks/use-subscription"
-import { useEffect, useState } from "react"
-import { getFirestore, collection, getDocs } from "firebase/firestore"
-import { app } from "@/lib/firebase" // Assuming 'app' is exported from firebase.ts
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/contexts/auth-context'
+import { useSubscription } from '@/hooks/use-subscription'
+import { useEffect, useState } from 'react'
+import { getFirestore, collection, getDocs } from 'firebase/firestore'
+import { app } from '@/lib/firebase' // Assuming 'app' is exported from firebase.ts
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAllUsers, getUserProfile } from "@/lib/firebase-firestore"
-import { Bug, Database } from "lucide-react"
+import { Bug, Database } from 'lucide-react'
 
 export function AdminDebug() {
   const { currentUser, isAdmin, loading: authLoading } = useAuth()
@@ -24,15 +24,7 @@ export function AdminDebug() {
     const fetchCollectionCounts = async () => {
       setLoadingDataCount(true)
       const db = getFirestore(app)
-      const collectionsToCount = [
-        "users",
-        "subscriptions",
-        "upgradeRequests",
-        "payments",
-        "adminLogs",
-        "pricing",
-        "settings",
-      ]
+      const collectionsToCount = ['users', 'subscriptions', 'upgradeRequests', 'payments', 'adminLogs', 'pricing', 'settings']
       const counts: Record<string, number> = {}
 
       for (const colName of collectionsToCount) {
@@ -96,18 +88,10 @@ export function AdminDebug() {
         <div>
           <h3 className="font-semibold text-lg mb-2">Informasi Pengguna Aktif</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <p>
-              <strong>User ID:</strong> {currentUser?.uid || "N/A"}
-            </p>
-            <p>
-              <strong>Email:</strong> {currentUser?.email || "N/A"}
-            </p>
-            <p>
-              <strong>Admin:</strong> {isAdmin ? "Ya" : "Tidak"}
-            </p>
-            <p>
-              <strong>Auth Loading:</strong> {authLoading ? "Ya" : "Tidak"}
-            </p>
+            <p><strong>User ID:</strong> {currentUser?.uid || 'N/A'}</p>
+            <p><strong>Email:</strong> {currentUser?.email || 'N/A'}</p>
+            <p><strong>Admin:</strong> {isAdmin ? 'Ya' : 'Tidak'}</p>
+            <p><strong>Auth Loading:</strong> {authLoading ? 'Ya' : 'Tidak'}</p>
           </div>
         </div>
 
@@ -116,21 +100,11 @@ export function AdminDebug() {
         <div>
           <h3 className="font-semibold text-lg mb-2">Informasi Langganan</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <p>
-              <strong>Status Langganan:</strong> {userSubscription?.status || "N/A"}
-            </p>
-            <p>
-              <strong>Tier Langganan:</strong> {userSubscription?.tier || "N/A"}
-            </p>
-            <p>
-              <strong>Tanggal Mulai:</strong> {userSubscription?.startDate?.toDateString() || "N/A"}
-            </p>
-            <p>
-              <strong>Tanggal Berakhir:</strong> {userSubscription?.endDate?.toDateString() || "N/A"}
-            </p>
-            <p>
-              <strong>Subscription Loading:</strong> {subscriptionLoading ? "Ya" : "Tidak"}
-            </p>
+            <p><strong>Status Langganan:</strong> {userSubscription?.status || 'N/A'}</p>
+            <p><strong>Tier Langganan:</strong> {userSubscription?.tier || 'N/A'}</p>
+            <p><strong>Tanggal Mulai:</strong> {userSubscription?.startDate?.toDateString() || 'N/A'}</p>
+            <p><strong>Tanggal Berakhir:</strong> {userSubscription?.endDate?.toDateString() || 'N/A'}</p>
+            <p><strong>Subscription Loading:</strong> {subscriptionLoading ? 'Ya' : 'Tidak'}</p>
           </div>
         </div>
 
@@ -143,9 +117,7 @@ export function AdminDebug() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {Object.entries(firestoreDataCount).map(([colName, count]) => (
-                <p key={colName}>
-                  <strong>{colName} Count:</strong> {count === -1 ? "Error" : count}
-                </p>
+                <p key={colName}><strong>{colName} Count:</strong> {count === -1 ? 'Error' : count}</p>
               ))}
             </div>
           )}
@@ -156,14 +128,8 @@ export function AdminDebug() {
         <div>
           <h3 className="font-semibold text-lg mb-2">Variabel Lingkungan (Public)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <p>
-              <strong>NEXT_PUBLIC_FIREBASE_PROJECT_ID:</strong>{" "}
-              {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "Tidak Ditemukan"}
-            </p>
-            <p>
-              <strong>NEXT_PUBLIC_FIREBASE_APP_ID:</strong>{" "}
-              {process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "Tidak Ditemukan"}
-            </p>
+            <p><strong>NEXT_PUBLIC_FIREBASE_PROJECT_ID:</strong> {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'Tidak Ditemukan'}</p>
+            <p><strong>NEXT_PUBLIC_FIREBASE_APP_ID:</strong> {process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'Tidak Ditemukan'}</p>
             {/* Add other public env variables as needed for debugging */}
           </div>
         </div>

@@ -1,26 +1,25 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { Loader2, PlusCircle, Edit, Trash2, CheckCircle2 } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, PlusCircle, Edit, Trash2, CheckCircle2, XCircle } from 'lucide-react'
 import {
   createPricingPlan,
+  getPricingPlans,
   updatePricingPlan,
   deletePricingPlan,
-  type PricingPlan,
+  PricingPlan,
   formatPrice,
   subscribeToPricingChanges,
   calculateYearlyPrice,
-} from "@/lib/firebase-pricing"
-import { useToast } from "@/components/ui/use-toast"
+} from '@/lib/firebase-pricing'
+import { useToast } from '@/components/ui/use-toast'
 import {
   Dialog,
   DialogContent,
@@ -28,10 +27,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { cn } from "@/lib/utils"
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
 export function PricingManagement() {
   const [plans, setPlans] = useState<PricingPlan[]>([])
@@ -39,7 +39,7 @@ export function PricingManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentPlan, setCurrentPlan] = useState<PricingPlan | null>(null)
   const [formState, setFormState] = useState<Partial<PricingPlan>>({})
-  const [activeTab, setActiveTab] = useState("basic")
+  const [activeTab, setActiveTab] = useState('basic')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -55,11 +55,11 @@ export function PricingManagement() {
   const handleAddPlan = () => {
     setCurrentPlan(null)
     setFormState({
-      name: "",
-      description: "",
+      name: '',
+      description: '',
       price: 0,
-      currency: "IDR",
-      interval: "month",
+      currency: 'IDR',
+      interval: 'month',
       features: [],
       maxStudents: null,
       maxTeachers: null,
@@ -68,7 +68,7 @@ export function PricingManagement() {
       order: plans.length + 1,
       active: true,
     })
-    setActiveTab("basic")
+    setActiveTab('basic')
     setIsModalOpen(true)
   }
 
@@ -78,26 +78,26 @@ export function PricingManagement() {
       ...plan,
       features: plan.features || [], // Ensure features is an array
     })
-    setActiveTab("basic")
+    setActiveTab('basic')
     setIsModalOpen(true)
   }
 
   const handleDeletePlan = async (planId: string) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus paket harga ini?")) {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus paket harga ini?')) {
       return
     }
     try {
       await deletePricingPlan(planId)
       toast({
-        title: "Sukses",
-        description: "Paket harga berhasil dihapus.",
+        title: 'Sukses',
+        description: 'Paket harga berhasil dihapus.',
       })
     } catch (error) {
-      console.error("Error deleting pricing plan:", error)
+      console.error('Error deleting pricing plan:', error)
       toast({
-        title: "Error",
-        description: "Gagal menghapus paket harga.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal menghapus paket harga.',
+        variant: 'destructive',
       })
     }
   }
@@ -106,7 +106,7 @@ export function PricingManagement() {
     const { name, value, type, checked } = e.target as HTMLInputElement
     setFormState((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === 'checkbox' ? checked : value,
     }))
   }
 
@@ -114,7 +114,7 @@ export function PricingManagement() {
     const { name, value } = e.target
     setFormState((prev) => ({
       ...prev,
-      [name]: value === "" ? null : Number(value),
+      [name]: value === '' ? null : Number(value),
     }))
   }
 
@@ -127,7 +127,7 @@ export function PricingManagement() {
   const addFeature = () => {
     setFormState((prev) => ({
       ...prev,
-      features: [...(prev.features || []), ""],
+      features: [...(prev.features || []), ''],
     }))
   }
 
@@ -141,9 +141,9 @@ export function PricingManagement() {
 
     if (!formState.name || !formState.description || formState.price === undefined) {
       toast({
-        title: "Validasi Gagal",
-        description: "Nama, deskripsi, dan harga harus diisi.",
-        variant: "destructive",
+        title: 'Validasi Gagal',
+        description: 'Nama, deskripsi, dan harga harus diisi.',
+        variant: 'destructive',
       })
       return
     }
@@ -152,13 +152,13 @@ export function PricingManagement() {
       const finalPrice = Number(formState.price)
       const yearlyPrice = calculateYearlyPrice(finalPrice)
 
-      const dataToSave: Omit<PricingPlan, "id" | "createdAt" | "updatedAt"> = {
+      const dataToSave: Omit<PricingPlan, 'id' | 'createdAt' | 'updatedAt'> = {
         name: formState.name,
         description: formState.description,
         price: finalPrice,
         yearlyPrice: yearlyPrice,
-        currency: formState.currency || "IDR",
-        interval: formState.interval || "month",
+        currency: formState.currency || 'IDR',
+        interval: formState.interval || 'month',
         features: formState.features || [],
         maxStudents: formState.maxStudents === null ? null : Number(formState.maxStudents),
         maxTeachers: formState.maxTeachers === null ? null : Number(formState.maxTeachers),
@@ -171,23 +171,23 @@ export function PricingManagement() {
       if (currentPlan) {
         await updatePricingPlan(currentPlan.id, dataToSave)
         toast({
-          title: "Sukses",
-          description: "Paket harga berhasil diperbarui.",
+          title: 'Sukses',
+          description: 'Paket harga berhasil diperbarui.',
         })
       } else {
         await createPricingPlan(dataToSave)
         toast({
-          title: "Sukses",
-          description: "Paket harga baru berhasil ditambahkan.",
+          title: 'Sukses',
+          description: 'Paket harga baru berhasil ditambahkan.',
         })
       }
       setIsModalOpen(false)
     } catch (error) {
-      console.error("Error saving pricing plan:", error)
+      console.error('Error saving pricing plan:', error)
       toast({
-        title: "Error",
-        description: "Gagal menyimpan paket harga.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal menyimpan paket harga.',
+        variant: 'destructive',
       })
     }
   }
@@ -216,15 +216,12 @@ export function PricingManagement() {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => (
-            <Card
-              key={plan.id}
-              className={cn(
-                "flex flex-col justify-between p-6 border-2",
-                plan.isPopular && "border-blue-500 dark:border-blue-400",
-                plan.isRecommended && "border-green-500 dark:border-green-400",
-                !plan.active && "opacity-50 border-dashed",
-              )}
-            >
+            <Card key={plan.id} className={cn(
+              "flex flex-col justify-between p-6 border-2",
+              plan.isPopular && "border-blue-500 dark:border-blue-400",
+              plan.isRecommended && "border-green-500 dark:border-green-400",
+              !plan.active && "opacity-50 border-dashed"
+            )}>
               <div>
                 <CardHeader className="p-0 pb-4">
                   <div className="flex justify-between items-center">
@@ -258,13 +255,13 @@ export function PricingManagement() {
                     {plan.maxStudents !== undefined && (
                       <li className="flex items-center">
                         <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                        Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri
+                        Maksimal {plan.maxStudents === null ? 'Tidak Terbatas' : plan.maxStudents} Santri
                       </li>
                     )}
                     {plan.maxTeachers !== undefined && (
                       <li className="flex items-center">
                         <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                        Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji
+                        Maksimal {plan.maxTeachers === null ? 'Tidak Terbatas' : plan.maxTeachers} Penguji
                       </li>
                     )}
                   </ul>
@@ -285,11 +282,11 @@ export function PricingManagement() {
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{currentPlan ? "Edit Paket Harga" : "Tambah Paket Harga Baru"}</DialogTitle>
+              <DialogTitle>{currentPlan ? 'Edit Paket Harga' : 'Tambah Paket Harga Baru'}</DialogTitle>
               <DialogDescription>
                 {currentPlan
-                  ? "Ubah detail paket harga yang sudah ada."
-                  : "Buat paket harga baru untuk langganan Anda."}
+                  ? 'Ubah detail paket harga yang sudah ada.'
+                  : 'Buat paket harga baru untuk langganan Anda.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -302,14 +299,20 @@ export function PricingManagement() {
                 <TabsContent value="basic" className="space-y-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">Nama Paket</Label>
-                    <Input id="name" name="name" value={formState.name || ""} onChange={handleFormChange} required />
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formState.name || ''}
+                      onChange={handleFormChange}
+                      required
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="description">Deskripsi</Label>
                     <Textarea
                       id="description"
                       name="description"
-                      value={formState.description || ""}
+                      value={formState.description || ''}
                       onChange={handleFormChange}
                       required
                     />
@@ -321,7 +324,7 @@ export function PricingManagement() {
                         id="price"
                         name="price"
                         type="number"
-                        value={formState.price !== undefined ? formState.price : ""}
+                        value={formState.price !== undefined ? formState.price : ''}
                         onChange={handleNumberChange}
                         required
                       />
@@ -331,7 +334,7 @@ export function PricingManagement() {
                       <Input
                         id="currency"
                         name="currency"
-                        value={formState.currency || "IDR"}
+                        value={formState.currency || 'IDR'}
                         onChange={handleFormChange}
                         disabled // For now, keep it IDR
                       />
@@ -370,7 +373,7 @@ export function PricingManagement() {
                       id="order"
                       name="order"
                       type="number"
-                      value={formState.order !== undefined ? formState.order : ""}
+                      value={formState.order !== undefined ? formState.order : ''}
                       onChange={handleNumberChange}
                     />
                   </div>
@@ -386,7 +389,7 @@ export function PricingManagement() {
                       name="maxStudents"
                       type="number"
                       placeholder="Kosongkan untuk tidak terbatas"
-                      value={formState.maxStudents === null ? "" : formState.maxStudents || ""}
+                      value={formState.maxStudents === null ? '' : formState.maxStudents || ''}
                       onChange={handleNumberChange}
                     />
                   </div>
@@ -397,13 +400,15 @@ export function PricingManagement() {
                       name="maxTeachers"
                       type="number"
                       placeholder="Kosongkan untuk tidak terbatas"
-                      value={formState.maxTeachers === null ? "" : formState.maxTeachers || ""}
+                      value={formState.maxTeachers === null ? '' : formState.maxTeachers || ''}
                       onChange={handleNumberChange}
                     />
                   </div>
                 </TabsContent>
                 <TabsContent value="features" className="space-y-4">
-                  <p className="text-muted-foreground">Tambahkan fitur-fitur yang termasuk dalam paket ini.</p>
+                  <p className="text-muted-foreground">
+                    Tambahkan fitur-fitur yang termasuk dalam paket ini.
+                  </p>
                   {(formState.features || []).map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input
@@ -424,7 +429,7 @@ export function PricingManagement() {
               <DialogFooter>
                 <Button type="submit" disabled={loading}>
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  {currentPlan ? "Simpan Perubahan" : "Tambah Paket"}
+                  {currentPlan ? 'Simpan Perubahan' : 'Tambah Paket'}
                 </Button>
               </DialogFooter>
             </form>

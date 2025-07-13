@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, BookOpen, AlertCircle, ArrowLeft } from "lucide-react"
+import { Loader2, BookOpen, AlertCircle, ArrowLeft } from 'lucide-react'
 import { EmailAuthForm } from "./email-auth-form"
 import { useRouter } from "next/navigation"
 
@@ -44,11 +44,16 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <Button variant="ghost" size="sm" onClick={() => setShowEmailAuth(false)} className="absolute top-4 left-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowEmailAuth(false)}
+              className="absolute top-4 left-4"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Kembali
             </Button>
-
+            
             <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
               <BookOpen className="w-8 h-8 text-white" />
             </div>
@@ -56,12 +61,9 @@ export default function LoginPage() {
             <CardDescription>Kelola hafalan Al-Quran dengan mudah dan efektif</CardDescription>
           </CardHeader>
           <CardContent>
-            <EmailAuthForm
-              type="login"
-              onSuccess={() => {
-                // Login berhasil, akan redirect otomatis oleh auth context
-              }}
-            />
+            <EmailAuthForm type="login" onSuccess={() => {
+              // Login berhasil, akan redirect otomatis oleh auth context
+            }} />
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
@@ -72,7 +74,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button onClick={handleGoogleSignIn} disabled={loading} variant="outline" className="w-full bg-transparent">
+            <Button onClick={handleGoogleSignIn} disabled={loading} variant="outline" className="w-full">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -100,11 +102,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Button variant="ghost" size="sm" onClick={() => setShowSimpleLogin(false)} className="absolute top-4 left-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowSimpleLogin(false)}
+            className="absolute top-4 left-4"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Kembali
           </Button>
-
+          
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
@@ -125,7 +132,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button onClick={handleGoogleSignIn} disabled={loading} variant="outline" className="w-full bg-transparent">
+          <Button onClick={handleGoogleSignIn} disabled={loading} variant="outline" className="w-full">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

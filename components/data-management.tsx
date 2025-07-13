@@ -1,26 +1,24 @@
-"use client"
+'use client'
 
-import { Separator } from "@/components/ui/separator"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StudentList } from "@/components/student-list"
-import { PengujiList } from "@/components/penguji-list"
-import { SetoranHistory } from "@/components/setoran-history"
-import { StudentProgress } from "@/components/student-progress"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { StudentList } from '@/components/student-list'
+import { PengujiList } from '@/components/penguji-list'
+import { SetoranHistory } from '@/components/setoran-history'
+import { StudentProgress } from '@/components/student-progress'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 export function DataManagement() {
   const { currentUser, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("students")
+  const [activeTab, setActiveTab] = useState('students')
 
   useEffect(() => {
     if (!loading && !currentUser) {
-      router.push("/login")
+      router.push('/login')
     }
   }, [currentUser, loading, router])
 
@@ -64,7 +62,9 @@ export function DataManagement() {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Manajemen Data</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Manajemen Data
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">
@@ -95,7 +95,9 @@ export function DataManagement() {
                       </span>
                     </li>
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Tab "Penguji" untuk mengelola daftar penguji.</span>
+                      <span className="text-muted-foreground">
+                        Tab "Penguji" untuk mengelola daftar penguji.
+                      </span>
                     </li>
                     <li className="flex items-center justify-between">
                       <span className="text-muted-foreground">
@@ -103,7 +105,9 @@ export function DataManagement() {
                       </span>
                     </li>
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">"Progres Santri" untuk memantau capaian hafalan.</span>
+                      <span className="text-muted-foreground">
+                        "Progres Santri" untuk memantau capaian hafalan.
+                      </span>
                     </li>
                   </ul>
                 </div>

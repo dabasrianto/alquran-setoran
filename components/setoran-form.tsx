@@ -1,19 +1,17 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { addDoc, collection, serverTimestamp, getDocs, query } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useAuth } from "@/contexts/auth-context"
-import { QURAN_DATA } from "@/lib/quran-data"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
+import { addDoc, collection, serverTimestamp, getDocs, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/auth-context'
+import { QURAN_DATA } from '@/lib/quran-data'
 
 interface Student {
   id: string
@@ -26,15 +24,15 @@ interface Penguji {
 }
 
 export function SetoranForm() {
-  const [selectedStudent, setSelectedStudent] = useState("")
-  const [selectedPenguji, setSelectedPenguji] = useState("")
-  const [date, setDate] = useState("")
-  const [type, setType] = useState("")
-  const [surah, setSurah] = useState("")
-  const [startAyat, setStartAyat] = useState("")
-  const [endAyat, setEndAyat] = useState("")
-  const [score, setScore] = useState("")
-  const [notes, setNotes] = useState("")
+  const [selectedStudent, setSelectedStudent] = useState('')
+  const [selectedPenguji, setSelectedPenguji] = useState('')
+  const [date, setDate] = useState('')
+  const [type, setType] = useState('')
+  const [surah, setSurah] = useState('')
+  const [startAyat, setStartAyat] = useState('')
+  const [endAyat, setEndAyat] = useState('')
+  const [score, setScore] = useState('')
+  const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [students, setStudents] = useState<Student[]>([])
   const [pengujis, setPengujis] = useState<Penguji[]>([])
@@ -46,18 +44,18 @@ export function SetoranForm() {
       if (!currentUser) return
 
       // Fetch students
-      const studentsRef = collection(db, "users", currentUser.uid, "students")
+      const studentsRef = collection(db, 'users', currentUser.uid, 'students')
       const studentsSnapshot = await getDocs(query(studentsRef))
-      const fetchedStudents: Student[] = studentsSnapshot.docs.map((doc) => ({
+      const fetchedStudents: Student[] = studentsSnapshot.docs.map(doc => ({
         id: doc.id,
         name: doc.data().name,
       }))
       setStudents(fetchedStudents)
 
       // Fetch pengujis
-      const pengujisRef = collection(db, "users", currentUser.uid, "pengujis")
+      const pengujisRef = collection(db, 'users', currentUser.uid, 'pengujis')
       const pengujisSnapshot = await getDocs(query(pengujisRef))
-      const fetchedPengujis: Penguji[] = pengujisSnapshot.docs.map((doc) => ({
+      const fetchedPengujis: Penguji[] = pengujisSnapshot.docs.map(doc => ({
         id: doc.id,
         name: doc.data().name,
       }))
@@ -79,15 +77,15 @@ export function SetoranForm() {
 
     setLoading(true)
     try {
-      await addDoc(collection(db, "users", currentUser.uid, "setoran"), {
+      await addDoc(collection(db, 'users', currentUser.uid, 'setoran'), {
         studentId: selectedStudent,
         pengujiId: selectedPenguji,
         date: new Date(date),
         type,
         surah,
-        startAyat: Number.parseInt(startAyat),
-        endAyat: Number.parseInt(endAyat),
-        score: Number.parseInt(score),
+        startAyat: parseInt(startAyat),
+        endAyat: parseInt(endAyat),
+        score: parseInt(score),
         notes,
         createdAt: serverTimestamp(),
       })
@@ -96,15 +94,15 @@ export function SetoranForm() {
         description: "Setoran berhasil dicatat.",
       })
       // Reset form
-      setSelectedStudent("")
-      setSelectedPenguji("")
-      setDate("")
-      setType("")
-      setSurah("")
-      setStartAyat("")
-      setEndAyat("")
-      setScore("")
-      setNotes("")
+      setSelectedStudent('')
+      setSelectedPenguji('')
+      setDate('')
+      setType('')
+      setSurah('')
+      setStartAyat('')
+      setEndAyat('')
+      setScore('')
+      setNotes('')
     } catch (error) {
       console.error("Error adding setoran:", error)
       toast({
@@ -156,7 +154,13 @@ export function SetoranForm() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="date">Tanggal</Label>
-            <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="type">Jenis Setoran</Label>
@@ -221,7 +225,11 @@ export function SetoranForm() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="notes">Catatan (Opsional)</Label>
-            <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Input
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

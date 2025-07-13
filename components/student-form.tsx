@@ -1,26 +1,24 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { addDoc, collection, serverTimestamp } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/hooks/use-subscription"
-import { checkFeatureLimit } from "@/lib/subscription-system"
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useAuth } from '@/contexts/auth-context'
+import { useSubscription } from '@/hooks/use-subscription'
+import { checkFeatureLimit } from '@/lib/subscription-system'
 
 export function StudentForm() {
-  const [name, setName] = useState("")
-  const [dob, setDob] = useState("")
-  const [gender, setGender] = useState("")
-  const [kelas, setKelas] = useState("")
+  const [name, setName] = useState('')
+  const [dob, setDob] = useState('')
+  const [gender, setGender] = useState('')
+  const [kelas, setKelas] = useState('')
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const { currentUser } = useAuth()
@@ -39,19 +37,18 @@ export function StudentForm() {
 
     setLoading(true)
     try {
-      const hasLimitReached = await checkFeatureLimit(currentUser.uid, userSubscription, "maxStudents")
+      const hasLimitReached = await checkFeatureLimit(currentUser.uid, userSubscription, 'maxStudents')
       if (hasLimitReached) {
         toast({
           title: "Batas Santri Tercapai",
-          description:
-            "Anda telah mencapai batas maksimal santri untuk paket langganan Anda. Silakan upgrade paket untuk menambah lebih banyak santri.",
+          description: "Anda telah mencapai batas maksimal santri untuk paket langganan Anda. Silakan upgrade paket untuk menambah lebih banyak santri.",
           variant: "destructive",
         })
         setLoading(false)
         return
       }
 
-      await addDoc(collection(db, "users", currentUser.uid, "students"), {
+      await addDoc(collection(db, 'users', currentUser.uid, 'students'), {
         name,
         dob: new Date(dob),
         gender,
@@ -62,10 +59,10 @@ export function StudentForm() {
         title: "Sukses",
         description: "Santri berhasil ditambahkan.",
       })
-      setName("")
-      setDob("")
-      setGender("")
-      setKelas("")
+      setName('')
+      setDob('')
+      setGender('')
+      setKelas('')
     } catch (error) {
       console.error("Error adding student:", error)
       toast({
@@ -87,11 +84,22 @@ export function StudentForm() {
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Nama Santri</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="dob">Tanggal Lahir</Label>
-            <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} required />
+            <Input
+              id="dob"
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="gender">Jenis Kelamin</Label>

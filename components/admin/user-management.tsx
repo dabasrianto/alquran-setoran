@@ -1,35 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Loader2 } from "lucide-react"
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { Input } from "@/components/ui/input"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Loader2 } from 'lucide-react'
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { Input } from '@/components/ui/input'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 
 interface User {
   id: string
   email: string
-  role: "user" | "admin"
+  role: 'user' | 'admin'
   createdAt: Date
   lastLogin: Date
 }
@@ -37,45 +24,41 @@ interface User {
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [usersPerPage] = useState(10)
   const { toast } = useToast()
 
   useEffect(() => {
     setLoading(true)
-    const usersRef = collection(db, "users")
+    const usersRef = collection(db, 'users')
     const q = query(usersRef)
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedUsers: User[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-          lastLogin: doc.data().lastLogin?.toDate() || new Date(),
-        })) as User[]
-        setUsers(fetchedUsers)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching users:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat daftar pengguna.",
-          variant: "destructive",
-        })
-      },
-    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedUsers: User[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        lastLogin: doc.data().lastLogin?.toDate() || new Date(),
+      })) as User[]
+      setUsers(fetchedUsers)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching users:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat daftar pengguna.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribe()
   }, [toast])
 
-  const handleRoleChange = async (userId: string, newRole: "user" | "admin") => {
+  const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
     try {
-      await updateDoc(doc(db, "users", userId), { role: newRole })
+      await updateDoc(doc(db, 'users', userId), { role: newRole })
       toast({
         title: "Sukses",
         description: `Peran pengguna berhasil diubah menjadi ${newRole}.`,
@@ -95,7 +78,7 @@ export function UserManagement() {
       return
     }
     try {
-      await deleteDoc(doc(db, "users", userId))
+      await deleteDoc(doc(db, 'users', userId))
       toast({
         title: "Sukses",
         description: "Pengguna berhasil dihapus.",
@@ -110,10 +93,9 @@ export function UserManagement() {
     }
   }
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredUsers = users.filter(user =>
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const indexOfLastUser = currentPage * usersPerPage
@@ -163,16 +145,16 @@ export function UserManagement() {
           <TableBody>
             {currentUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
-                  Tidak ada pengguna ditemukan.
-                </TableCell>
+                <TableCell colSpan={5} className="text-center">Tidak ada pengguna ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "admin" ? "default" : "outline"}>{user.role}</Badge>
+                    <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
+                      {user.role}
+                    </Badge>
                   </TableCell>
                   <TableCell>{user.createdAt.toLocaleDateString()}</TableCell>
                   <TableCell>{user.lastLogin.toLocaleDateString()}</TableCell>
@@ -186,10 +168,8 @@ export function UserManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => handleRoleChange(user.id, user.role === "admin" ? "user" : "admin")}
-                        >
-                          Jadikan {user.role === "admin" ? "Pengguna Biasa" : "Admin"}
+                        <DropdownMenuItem onClick={() => handleRoleChange(user.id, user.role === 'admin' ? 'user' : 'admin')}>
+                          Jadikan {user.role === 'admin' ? 'Pengguna Biasa' : 'Admin'}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-red-600">
@@ -210,7 +190,10 @@ export function UserManagement() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>

@@ -1,29 +1,27 @@
-"use client"
+'use client'
 
-import { Separator } from "@/components/ui/separator"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { OverallStats } from "@/components/overall-stats"
-import { StudentList } from "@/components/student-list"
-import { PengujiList } from "@/components/penguji-list"
-import { SetoranHistory } from "@/components/setoran-history"
-import { StudentProgress } from "@/components/student-progress"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
-import { UserStats } from "@/components/dashboard/user-stats"
-import { PricingDisplay } from "@/components/dashboard/pricing-display"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { OverallStats } from '@/components/overall-stats'
+import { StudentList } from '@/components/student-list'
+import { PengujiList } from '@/components/penguji-list'
+import { SetoranHistory } from '@/components/setoran-history'
+import { StudentProgress } from '@/components/student-progress'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { UserStats } from '@/components/dashboard/user-stats'
+import { PricingDisplay } from '@/components/dashboard/pricing-display'
 
 export default function DashboardClient() {
   const { currentUser, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
     if (!loading && !currentUser) {
-      router.push("/login")
+      router.push('/login')
     }
   }, [currentUser, loading, router])
 
@@ -75,7 +73,9 @@ export default function DashboardClient() {
             <Card className="overflow-hidden">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">
-                  <CardTitle className="group flex items-center gap-2 text-lg">Dashboard Pengguna</CardTitle>
+                  <CardTitle className="group flex items-center gap-2 text-lg">
+                    Dashboard Pengguna
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="p-6 text-sm">
@@ -83,7 +83,9 @@ export default function DashboardClient() {
                   <div className="font-semibold">Selamat datang, {currentUser.email}!</div>
                   <ul className="grid gap-3">
                     <li className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Gunakan tab di atas untuk mengelola data Anda.</span>
+                      <span className="text-muted-foreground">
+                        Gunakan tab di atas untuk mengelola data Anda.
+                      </span>
                     </li>
                   </ul>
                 </div>

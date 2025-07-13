@@ -1,24 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { CheckCircle2, Loader2 } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { useSubscription } from "@/hooks/use-subscription"
-import { PremiumUpgradeModal } from "@/components/auth/premium-upgrade-modal"
-import {
-  type PricingPlan,
-  getPricingPlans,
-  formatPrice,
-  calculateYearlyPrice,
-  subscribeToPricingChanges,
-} from "@/lib/firebase-pricing"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
+import { useSubscription } from '@/hooks/use-subscription'
+import { PremiumUpgradeModal } from '@/components/auth/premium-upgrade-modal'
+import { PricingPlan, getPricingPlans, formatPrice, calculateYearlyPrice, subscribeToPricingChanges } from '@/lib/firebase-pricing'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export function PricingDisplay() {
   const { currentUser, loading } = useAuth()
@@ -27,27 +21,27 @@ export function PricingDisplay() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null)
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([])
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
   const [loadingPricing, setLoadingPricing] = useState(true)
 
   useEffect(() => {
     const fetchPlans = async () => {
       setLoadingPricing(true)
       const plans = await getPricingPlans()
-      setPricingPlans(plans.filter((p) => p.active)) // Only show active plans
+      setPricingPlans(plans.filter(p => p.active)) // Only show active plans
       setLoadingPricing(false)
     }
 
     fetchPlans()
 
-    const unsubscribeRealtime = subscribeToPricingChanges((plans) => {
-      setPricingPlans(plans.filter((p) => p.active))
-    })
+    const unsubscribeRealtime = subscribeToPricingChanges(plans => {
+      setPricingPlans(plans.filter(p => p.active));
+    });
 
     return () => {
-      unsubscribeRealtime()
-    }
-  }, [])
+      unsubscribeRealtime();
+    };
+  }, []);
 
   const handleUpgradeClick = (plan: PricingPlan) => {
     setSelectedPlan(plan)
@@ -62,8 +56,8 @@ export function PricingDisplay() {
     )
   }
 
-  const currentPlanId = userSubscription?.tier || "free"
-  const currentPlan = pricingPlans.find((p) => p.id === currentPlanId)
+  const currentPlanId = userSubscription?.tier || 'free'
+  const currentPlan = pricingPlans.find(p => p.id === currentPlanId)
 
   return (
     <Card>
@@ -78,7 +72,7 @@ export function PricingDisplay() {
           <ToggleGroup
             type="single"
             value={billingPeriod}
-            onValueChange={(value: "monthly" | "yearly") => {
+            onValueChange={(value: 'monthly' | 'yearly') => {
               if (value) setBillingPeriod(value)
             }}
             className="border rounded-md"
@@ -95,9 +89,8 @@ export function PricingDisplay() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {pricingPlans.map((plan) => {
             const isCurrent = currentPlanId === plan.id
-            const displayPrice =
-              billingPeriod === "monthly" ? plan.price : plan.yearlyPrice || calculateYearlyPrice(plan.price)
-            const displayInterval = billingPeriod === "monthly" ? "/bulan" : "/tahun"
+            const displayPrice = billingPeriod === 'monthly' ? plan.price : (plan.yearlyPrice || calculateYearlyPrice(plan.price))
+            const displayInterval = billingPeriod === 'monthly' ? '/bulan' : '/tahun'
 
             return (
               <Card
@@ -106,7 +99,7 @@ export function PricingDisplay() {
                   "flex flex-col justify-between p-6 border-2",
                   isCurrent ? "border-primary" : "border-gray-200 dark:border-gray-700",
                   plan.isPopular && "border-blue-500 dark:border-blue-400",
-                  plan.isRecommended && "border-green-500 dark:border-green-400",
+                  plan.isRecommended && "border-green-500 dark:border-green-400"
                 )}
               >
                 <div>
@@ -134,20 +127,24 @@ export function PricingDisplay() {
                       {plan.maxStudents !== undefined && (
                         <li className="flex items-center">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                          Maksimal {plan.maxStudents === null ? "Tidak Terbatas" : plan.maxStudents} Santri
+                          Maksimal {plan.maxStudents === null ? 'Tidak Terbatas' : plan.maxStudents} Santri
                         </li>
                       )}
                       {plan.maxTeachers !== undefined && (
                         <li className="flex items-center">
                           <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                          Maksimal {plan.maxTeachers === null ? "Tidak Terbatas" : plan.maxTeachers} Penguji
+                          Maksimal {plan.maxTeachers === null ? 'Tidak Terbatas' : plan.maxTeachers} Penguji
                         </li>
                       )}
                     </ul>
                   </CardContent>
                 </div>
-                <Button className="mt-6 w-full" onClick={() => handleUpgradeClick(plan)} disabled={isCurrent}>
-                  {isCurrent ? "Paket Anda Saat Ini" : "Pilih Paket"}
+                <Button
+                  className="mt-6 w-full"
+                  onClick={() => handleUpgradeClick(plan)}
+                  disabled={isCurrent}
+                >
+                  {isCurrent ? 'Paket Anda Saat Ini' : 'Pilih Paket'}
                 </Button>
               </Card>
             )

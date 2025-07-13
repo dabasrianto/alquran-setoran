@@ -1,25 +1,20 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Progress } from "@/components/ui/progress"
-import { Loader2 } from "lucide-react"
-import { collection, query, onSnapshot, getDocs, where } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { calculateStudentSummary } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Progress } from '@/components/ui/progress'
+import { Loader2 } from 'lucide-react'
+import { collection, query, onSnapshot, getDocs, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { useToast } from '@/components/ui/use-toast'
+import { useAuth } from '@/contexts/auth-context'
+import { QURAN_DATA } from '@/lib/quran-data'
+import { calculateStudentSummary } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 
 interface Student {
   id: string
@@ -61,8 +56,8 @@ interface StudentSummary {
 export function SetoranProgressTable() {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterKelas, setFilterKelas] = useState("all")
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterKelas, setFilterKelas] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [studentsPerPage] = useState(10)
   const { toast } = useToast()
@@ -75,66 +70,54 @@ export function SetoranProgressTable() {
     }
 
     setLoading(true)
-    const studentsRef = collection(db, "users", currentUser.uid, "students")
-    const setoranRef = collection(db, "users", currentUser.uid, "setoran")
+    const studentsRef = collection(db, 'users', currentUser.uid, 'students')
+    const setoranRef = collection(db, 'users', currentUser.uid, 'setoran')
 
-    const unsubscribeStudents = onSnapshot(
-      query(studentsRef),
-      async (studentSnapshot) => {
-        const fetchedStudents: Student[] = studentSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          name: doc.data().name,
-          kelas: doc.data().kelas || "Tidak Ada Kelas",
+    const unsubscribeStudents = onSnapshot(query(studentsRef), async (studentSnapshot) => {
+      const fetchedStudents: Student[] = studentSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().name,
+        kelas: doc.data().kelas || 'Tidak Ada Kelas',
+      }))
+
+      const studentsWithHafalan: Student[] = []
+      for (const student of fetchedStudents) {
+        const setoranQuery = query(setoranRef, where('studentId', '==', student.id))
+        const setoranSnapshot = await getDocs(setoranQuery)
+        const hafalanData = setoranSnapshot.docs.map(doc => ({
+          surah: doc.data().surah,
+          start: doc.data().startAyat,
+          end: doc.data().endAyat,
+          penilaian: doc.data().score >= 90 ? 'Mutqin' : doc.data().score >= 75 ? 'Lancar' : doc.data().score >= 50 ? 'Kurang Lancar' : 'Ulang Lagi',
         }))
-
-        const studentsWithHafalan: Student[] = []
-        for (const student of fetchedStudents) {
-          const setoranQuery = query(setoranRef, where("studentId", "==", student.id))
-          const setoranSnapshot = await getDocs(setoranQuery)
-          const hafalanData = setoranSnapshot.docs.map((doc) => ({
-            surah: doc.data().surah,
-            start: doc.data().startAyat,
-            end: doc.data().endAyat,
-            penilaian:
-              doc.data().score >= 90
-                ? "Mutqin"
-                : doc.data().score >= 75
-                  ? "Lancar"
-                  : doc.data().score >= 50
-                    ? "Kurang Lancar"
-                    : "Ulang Lagi",
-          }))
-          studentsWithHafalan.push({ ...student, hafalan: hafalanData })
-        }
-        setStudents(studentsWithHafalan)
-        setLoading(false)
-      },
-      (error) => {
-        console.error("Error fetching students or setoran:", error)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Gagal memuat progres santri.",
-          variant: "destructive",
-        })
-      },
-    )
+        studentsWithHafalan.push({ ...student, hafalan: hafalanData })
+      }
+      setStudents(studentsWithHafalan)
+      setLoading(false)
+    }, (error) => {
+      console.error("Error fetching students or setoran:", error)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Gagal memuat progres santri.",
+        variant: "destructive",
+      })
+    })
 
     return () => unsubscribeStudents()
   }, [currentUser, toast])
 
-  const studentsWithSummary = students.map((student) => ({
+  const studentsWithSummary = students.map(student => ({
     ...student,
     summary: calculateStudentSummary(student),
   }))
 
-  const filteredStudents = studentsWithSummary.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filterKelas === "all" || student.kelas === filterKelas),
+  const filteredStudents = studentsWithSummary.filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (filterKelas === 'all' || student.kelas === filterKelas)
   )
 
-  const uniqueKelas = [...new Set(students.map((s) => s.kelas))].filter(Boolean)
+  const uniqueKelas = [...new Set(students.map(s => s.kelas))].filter(Boolean)
 
   const indexOfLastStudent = currentPage * studentsPerPage
   const indexOfFirstStudent = indexOfLastStudent - studentsPerPage
@@ -173,10 +156,8 @@ export function SetoranProgressTable() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Kelas</SelectItem>
-              {uniqueKelas.map((kelas) => (
-                <SelectItem key={kelas} value={kelas}>
-                  {kelas}
-                </SelectItem>
+              {uniqueKelas.map(kelas => (
+                <SelectItem key={kelas} value={kelas}>{kelas}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -196,9 +177,7 @@ export function SetoranProgressTable() {
           <TableBody>
             {currentStudents.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
-                  Tidak ada santri ditemukan.
-                </TableCell>
+                <TableCell colSpan={5} className="text-center">Tidak ada santri ditemukan.</TableCell>
               </TableRow>
             ) : (
               currentStudents.map((student) => (
@@ -209,10 +188,7 @@ export function SetoranProgressTable() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Progress value={student.summary?.juzProgress?.progress || 0} className="w-[100px]" />
-                      <span>
-                        {student.summary?.juzProgress?.completedJuz || 0}/{student.summary?.juzProgress?.totalJuz || 30}{" "}
-                        Juz
-                      </span>
+                      <span>{student.summary?.juzProgress?.completedJuz || 0}/{student.summary?.juzProgress?.totalJuz || 30} Juz</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -221,9 +197,7 @@ export function SetoranProgressTable() {
                         <div key={surahName} className="flex items-center gap-2 text-xs">
                           <span>{surahName}:</span>
                           <Progress value={progress.progress} className="w-[80px]" />
-                          <span>
-                            {progress.memorizedVerses}/{progress.totalVerses}
-                          </span>
+                          <span>{progress.memorizedVerses}/{progress.totalVerses}</span>
                         </div>
                       ))}
                       {Object.keys(student.summary?.surahProgress || {}).length === 0 && "Belum ada hafalan"}
@@ -241,7 +215,10 @@ export function SetoranProgressTable() {
             </PaginationItem>
             {Array.from({ length: totalPages }, (_, i) => (
               <PaginationItem key={i}>
-                <Button variant={currentPage === i + 1 ? "default" : "outline"} onClick={() => paginate(i + 1)}>
+                <Button
+                  variant={currentPage === i + 1 ? 'default' : 'outline'}
+                  onClick={() => paginate(i + 1)}
+                >
                   {i + 1}
                 </Button>
               </PaginationItem>
